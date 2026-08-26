@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#6045d8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="world-platform-version" content="pwa-mobile-pc-20260823-createfix">
+  <title>World Platform</title><link rel="stylesheet" href="style.css?v=20260823-16x9-fix4">
+  <link rel="shortcut icon" type="image/x-icon" href="images/logo_1.png">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+<header class="top">
+  <button id="logo">WORLD</button>
+  <input id="search" placeholder="세계관 검색">
+<div class="top-actions">
+  <button id="installApp" class="install-app" type="button">📱 앱 설치</button><button>👤</button>
+</div>
+</header>
+<aside><nav><button class="active" data-home>🏠 홈</button><button data-home>🌍 세계관</button><button data-home>✍️ 내 창작</button><button>👥 가입한 세계관</button></nav><button id="create">＋ 세계관 만들기</button></aside>
+<main><section id="home"><div class="welcome"><small>WORLD PLATFORM</small><h1>새로운 세계를 만나보세요.</h1><p>세계관을 만들고 다른 창작자들과 함께 이야기를 만들어보세요.</p></div><div class="title"><h2>인기 세계관</h2></div><div id="grid" class="grid"></div><div class="title"><h2>최근 만들어진 세계관</h2></div><div id="recent" class="recent"></div></section><section id="world" class="hidden"></section></main>
+<button id="mobileCreate" class="mobile-create" type="button">＋ 세계관 만들기</button>
+<nav class="mobile"><button data-home>🏠<small>홈</small></button><button data-home>🌍<small>세계관</small></button><button data-home>✍️<small>창작</small></button><button>👤<small>내 정보</small></button></nav>
+<div id="modal" class="modal"><div class="shade"></div><div class="box"><header><h2 id="mtitle">세계관 만들기</h2><button id="mclose">×</button></header><label>세계관 이름<input id="name"></label><label>세계관 소개<textarea id="desc"></textarea></label><label>장르<select id="genre"><option>판타지</option><option>SF</option><option>현대</option><option>역사</option><option>공포</option><option>기타</option></select>
+<div id="customGenreWrap" class="custom-input-wrap">
+<label>기타 장르 직접 입력
+<input id="customGenre" type="text" maxlength="30" placeholder="예: 다크 판타지, 디젤펑크">
+</label>
+</div></label><label>공개 설정<select id="visibility"><option value="public">공개</option><option value="private">비공개</option></select></label><label>세계관 테마<select id="theme"><option value="purple">보라빛 판타지</option><option value="blue">푸른 미래</option><option value="pink">별빛 왕국</option><option value="red">붉은 제국</option></select></label>
+<label>세계관 대표 사진
+<div class="cover-upload">
+  <div id="coverPreview" class="cover-preview">
+    <span>🖼️</span><small>사진을 선택하면<br>세계관 대표 이미지로 표시됩니다.</small>
+  </div>
+  <input id="coverFile" type="file" accept="image/jpeg,image/png,image/webp">
+  <small class="upload-help">JPG · PNG · WEBP / 사진은 세계관 카드와 상세 페이지의 배경으로 사용됩니다.<br>자동으로 16:9에 맞춰 잘리고, 용량도 줄여서 저장합니다.</small>
+  <button type="button" id="removeCover" class="remove-cover">사진 제거</button>
+</div>
+</label><footer><button id="mcancel">취소</button><button id="msave">저장</button></footer></div></div>
+<div id="deleteModal" class="modal"><div class="shade"></div><div class="box delete"><div>⚠️</div><h2>세계관을 삭제하시겠습니까?</h2><p id="deleteText"></p><strong>이 작업은 되돌릴 수 없습니다.</strong><footer><button id="dcancel">취소</button><button id="dconfirm">삭제하기</button></footer></div></div>
+<div id="itemModal" class="modal"><div class="shade"></div><div class="box">
+<header><h2 id="ititle">항목 추가</h2><button id="iclose">×</button></header>
+<label id="ilabel">이름<input id="iname"></label>
+<div id="characterFields" class="character-fields">
+<label>캐릭터 그룹
+<select id="characterGroup">
+<option>주요 인물</option><option>조연</option><option>적대 세력</option><option>왕족 / 귀족</option><option>군대 / 기사단</option><option>기타</option>
+</select></label>
+<label>캐릭터 사진 (3:4)
+<div class="character-photo-upload">
+<div id="characterPhotoPreview" class="character-photo-preview"><span>🧑‍🎨</span><small>사진을 선택하세요.</small></div>
+<input id="characterPhoto" type="file" accept="image/jpeg,image/png,image/webp">
+<small class="upload-help">선택한 사진은 자동으로 정확한 3:4 비율로 잘립니다.</small>
+<button type="button" id="removeCharacterPhoto" class="remove-cover">사진 제거</button>
+</div></label>
+</div>
+<div id="genericFields" class="generic-fields" style="display:none;">
+<label>그룹
+<select id="genericGroup">
+<option>기본</option><option>주요 지역</option><option>도시</option><option>국가</option><option>특별한 장소</option><option>세계관 기본 설정</option><option>역사</option><option>사회</option><option>마법</option><option>기술</option><option>기타</option>
+</select></label>
+<div id="customGenericGroupWrap" class="custom-input-wrap"><label>기타 그룹 직접 입력<input id="customGenericGroup" type="text" maxlength="40" placeholder="예: 스림우즈 지역, 정치 체계"></label></div>
+<label>사진 (3:4)
+<div class="generic-photo-upload">
+<div id="genericPhotoPreview" class="generic-photo-preview"><span>🖼️</span><small>사진을 선택하세요.</small></div>
+<input id="genericPhoto" type="file" accept="image/jpeg,image/png,image/webp">
+<small class="upload-help">사진은 자동으로 정확한 3:4 비율에 맞춰집니다.</small>
+<button type="button" id="removeGenericPhoto" class="remove-cover">사진 제거</button>
+</div></label>
+</div>
+<div id="storyFields" class="story-fields">
+<label>스토리 표지
+<div class="story-cover-upload">
+  <div id="storyCoverPreview" class="story-cover-preview">
+    <span>📖</span><small>스토리 표지를 선택하세요.</small>
+  </div>
+  <input id="storyCoverFile" type="file" accept="image/jpeg,image/png,image/webp">
+  <small class="upload-help">표지는 3:4 비율로 자동 맞춤됩니다.</small>
+  <button type="button" id="removeStoryCover" class="remove-cover">표지 제거</button>
+</div>
+</label>
+<label>스토리 공개 설정
+<select id="storyVisibility"><option value="public">공개</option><option value="private">비공개</option></select>
+</label>
+</div>
+<label>설명<textarea id="idesc"></textarea></label>
+<footer><button id="icancel">취소</button><button id="isave">추가</button></footer>
+</div></div>
+
+<div id="chapterModal" class="modal">
+  <div class="shade"></div>
+  <div class="box chapter-box">
+    <header>
+      <h2 id="chapterTitle">새 회차 쓰기</h2>
+      <button id="chapterClose">×</button>
+    </header>
+    <label>회차 제목<input id="chapterName" placeholder="예: 1화 - 새로운 시작"></label>
+    <label>본문<textarea id="chapterBody" class="chapter-body" placeholder="이곳에 이야기를 작성하세요."></textarea></label>
+    <footer>
+      <button id="chapterCancel">취소</button>
+      <button id="chapterSave">저장</button></footer>
+  </div>
+</div>
+
+<div id="chapterReadModal" class="modal">
+    <div class="shade"></div>
+    <div class="box chapter-read-box">
+        <header class="chapter-read-header">
+            <div>
+                <small id="chapterReadStory"></small>
+                <h2 id="chapterReadTitle">회차 제목</h2>
+            </div>
+            <button id="chapterReadClose" class="close-button">×</button>
+        </header>
+        <article id="chapterReadBody" class="chapter-read-body"></article>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="script.js?v=20260824-data-fix1"></script>
+
+<script>
+(function(){
+  let deferredPrompt=null;
+  const btn=document.getElementById("installApp");
+  window.addEventListener("beforeinstallprompt", function(e){
+    e.preventDefault(); deferredPrompt=e; if(btn) btn.classList.add("show");
+  });
+  if(btn) btn.addEventListener("click", async function(){
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try{ await deferredPrompt.userChoice; }catch(e){}
+    deferredPrompt=null; btn.classList.remove("show");
+  });
+  window.addEventListener("appinstalled", function(){ deferredPrompt=null; if(btn) btn.classList.remove("show"); });
+  if("serviceWorker" in navigator && (location.protocol === "http:" || location.protocol === "https:")) {
+    window.addEventListener("load", function(){ navigator.serviceWorker.register("./sw.js").catch(console.error); });
+  }
+})();
+</script>
+
+</body>
+</html>
