@@ -8,6 +8,17 @@ const supabaseClient = window.supabase.createClient(
     SUPABASE_PUBLISHABLE_KEY
 );
 
+async function requireLogin(){
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    if(!session){
+        alert('세계관을 만들려면 먼저 Google 로그인이 필요합니다.');
+        return false;
+    }
+
+    return true;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
 
   document.getElementById('googleLoginBtn').addEventListener('click', async () => {
@@ -792,7 +803,17 @@ function openModal(id=null){
  $('name').value=w?.name||'';$('desc').value=w?.description||'';$('genre').value=['판타지','SF','현대','역사','공포','기타'].includes(w?.genre)?(w?.genre||'판타지'):'기타';$('customGenre').value=(w?.genre&& !['판타지','SF','현대','역사','공포'].includes(w.genre))?w.genre:'';updateCustomGenreField();$('visibility').value=w?.visibility||'public';$('theme').value=w?.theme||'purple';
  $('coverFile').value='';setCoverPreview(w?.coverImage||'');
  $('modal').classList.add('show')
-}$('create').onclick=()=>openModal();$('mobileCreate').onclick=()=>openModal();$('mclose').onclick=$('mcancel').onclick=()=>{$('modal').classList.remove('show');editId=null;selectedCover=''};
+}
+$('create').onclick=async ()=>{
+    if(!(await requireLogin())) return;
+    openModal();
+};
+
+$('mobileCreate').onclick=async ()=>{
+    if(!(await requireLogin())) return;
+    openModal();
+};
+$('mclose').onclick=$('mcancel').onclick=()=>{$('modal').classList.remove('show');editId=null;selectedCover=''};
 $('storyCoverFile').onchange=()=>{const f=$('storyCoverFile').files[0];if(f)processStoryCover(f)};
 $('removeStoryCover').onclick=()=>{$('storyCoverFile').value='';setStoryCoverPreview('')};
 
@@ -806,6 +827,8 @@ $('coverFile').onchange=()=>{
 };
 $('removeCover').onclick=()=>{$('coverFile').value='';selectedCover='';setCoverPreview('')};
 $('msave').onclick = async () => {
+
+    if(!(await requireLogin())) return;
 
     const name = $('name').value.trim();
     const desc = $('desc').value.trim();
