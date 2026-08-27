@@ -259,3 +259,12 @@
   }
   .mobile-create:active{transform:scale(.97);}
 }
+
+/* 프로필 아바타 이미지 크기 고정 */
+#profileAvatar img {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  display: block;
+}
