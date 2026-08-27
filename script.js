@@ -7,6 +7,27 @@ const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY
 );
+
+document.addEventListener('DOMContentLoaded', function () {
+
+  document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+
+    if (error) {
+      console.error('Google 로그인 실패:', error);
+      alert('Google 로그인에 실패했습니다.');
+    }
+
+  });
+
+});
+
 async function loadWorldsFromSupabase(){
     return load();
 }
