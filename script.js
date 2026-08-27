@@ -12,37 +12,30 @@ async function updateAuthUI(){
     const { data: { session } } = await supabaseClient.auth.getSession();
 
     const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const profileBtn = document.getElementById('profileBtn');
+    const profileAvatar = document.getElementById('profileAvatar');
     const profileMenu = document.getElementById('profileMenu');
-    const profileImage = document.getElementById('profileImage');
     const profileName = document.getElementById('profileName');
     const profileEmail = document.getElementById('profileEmail');
 
-    // 로그아웃 상태
+    // 로그인하지 않은 상태
     if(!session){
         if(googleLoginBtn){
             googleLoginBtn.style.display = '';
+        }
+
+        if(profileBtn){
+            profileBtn.style.display = 'none';
         }
 
         if(profileMenu){
             profileMenu.style.display = 'none';
         }
 
-        if(profileName){
-            profileName.textContent = '사용자';
-        }
-
-        if(profileEmail){
-            profileEmail.textContent = '';
-        }
-
-        if(profileImage){
-            profileImage.src = '';
-        }
-
         return;
     }
 
-    // 로그인 상태
+    // 로그인한 사용자 정보
     const user = session.user;
     const metadata = user.user_metadata || {};
 
@@ -57,14 +50,17 @@ async function updateAuthUI(){
         metadata.picture ||
         '';
 
+    // Google 로그인 버튼 숨기기
     if(googleLoginBtn){
         googleLoginBtn.style.display = 'none';
     }
 
-    if(profileMenu){
-        profileMenu.style.display = 'block';
+    // 프로필 버튼 보여주기
+    if(profileBtn){
+        profileBtn.style.display = 'flex';
     }
 
+    // 프로필 이름 / 이메일
     if(profileName){
         profileName.textContent = name;
     }
@@ -73,13 +69,13 @@ async function updateAuthUI(){
         profileEmail.textContent = user.email || '';
     }
 
-    if(profileImage){
+    // 프로필 사진이 있으면 사진 사용
+    // 사진이 없으면 👤 기본 아이콘 사용
+    if(profileAvatar){
         if(avatar){
-            profileImage.src = avatar;
-            profileImage.style.display = 'block';
+            profileAvatar.innerHTML = `<img src="${avatar}" alt="프로필 사진">`;
         }else{
-            profileImage.src = '';
-            profileImage.style.display = 'none';
+            profileAvatar.textContent = '👤';
         }
     }
 }
