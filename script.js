@@ -1470,5 +1470,4 @@ document.addEventListener('DOMContentLoaded', function() {
     if(logoutBtn){
         logoutBtn.addEventListener('click', logout);
     }
-});    
-
+});
