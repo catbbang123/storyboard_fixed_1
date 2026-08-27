@@ -16,9 +16,26 @@ async function updateAuthUI(){
     const profileName = document.getElementById('profileName');
     const profileEmail = document.getElementById('profileEmail');
 
-    if(!session){
-        return;
+if(!session){
+
+    if(googleLoginBtn){
+        googleLoginBtn.style.display = '';
     }
+
+    if(profileName){
+        profileName.textContent = '';
+    }
+
+    if(profileEmail){
+        profileEmail.textContent = '';
+    }
+
+    if(profileImage){
+        profileImage.src = '';
+    }
+
+    return;
+}
 
     const user = session.user;
     const metadata = user.user_metadata || {};
@@ -54,6 +71,22 @@ async function requireLogin(){
     return true;
 }
 
+async function logout(){
+    const { error } = await supabaseClient.auth.signOut();
+
+    if(error){
+        console.error('로그아웃 실패:', error);
+        alert('로그아웃에 실패했습니다.');
+        return;
+    }
+
+    // 로그아웃 후 화면도 초기 상태로 갱신
+    await updateAuthUI();
+
+    // 페이지 새로고침
+    window.location.reload();
+}
+
 document.addEventListener('DOMContentLoaded', function () {
 
   document.getElementById('googleLoginBtn').addEventListener('click', async () => {
@@ -80,6 +113,12 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 });
+
+const logoutBtn = document.getElementById('logoutBtn');
+
+if(logoutBtn){
+    logoutBtn.addEventListener('click', logout);
+}
 
 async function loadWorldsFromSupabase(){
     return load();
