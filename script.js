@@ -8,6 +8,41 @@ const supabaseClient = window.supabase.createClient(
     SUPABASE_PUBLISHABLE_KEY
 );
 
+async function updateAuthUI(){
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const profileImage = document.getElementById('profileImage');
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+
+    if(!session){
+        return;
+    }
+
+    const user = session.user;
+    const metadata = user.user_metadata || {};
+
+    const name = metadata.full_name || metadata.name || '사용자';
+    const avatar = metadata.avatar_url || metadata.picture || '';
+
+    if(profileName){
+        profileName.textContent = name;
+    }
+
+    if(profileEmail){
+        profileEmail.textContent = user.email || '';
+    }
+
+    if(profileImage && avatar){
+        profileImage.src = avatar;
+    }
+
+    if(googleLoginBtn){
+        googleLoginBtn.style.display = 'none';
+    }
+}
+
 async function requireLogin(){
     const { data: { session } } = await supabaseClient.auth.getSession();
 
@@ -35,6 +70,13 @@ document.addEventListener('DOMContentLoaded', function () {
       alert('Google 로그인에 실패했습니다.');
     }
 
+  });
+
+      // 로그인 상태에 따라 프로필 UI 업데이트
+  updateAuthUI();
+
+  supabaseClient.auth.onAuthStateChange(() => {
+    updateAuthUI();
   });
 
 });
