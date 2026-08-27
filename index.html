@@ -21,7 +21,22 @@
   <button id="logo">WORLD</button>
   <input id="search" placeholder="세계관 검색">
 <div class="top-actions">
-  <button id="installApp" class="install-app" type="button">📱 앱 설치</button><button id="googleLoginBtn">👤</button>
+  <div id="profileArea">
+  <button id="googleLoginBtn">👤</button>
+
+  <div id="profileMenu" style="display:none;">
+    <div id="profileInfo">
+      <img id="profileImage" src="" alt="프로필 사진">
+      <div>
+        <div id="profileName">사용자</div>
+        <div id="profileEmail"></div>
+      </div>
+    </div>
+
+    <button id="editProfileBtn">프로필 편집</button>
+    <button id="logoutBtn">로그아웃</button>
+  </div>
+</div>
 </div>
 </header>
 <aside><nav><button class="active" data-home>🏠 홈</button><button data-home>🌍 세계관</button><button data-home>✍️ 내 창작</button><button>👥 가입한 세계관</button></nav><button id="create">＋ 세계관 만들기</button></aside>
