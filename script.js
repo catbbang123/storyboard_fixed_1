@@ -12,36 +12,58 @@ async function updateAuthUI(){
     const { data: { session } } = await supabaseClient.auth.getSession();
 
     const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const profileMenu = document.getElementById('profileMenu');
     const profileImage = document.getElementById('profileImage');
     const profileName = document.getElementById('profileName');
     const profileEmail = document.getElementById('profileEmail');
 
-if(!session){
+    // 로그아웃 상태
+    if(!session){
+        if(googleLoginBtn){
+            googleLoginBtn.style.display = '';
+        }
 
-    if(googleLoginBtn){
-        googleLoginBtn.style.display = '';
+        if(profileMenu){
+            profileMenu.style.display = 'none';
+        }
+
+        if(profileName){
+            profileName.textContent = '사용자';
+        }
+
+        if(profileEmail){
+            profileEmail.textContent = '';
+        }
+
+        if(profileImage){
+            profileImage.src = '';
+        }
+
+        return;
     }
 
-    if(profileName){
-        profileName.textContent = '';
-    }
-
-    if(profileEmail){
-        profileEmail.textContent = '';
-    }
-
-    if(profileImage){
-        profileImage.src = '';
-    }
-
-    return;
-}
-
+    // 로그인 상태
     const user = session.user;
     const metadata = user.user_metadata || {};
 
-    const name = metadata.full_name || metadata.name || '사용자';
-    const avatar = metadata.avatar_url || metadata.picture || '';
+    const name =
+        metadata.full_name ||
+        metadata.name ||
+        user.email?.split('@')[0] ||
+        '사용자';
+
+    const avatar =
+        metadata.avatar_url ||
+        metadata.picture ||
+        '';
+
+    if(googleLoginBtn){
+        googleLoginBtn.style.display = 'none';
+    }
+
+    if(profileMenu){
+        profileMenu.style.display = 'block';
+    }
 
     if(profileName){
         profileName.textContent = name;
@@ -51,12 +73,14 @@ if(!session){
         profileEmail.textContent = user.email || '';
     }
 
-    if(profileImage && avatar){
-        profileImage.src = avatar;
-    }
-
-    if(googleLoginBtn){
-        googleLoginBtn.style.display = 'none';
+    if(profileImage){
+        if(avatar){
+            profileImage.src = avatar;
+            profileImage.style.display = 'block';
+        }else{
+            profileImage.src = '';
+            profileImage.style.display = 'none';
+        }
     }
 }
 
