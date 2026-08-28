@@ -13,6 +13,7 @@
 .hero.has-photo{background-size:cover;background-position:center;background-repeat:no-repeat}
 
 /* 사진이 커져서 아래 버튼이 화면 밖으로 밀리지 않도록 */
+
 .box footer{
     position:sticky;
     bottom:0;
@@ -409,4 +410,95 @@
     .install-app{
         white-space:nowrap;
     }
+}
+
+/* =========================
+   이미지 위치 / 확대 편집창
+========================= */
+
+.image-crop-box{
+  width:520px;
+  max-width:calc(100vw - 24px);
+}
+
+.crop-area{
+  position:relative;
+  width:100%;
+  margin-top:18px;
+  background:#111;
+  border-radius:12px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  touch-action:none;
+}
+
+#imageCropCanvas{
+  display:block;
+  max-width:100%;
+  cursor:grab;
+  touch-action:none;
+}
+
+#imageCropCanvas.dragging{
+  cursor:grabbing;
+}
+
+.crop-controls{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:16px;
+}
+
+.crop-controls button{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:9px;
+  background:#eeeaff;
+  color:#6045d8;
+  font-size:22px;
+  cursor:pointer;
+  flex-shrink:0;
+}
+
+.crop-controls button:hover{
+  background:#e1dbff;
+}
+
+#imageZoom{
+  flex:1;
+  cursor:pointer;
+}
+
+.crop-help{
+  display:block;
+  margin-top:10px;
+  color:#888;
+  font-size:12px;
+  line-height:1.6;
+  text-align:center;
+}
+
+#imageCropModal .box footer{
+  position:static;
+  margin-top:18px;
+  padding-top:0;
+}
+
+@media(max-width:700px){
+  .image-crop-box{
+    width:calc(100vw - 24px);
+    padding:18px;
+  }
+
+  .crop-area{
+    margin-top:12px;
+  }
+
+  .crop-help{
+    font-size:11px;
+  }
 }
