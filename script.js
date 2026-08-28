@@ -1416,20 +1416,17 @@ function setCharacterPhotoPreview(src=''){
  p.innerHTML=src?`<img src="${src}" alt="캐릭터 사진 미리보기">`:`<span>🧑‍🎨</span><small>사진을 선택하세요.</small>`;
  $('removeCharacterPhoto').style.display=src?'inline-block':'none';
 }
+
 function processCharacterPhoto(file){
- const reader=new FileReader();
- reader.onload=e=>{
-  const img=new Image();
-  img.onload=()=>{
-   const W=600,H=800,canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
-   const ctx=canvas.getContext('2d'),scale=Math.max(W/img.width,H/img.height),nw=img.width*scale,nh=img.height*scale;
-   ctx.drawImage(img,(W-nw)/2,(H-nh)/2,nw,nh);
-   setCharacterPhotoPreview(canvas.toDataURL('image/jpeg',0.82));
-  };
-  img.src=e.target.result;
- };
- reader.readAsDataURL(file);
+    if(!file) return;
+
+    openImageCropModal(
+        file,
+        'character',
+        3 / 4
+    );
 }
+
 $('characterPhoto').onchange=()=>{const f=$('characterPhoto').files[0];if(f)processCharacterPhoto(f)};
 $('removeCharacterPhoto').onclick=()=>{$('characterPhoto').value='';setCharacterPhotoPreview('')};
 $('genericPhoto').onchange=()=>{const f=$('genericPhoto').files[0];if(f)processGenericPhoto(f)};
@@ -1819,6 +1816,12 @@ function openImageCropModal(file, target, ratio) {
         imageCropTarget = target;
         imageCropRatio = ratio;
 
+        if(target === 'character'){
+    imageCropCallback = function(result){
+        setCharacterPhotoPreview(result);
+    };
+}
+
         imageCropImage = new Image();
 
         imageCropImage.onload = function() {
@@ -1991,7 +1994,7 @@ function closeImageCropModal(){
     imageCropTarget = null;
     imageCropImage = null;
     imageCropDragging = false;
-    worldCoverCropCallback = null;
+    imageCropCallback = null;
 }
 
 if(imageCropClose){
@@ -2023,9 +2026,9 @@ if(imageCropApply){
             0.85
         );
 
-        if(worldCoverCropCallback){
-            worldCoverCropCallback(result);
-        }
+if(imageCropCallback){
+    imageCropCallback(result);
+}
 
         closeImageCropModal();
     });
