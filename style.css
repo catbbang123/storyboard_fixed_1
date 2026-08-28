@@ -283,3 +283,130 @@
     cursor: not-allowed;
     pointer-events: none;
 }
+
+/* =========================
+   프로필 영역
+========================= */
+
+#profileArea{
+    position:relative;
+    display:flex;
+    align-items:center;
+}
+
+#googleLoginBtn,
+#profileBtn{
+    width:42px;
+    height:42px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f1efff;
+    color:#6045d8;
+    cursor:pointer;
+}
+
+#googleLoginBtn:hover,
+#profileBtn:hover{
+    background:#e8e3ff;
+    transform:translateY(-1px);
+}
+
+#profileAvatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#eeeaff;
+}
+
+#profileAvatar img{
+    width:100% !important;
+    height:100% !important;
+    border-radius:50% !important;
+    object-fit:cover !important;
+    display:block;
+}
+
+/* 프로필 메뉴 */
+
+#profileMenu{
+    position:absolute;
+    top:52px;
+    right:0;
+    width:230px;
+    padding:15px;
+    background:#fff;
+    border:1px solid #e4e2eb;
+    border-radius:15px;
+    box-shadow:0 15px 40px #0002;
+    z-index:100;
+}
+
+#profileName{
+    font-size:14px;
+    font-weight:800;
+    color:#222;
+    margin-bottom:4px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+#profileEmail{
+    font-size:12px;
+    color:#888;
+    margin-bottom:14px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+#logoutBtn{
+    width:100%;
+    border:0;
+    border-radius:9px;
+    padding:10px;
+    background:#f4f2f7;
+    color:#555;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+#logoutBtn:hover{
+    background:#eeeaff;
+    color:#6045d8;
+}
+
+@media(max-width:700px){
+
+    #googleLoginBtn,
+    #profileBtn{
+        width:38px;
+        height:38px;
+        flex-shrink:0;
+    }
+
+    #profileAvatar{
+        width:36px;
+        height:36px;
+    }
+
+    #profileMenu{
+        top:48px;
+        right:-2px;
+        width:210px;
+        padding:14px;
+    }
+
+    .install-app{
+        white-space:nowrap;
+    }
+}
