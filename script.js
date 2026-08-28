@@ -108,24 +108,6 @@ async function logout(){
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-
-  document.getElementById('googleLoginBtn').addEventListener('click', async () => {
-
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin
-      }
-    });
-
-    if (error) {
-      console.error('Google 로그인 실패:', error);
-      alert('Google 로그인에 실패했습니다.');
-    }
-
-  });
-
-document.addEventListener('DOMContentLoaded', function () {
     
     // 1. 페이지 로드 시 최초 1회 인증 상태 UI 업데이트
     updateAuthUI();
@@ -1436,38 +1418,4 @@ document.addEventListener("click", function(e){
         viewButton.dataset.storyId,
         viewButton.dataset.viewChapter
     );
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. 페이지 로드 시 최초 1회 인증 상태 UI 업데이트
-    updateAuthUI();
-
-    // 2. 로그인 상태 변화 실시간 감지
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-        updateAuthUI();
-    });
-
-    // 구글 로그인 버튼 이벤트
-    const googleLoginBtn = document.getElementById('googleLoginBtn');
-    if(googleLoginBtn){
-        googleLoginBtn.addEventListener('click', async () => {
-            const { error } = await supabaseClient.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin
-                }
-            });
-            if (error) {
-                console.error('Google 로그인 실패:', error);
-                alert('Google 로그인에 실패했습니다.');
-            }
-        });
-    }
-
-    // 로그아웃 버튼 연결
-    const logoutBtn = document.getElementById('logoutBtn');
-    if(logoutBtn){
-        logoutBtn.addEventListener('click', logout);
-    }
 });
