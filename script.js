@@ -1251,6 +1251,20 @@ function setCoverPreview(src=''){
  p.innerHTML=src?`<img src="${src}" alt="세계관 대표 사진 미리보기">`:`<span>🖼️</span><small>사진을 선택하면<br>세계관 대표 이미지로 표시됩니다.</small>`;
  $('removeCover').style.display=src?'inline-block':'none';
 }
+
+// 세계관 대표 사진 16:9 조정
+let worldCoverCropCallback = null;
+
+function cropWorldCoverTo169(file, callback){
+    worldCoverCropCallback = callback;
+
+    openImageCropModal(
+        file,
+        'worldCover',
+        16 / 9
+    );
+}
+
 function openModal(id=null){
  editId=id;let w=id?get(id):null;
  $('mtitle').textContent=id?'세계관 수정':'새로운 세계관 만들기';
@@ -1940,6 +1954,56 @@ if (imageCropCanvas) {
     });
 }
 
+// 이미지 조정 - 취소 / 적용
+const imageCropClose = $('imageCropClose');
+const imageCropCancel = $('imageCropCancel');
+const imageCropApply = $('imageCropApply');
+
+function closeImageCropModal(){
+    $('imageCropModal')?.classList.remove('show');
+
+    imageCropTarget = null;
+    imageCropImage = null;
+    imageCropDragging = false;
+    worldCoverCropCallback = null;
+}
+
+if(imageCropClose){
+    imageCropClose.addEventListener('click', closeImageCropModal);
+}
+
+if(imageCropCancel){
+    imageCropCancel.addEventListener('click', closeImageCropModal);
+}
+
+if(imageCropApply){
+    imageCropApply.addEventListener('click', function(){
+
+        if(!imageCropImage){
+            closeImageCropModal();
+            return;
+        }
+
+        const canvas = $('imageCropCanvas');
+
+        if(!canvas){
+            closeImageCropModal();
+            return;
+        }
+
+        // 현재 조정된 16:9 화면을 이미지로 저장
+        const result = canvas.toDataURL(
+            'image/jpeg',
+            0.85
+        );
+
+        if(worldCoverCropCallback){
+            worldCoverCropCallback(result);
+        }
+
+        closeImageCropModal();
+    });
+}
 // ==============================
 // 세계관 대표 사진 16:9 조절 연결
 // ==============================
