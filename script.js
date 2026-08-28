@@ -6,6 +6,14 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hFt0uuyB5EVIn7gCN-aQJQ_QVeAFWBB
 const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY
+    {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storage: window.localStorage
+        }
+    }
 );
 
 async function updateAuthUI(){
@@ -139,6 +147,32 @@ document.addEventListener('DOMContentLoaded', function () {
     if(logoutBtn){
         logoutBtn.addEventListener('click', logout);
     }
+
+        // 프로필 사진 클릭 → 프로필 메뉴 열기/닫기
+    const profileBtn = document.getElementById('profileBtn');
+    const profileMenu = document.getElementById('profileMenu');
+
+    if(profileBtn && profileMenu){
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            profileMenu.style.display =
+                profileMenu.style.display === 'none' ||
+                profileMenu.style.display === ''
+                    ? 'block'
+                    : 'none';
+        });
+    }
+
+    // 메뉴 바깥을 클릭하면 프로필 메뉴 닫기
+    document.addEventListener('click', (e) => {
+        if(profileMenu &&
+           !e.target.closest('#profileBtn') &&
+           !e.target.closest('#profileMenu')){
+            profileMenu.style.display = 'none';
+        }
+    });
+    
 });
 
 async function loadCharactersFromSupabase(worldId){
