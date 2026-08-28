@@ -854,70 +854,290 @@ const chapterRow = {
 }
 
 function renderStorySettings(storyId){
- const w=get(current),s=w?.stories.find(x=>x.id===storyId);if(!s)return;
 
+    const w = get(current);
+    const s = w?.stories.find(x => x.id === storyId);
+
+    if(!s) return;
+
+    // 새로고침 시 현재 위치 기억
     sessionStorage.setItem('storyboard_current_world', current);
     sessionStorage.setItem('storyboard_current_tab', 'stories');
     sessionStorage.setItem('storyboard_current_reader', 'storySettings');
     sessionStorage.setItem('storyboard_current_story', storyId);
     sessionStorage.removeItem('storyboard_current_chapter');
 
- $('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 소설 목록</button><div><h1>${esc(s.name)}</h1><p>${esc(s.description||'')}</p></div></div>
- <div class="content" style="margin-top:18px"><div class="content-head"><div><h2>스토리 설정</h2><small>표지와 기본 정보를 관리하고 회차를 작성합니다.</small></div><button id="storySettingsEdit">⚙️ 스토리 설정 수정</button></div>
- <div class="story-grid" style="max-width:260px;margin-top:18px"><div class="story-card"><div class="story-card-cover">${s.coverImage?`<img src="${s.coverImage}" alt="">`:'📖'}</div></div></div>
- <div class="chapter-list"><div class="content-head"><h2>회차</h2><button id="writeChapter">＋ 회차 쓰기</button></div>
-${s.chapters.length ? s.chapters.map((c, i) => `
-    <div class="chapter-row">
+    $('world').innerHTML = `
+        <div class="hero ${w.theme} ${w.coverImage ? 'has-photo' : ''}"
+            ${w.coverImage ? `style="background-image:url('${w.coverImage}')"` : ''}>
 
-        <div>
-            <strong>
-                ${esc(c.name || `${i + 1}화`)}
-            </strong>
+            <button class="back" id="back">
+                ← 소설 목록
+            </button>
 
-            <small>
-                · ${c.body ? c.body.length + '자' : '내용 없음'}
-            </small>
+            <div>
+                <h1>${esc(s.name)}</h1>
+                <p>${esc(s.description || '')}</p>
+            </div>
         </div>
 
-        <div class="chapter-actions">
+        <div class="content" style="margin-top:18px">
 
-            <button
-                class="chapter-view-btn"
-                data-story-id="${s.id}"
-                data-view-chapter="${c.id}"
-            >
-                📖 본문 보기
-            </button>
+            <div class="content-head">
 
-            <button data-edit-chapter="${c.id}">
-                ✏️ 수정
-            </button>
+                <div>
+                    <h2>스토리 설정</h2>
+                    <small>
+                        표지와 기본 정보를 관리하고 회차를 작성합니다.
+                    </small>
+                </div>
 
-            <button
-                class="chapter-delete-btn"
-                data-story-id="${s.id}"
-                data-delete-chapter="${c.id}"
-            >
-                🗑️ 삭제
-            </button>
+                <button id="storySettingsEdit">
+                    ⚙️ 스토리 설정 수정
+                </button>
+
+            </div>
+
+
+            <div class="story-grid"
+                style="max-width:260px;margin-top:18px">
+
+                <div class="story-card">
+
+                    <div class="story-card-cover">
+                        ${
+                            s.coverImage
+                            ? `<img src="${esc(s.coverImage)}" alt="">`
+                            : '📖'
+                        }
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="chapter-list">
+
+                <div class="content-head">
+
+                    <h2>회차</h2>
+
+                    <button id="writeChapter">
+                        ＋ 회차 쓰기
+                    </button>
+
+                </div>
+
+
+                ${
+                    s.chapters.length
+                    ?
+
+                    s.chapters.map((c, i) => `
+
+                        <div class="chapter-row">
+
+                            <div class="chapter-info">
+
+                                <strong>
+                                    ${esc(c.name || `${i + 1}화`)}
+                                </strong>
+
+                                <small>
+                                    · ${
+                                        c.body
+                                        ? c.body.length + '자'
+                                        : '내용 없음'
+                                    }
+                                </small>
+
+                            </div>
+
+
+                            <div class="chapter-actions">
+
+                                <button
+                                    type="button"
+                                    class="chapter-view-btn"
+                                    data-story-id="${esc(s.id)}"
+                                    data-chapter-id="${esc(c.id)}"
+                                >
+                                    📖 본문 보기
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    data-edit-chapter="${esc(c.id)}"
+                                >
+                                    ✏️ 수정
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="chapter-delete-btn"
+                                    data-story-id="${esc(s.id)}"
+                                    data-delete-chapter="${esc(c.id)}"
+                                >
+                                    🗑️ 삭제
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    `).join('')
+
+                    :
+
+                    `
+                    <div class="empty">
+                        아직 작성된 회차가 없습니다.
+                    </div>
+                    `
+                }
+
+            </div>
 
         </div>
+    `;
 
-    </div>
-`).join('') : `
-    <div class="empty">
-        아직 작성된 회차가 없습니다.
-    </div>
-`}
 
- </div></div>`;
- $('back').onclick=()=>{tab='stories';renderWorld()};
- $('storySettingsEdit').onclick=()=>openStoryModal(storyId);
- $('writeChapter').onclick=()=>openChapterModal(storyId);
- document.querySelectorAll('[data-edit-chapter]').forEach(b=>b.onclick=()=>openChapterModal(storyId,b.dataset.editChapter));
- document.querySelectorAll('[data-delete-chapter]').forEach(b=>b.onclick=()=>deleteChapter(b.dataset.storyId,b.dataset.deleteChapter));
+    // ============================
+    // 소설 목록으로
+    // ============================
+
+    $('back').onclick = () => {
+
+        tab = 'stories';
+
+        sessionStorage.setItem(
+            'storyboard_current_tab',
+            'stories'
+        );
+
+        sessionStorage.removeItem(
+            'storyboard_current_reader'
+        );
+
+        sessionStorage.removeItem(
+            'storyboard_current_story'
+        );
+
+        sessionStorage.removeItem(
+            'storyboard_current_chapter'
+        );
+
+        renderWorld();
+
+    };
+
+
+    // ============================
+    // 스토리 설정 수정
+    // ============================
+
+    $('storySettingsEdit').onclick = () => {
+
+        openStoryModal(storyId);
+
+    };
+
+
+    // ============================
+    // 회차 쓰기
+    // ============================
+
+    $('writeChapter').onclick = () => {
+
+        openChapterModal(storyId);
+
+    };
+
+
+    // ============================
+    // 본문 보기
+    // ============================
+
+    document
+        .querySelectorAll('.chapter-view-btn')
+        .forEach(button => {
+
+            button.onclick = function(e){
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const storyId =
+                    this.dataset.storyId;
+
+                const chapterId =
+                    this.dataset.chapterId;
+
+                console.log(
+                    '본문 보기 클릭:',
+                    storyId,
+                    chapterId
+                );
+
+                openChapterReader(
+                    storyId,
+                    chapterId
+                );
+
+            };
+
+        });
+
+
+    // ============================
+    // 회차 수정
+    // ============================
+
+    document
+        .querySelectorAll('[data-edit-chapter]')
+        .forEach(button => {
+
+            button.onclick = function(e){
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                openChapterModal(
+                    storyId,
+                    this.dataset.editChapter
+                );
+
+            };
+
+        });
+
+
+    // ============================
+    // 회차 삭제
+    // ============================
+
+    document
+        .querySelectorAll('[data-delete-chapter]')
+        .forEach(button => {
+
+            button.onclick = function(e){
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                deleteChapter(
+                    this.dataset.storyId,
+                    this.dataset.deleteChapter
+                );
+
+            };
+
+        });
+
 }
-
 
 function openChapterReader(storyId, chapterId){
  const w=get(current);
@@ -1567,17 +1787,6 @@ document.addEventListener("DOMContentLoaded", function(){
 document.addEventListener("DOMContentLoaded",function(){
  const genre=$("genre");
  if(genre) genre.addEventListener("change",updateCustomGenreField);
-});
-
-
-document.addEventListener("click", function(e){
-    const viewButton = e.target.closest("[data-view-chapter]");
-    if(!viewButton) return;
-
-    openChapterReader(
-        viewButton.dataset.storyId,
-        viewButton.dataset.viewChapter
-    );
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
