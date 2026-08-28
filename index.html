@@ -140,6 +140,49 @@
     </div>
 </div>
 
+<!-- 이미지 위치/확대 편집창 -->
+<div id="imageCropModal" class="modal">
+  <div class="shade"></div>
+
+  <div class="box image-crop-box">
+
+    <header>
+      <h2 id="imageCropTitle">사진 조정</h2>
+      <button id="imageCropClose" type="button">×</button>
+    </header>
+
+    <div class="crop-area">
+      <canvas id="imageCropCanvas"></canvas>
+    </div>
+
+    <div class="crop-controls">
+      <button id="imageZoomOut" type="button">−</button>
+
+      <input
+        id="imageZoom"
+        type="range"
+        min="1"
+        max="3"
+        step="0.01"
+        value="1"
+      >
+
+      <button id="imageZoomIn" type="button">＋</button>
+    </div>
+
+    <small class="crop-help">
+      사진을 마우스로 드래그하여 원하는 위치로 이동하세요.<br>
+      아래 버튼으로 사진을 확대하거나 축소할 수 있습니다.
+    </small>
+
+    <footer>
+      <button id="imageCropCancel" type="button">취소</button>
+      <button id="imageCropApply" type="button">적용</button>
+    </footer>
+
+  </div>
+</div>
+
 <script src="script.js?v=20260828"></script>
 
 <script>
