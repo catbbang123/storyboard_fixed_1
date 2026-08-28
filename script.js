@@ -1783,3 +1783,159 @@ document.addEventListener('DOMContentLoaded', async () => {
     await load();
 
 });
+
+
+// ==============================
+// 이미지 조정 기능
+// ==============================
+
+let imageCropTarget = null;
+let imageCropRatio = 1;
+let imageCropImage = null;
+let imageCropScale = 1;
+let imageCropX = 0;
+let imageCropY = 0;
+let imageCropDragging = false;
+let imageCropStartX = 0;
+let imageCropStartY = 0;
+
+function openImageCropModal(file, target, ratio) {
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        imageCropTarget = target;
+        imageCropRatio = ratio;
+
+        imageCropImage = new Image();
+
+        imageCropImage.onload = function() {
+            imageCropScale = 1;
+            imageCropX = 0;
+            imageCropY = 0;
+
+            const zoom = $('imageZoom');
+            if (zoom) zoom.value = '1';
+
+            $('imageCropModal')?.classList.add('show');
+
+            drawImageCrop();
+        };
+
+        imageCropImage.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
+}
+
+function drawImageCrop() {
+    const canvas = $('imageCropCanvas');
+    if (!canvas || !imageCropImage) return;
+
+    const ctx = canvas.getContext('2d');
+
+    const width = 360;
+    const height = width / imageCropRatio;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const img = imageCropImage;
+
+    const baseScale = Math.max(
+        width / img.width,
+        height / img.height
+    );
+
+    const scale = baseScale * imageCropScale;
+
+    const drawWidth = img.width * scale;
+    const drawHeight = img.height * scale;
+
+    const drawX =
+        (width - drawWidth) / 2 + imageCropX;
+
+    const drawY =
+        (height - drawHeight) / 2 + imageCropY;
+
+    ctx.drawImage(
+        img,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+    );
+}
+
+// 이미지 조정 - 줌 기능
+const imageZoom = $('imageZoom');
+const imageZoomIn = $('imageZoomIn');
+const imageZoomOut = $('imageZoomOut');
+
+if (imageZoom) {
+    imageZoom.addEventListener('input', function() {
+        imageCropScale = Number(this.value);
+        drawImageCrop();
+    });
+}
+
+if (imageZoomIn) {
+    imageZoomIn.addEventListener('click', function() {
+        imageCropScale = Math.min(3, imageCropScale + 0.1);
+
+        if (imageZoom) {
+            imageZoom.value = String(imageCropScale);
+        }
+
+        drawImageCrop();
+    });
+}
+
+if (imageZoomOut) {
+    imageZoomOut.addEventListener('click', function() {
+        imageCropScale = Math.max(1, imageCropScale - 0.1);
+
+        if (imageZoom) {
+            imageZoom.value = String(imageCropScale);
+        }
+
+        drawImageCrop();
+    });
+}
+
+// 이미지 조정 - 마우스 드래그 이동
+const imageCropCanvas = $('imageCropCanvas');
+
+if (imageCropCanvas) {
+
+    imageCropCanvas.addEventListener('mousedown', function(e) {
+        if (!imageCropImage) return;
+
+        imageCropDragging = true;
+
+        imageCropStartX = e.clientX - imageCropX;
+        imageCropStartY = e.clientY - imageCropY;
+
+        imageCropCanvas.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!imageCropDragging) return;
+
+        imageCropX = e.clientX - imageCropStartX;
+        imageCropY = e.clientY - imageCropStartY;
+
+        drawImageCrop();
+    });
+
+    window.addEventListener('mouseup', function() {
+        imageCropDragging = false;
+
+        if (imageCropCanvas) {
+            imageCropCanvas.style.cursor = 'grab';
+        }
+    });
+}
