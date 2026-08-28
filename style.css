@@ -268,3 +268,18 @@
   object-fit: cover !important;
   display: block;
 }
+
+#googleLoginBtn,
+#profileBtn,
+#create,
+#mobileCreate{
+    transition: opacity .2s ease,
+                transform .2s ease;
+}
+
+#create:disabled,
+#mobileCreate:disabled{
+    opacity: .5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
