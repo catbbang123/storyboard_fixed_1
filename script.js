@@ -1244,24 +1244,7 @@ renderStorySettings(storyId);
 }
 
 let selectedCover='';
-function cropWorldCoverTo169(file, done){
- const reader=new FileReader();
- reader.onload=e=>{
-  const img=new Image();
-  img.onload=()=>{
-   const W=1280,H=720;
-   const canvas=document.createElement('canvas');
-   canvas.width=W; canvas.height=H;
-   const ctx=canvas.getContext('2d');
-   const scale=Math.max(W/img.width,H/img.height);
-   const nw=img.width*scale, nh=img.height*scale;
-   ctx.drawImage(img,(W-nw)/2,(H-nh)/2,nw,nh);
-   done(canvas.toDataURL('image/jpeg',0.88));
-  };
-  img.src=e.target.result;
- };
- reader.readAsDataURL(file);
-}
+
 function setCoverPreview(src=''){
  selectedCover=src||'';
  const p=$('coverPreview');
