@@ -1917,12 +1917,16 @@ if (imageZoomOut) {
     });
 }
 
-// 이미지 조정 - 마우스 드래그 이동
+// 이미지 조정 - 마우스/터치 드래그 이동
 const imageCropCanvas = $('imageCropCanvas');
 
 if (imageCropCanvas) {
 
-    imageCropCanvas.addEventListener('mousedown', function(e) {
+    imageCropCanvas.style.cursor = 'grab';
+    imageCropCanvas.style.touchAction = 'none';
+
+    imageCropCanvas.addEventListener('pointerdown', function(e) {
+
         if (!imageCropImage) return;
 
         imageCropDragging = true;
@@ -1931,23 +1935,48 @@ if (imageCropCanvas) {
         imageCropStartY = e.clientY - imageCropY;
 
         imageCropCanvas.style.cursor = 'grabbing';
+
+        try {
+            imageCropCanvas.setPointerCapture(e.pointerId);
+        } catch (err) {}
+
+        e.preventDefault();
     });
 
-    window.addEventListener('mousemove', function(e) {
+    imageCropCanvas.addEventListener('pointermove', function(e) {
+
         if (!imageCropDragging) return;
 
         imageCropX = e.clientX - imageCropStartX;
         imageCropY = e.clientY - imageCropStartY;
 
         drawImageCrop();
+
+        e.preventDefault();
     });
 
-    window.addEventListener('mouseup', function() {
+    imageCropCanvas.addEventListener('pointerup', function(e) {
+
         imageCropDragging = false;
 
-        if (imageCropCanvas) {
-            imageCropCanvas.style.cursor = 'grab';
-        }
+        imageCropCanvas.style.cursor = 'grab';
+
+        try {
+            imageCropCanvas.releasePointerCapture(e.pointerId);
+        } catch (err) {}
+
+        e.preventDefault();
+    });
+
+    imageCropCanvas.addEventListener('pointercancel', function(e) {
+
+        imageCropDragging = false;
+
+        imageCropCanvas.style.cursor = 'grab';
+
+        try {
+            imageCropCanvas.releasePointerCapture(e.pointerId);
+        } catch (err) {}
     });
 }
 
