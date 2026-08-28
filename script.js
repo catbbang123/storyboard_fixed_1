@@ -16,8 +16,13 @@ const supabaseClient = window.supabase.createClient(
     }
 );
 
-async function updateAuthUI(){
-    const { data: { session } } = await supabaseClient.auth.getSession();
+async function updateAuthUI(session = null){
+
+    // session을 전달받지 못했을 때만 Supabase에서 다시 확인
+    if(session === null){
+        const { data } = await supabaseClient.auth.getSession();
+        session = data?.session || null;
+    }
 
     const googleLoginBtn = document.getElementById('googleLoginBtn');
     const profileBtn = document.getElementById('profileBtn');
@@ -26,8 +31,16 @@ async function updateAuthUI(){
     const profileName = document.getElementById('profileName');
     const profileEmail = document.getElementById('profileEmail');
 
-    // 로그인하지 않은 상태
+    const createButtons = [
+        document.getElementById('create'),
+        document.getElementById('mobileCreate')
+    ];
+
+    // =========================
+    // 로그아웃 상태
+    // =========================
     if(!session){
+
         if(googleLoginBtn){
             googleLoginBtn.style.display = '';
         }
@@ -40,10 +53,21 @@ async function updateAuthUI(){
             profileMenu.style.display = 'none';
         }
 
+        // 세계관 만들기 버튼 비활성화
+        createButtons.forEach(btn => {
+            if(btn){
+                btn.disabled = true;
+                btn.classList.add('login-required');
+                btn.title = '로그인 후 세계관을 만들 수 있습니다.';
+            }
+        });
+
         return;
     }
 
-    // 로그인한 사용자 정보
+    // =========================
+    // 로그인 상태
+    // =========================
     const user = session.user;
     const metadata = user.user_metadata || {};
 
@@ -63,33 +87,54 @@ async function updateAuthUI(){
         googleLoginBtn.style.display = 'none';
     }
 
-    // 프로필 버튼 보여주기
+    // 프로필 버튼 표시
     if(profileBtn){
         profileBtn.style.display = 'flex';
     }
 
-    // 프로필 이름 / 이메일
+    // 프로필 이름
     if(profileName){
         profileName.textContent = name;
     }
 
+    // 프로필 이메일
     if(profileEmail){
         profileEmail.textContent = user.email || '';
     }
 
-    // 프로필 사진이 있으면 사진 사용
-    // 사진이 없으면 👤 기본 아이콘 사용
+    // 프로필 사진
     if(profileAvatar){
+
         if(avatar){
-            profileAvatar.innerHTML = `<img src="${avatar}" alt="프로필 사진">`;
+            profileAvatar.innerHTML =
+                `<img src="${esc(avatar)}" alt="프로필 사진">`;
         }else{
             profileAvatar.textContent = '👤';
         }
+
     }
+
+    // 세계관 만들기 버튼 활성화
+    createButtons.forEach(btn => {
+        if(btn){
+            btn.disabled = false;
+            btn.classList.remove('login-required');
+            btn.title = '';
+        }
+    });
 }
 
 async function requireLogin(){
-    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if(error){
+        console.error('로그인 상태 확인 실패:', error);
+        alert('로그인 상태를 확인하지 못했습니다.');
+        return false;
+    }
+
+    const session = data?.session;
 
     if(!session){
         alert('세계관을 만들려면 먼저 Google 로그인이 필요합니다.');
@@ -100,79 +145,153 @@ async function requireLogin(){
 }
 
 async function logout(){
-    const { error } = await supabaseClient.auth.signOut();
+
+    const { error } =
+        await supabaseClient.auth.signOut();
 
     if(error){
-        console.error('로그아웃 실패:', error);
-        alert('로그아웃에 실패했습니다.');
+
+        console.error(
+            '로그아웃 실패:',
+            error
+        );
+
+        alert(
+            '로그아웃에 실패했습니다.'
+        );
+
         return;
     }
 
-    // 로그아웃 후 화면도 초기 상태로 갱신
-    await updateAuthUI();
+    // 로그아웃 상태 즉시 UI 반영
+    await updateAuthUI(null);
 
-    // 페이지 새로고침
-    window.location.reload();
-}
+    // 프로필 메뉴 닫기
+    const profileMenu =
+        document.getElementById('profileMenu');
 
-document.addEventListener('DOMContentLoaded', function () {
-    
-    // 1. 페이지 로드 시 최초 1회 인증 상태 UI 업데이트
-    updateAuthUI();
-
-    // 2. [중요] 로그인 상태 변화 실시간 감지 (버튼 밖으로 빼야 합니다!)
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-        updateAuthUI();
-    });
-
-    // 구글 로그인 버튼 이벤트
-    const googleLoginBtn = document.getElementById('googleLoginBtn');
-    if(googleLoginBtn){
-        googleLoginBtn.addEventListener('click', async () => {
-            const { error } = await supabaseClient.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin
-                }
-            });
-            if (error) {
-                console.error('Google 로그인 실패:', error);
-                alert('Google 로그인에 실패했습니다.');
-            }
-        });
+    if(profileMenu){
+        profileMenu.style.display = 'none';
     }
 
-    // 로그아웃 버튼 연결
-    const logoutBtn = document.getElementById('logoutBtn');
+    // 홈으로 이동
+    home();
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
+
+    // ==========================================
+    // 페이지가 열리면 현재 로그인 상태 즉시 확인
+    // ==========================================
+    const { data } = await supabaseClient.auth.getSession();
+
+    await updateAuthUI(data?.session || null);
+
+
+    // ==========================================
+    // 로그인 / 로그아웃 상태 변화 감지
+    // ==========================================
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+
+        console.log('인증 상태 변경:', event, session);
+
+        updateAuthUI(session);
+    });
+
+
+    // ==========================================
+    // Google 로그인
+    // ==========================================
+    const googleLoginBtn =
+        document.getElementById('googleLoginBtn');
+
+    if(googleLoginBtn){
+
+        googleLoginBtn.addEventListener('click', async () => {
+
+            const { error } =
+                await supabaseClient.auth.signInWithOAuth({
+
+                    provider: 'google',
+
+                    options: {
+                        redirectTo: window.location.origin
+                    }
+
+                });
+
+            if(error){
+
+                console.error(
+                    'Google 로그인 실패:',
+                    error
+                );
+
+                alert(
+                    'Google 로그인에 실패했습니다.'
+                );
+            }
+
+        });
+
+    }
+
+
+    // ==========================================
+    // 로그아웃
+    // ==========================================
+    const logoutBtn =
+        document.getElementById('logoutBtn');
+
     if(logoutBtn){
         logoutBtn.addEventListener('click', logout);
     }
 
-        // 프로필 사진 클릭 → 프로필 메뉴 열기/닫기
-    const profileBtn = document.getElementById('profileBtn');
-    const profileMenu = document.getElementById('profileMenu');
+
+    // ==========================================
+    // 프로필 메뉴
+    // ==========================================
+    const profileBtn =
+        document.getElementById('profileBtn');
+
+    const profileMenu =
+        document.getElementById('profileMenu');
+
 
     if(profileBtn && profileMenu){
+
         profileBtn.addEventListener('click', (e) => {
+
             e.stopPropagation();
 
+            const isOpen =
+                profileMenu.style.display === 'block';
+
             profileMenu.style.display =
-                profileMenu.style.display === 'none' ||
-                profileMenu.style.display === ''
-                    ? 'block'
-                    : 'none';
+                isOpen ? 'none' : 'block';
+
         });
+
     }
 
-    // 메뉴 바깥을 클릭하면 프로필 메뉴 닫기
+
+    // ==========================================
+    // 메뉴 바깥 클릭 → 닫기
+    // ==========================================
     document.addEventListener('click', (e) => {
-        if(profileMenu &&
-           !e.target.closest('#profileBtn') &&
-           !e.target.closest('#profileMenu')){
+
+        if(
+            profileMenu &&
+            !e.target.closest('#profileBtn') &&
+            !e.target.closest('#profileMenu')
+        ){
+
             profileMenu.style.display = 'none';
+
         }
+
     });
-    
+
 });
 
 async function loadCharactersFromSupabase(worldId){
@@ -936,13 +1055,23 @@ function openModal(id=null){
  $('coverFile').value='';setCoverPreview(w?.coverImage||'');
  $('modal').classList.add('show')
 }
-$('create').onclick=async ()=>{
-    if(!(await requireLogin())) return;
+
+$('create').onclick = async () => {
+
+    if(!(await requireLogin())){
+        return;
+    }
+
     openModal();
 };
 
-$('mobileCreate').onclick=async ()=>{
-    if(!(await requireLogin())) return;
+
+$('mobileCreate').onclick = async () => {
+
+    if(!(await requireLogin())){
+        return;
+    }
+
     openModal();
 };
 $('mclose').onclick=$('mcancel').onclick=()=>{$('modal').classList.remove('show');editId=null;selectedCover=''};
@@ -1420,9 +1549,6 @@ document.addEventListener("click",function(e){
 });
 $('chapterClose').onclick=$('chapterCancel').onclick=()=>{$('chapterModal').classList.remove('show');editingChapterId=null;chapterStoryId=null};
 $('chapterSave').onclick=saveChapter;
-load();
-
-
 
 document.addEventListener("DOMContentLoaded", function(){
   try {
@@ -1452,4 +1578,16 @@ document.addEventListener("click", function(e){
         viewButton.dataset.storyId,
         viewButton.dataset.viewChapter
     );
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+    // 인증 상태 먼저 확인
+    const { data } = await supabaseClient.auth.getSession();
+
+    await updateAuthUI(data?.session || null);
+
+    // 그 다음 세계관 데이터 불러오기
+    await load();
+
 });
