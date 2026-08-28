@@ -1283,7 +1283,7 @@ $('storyCoverFile').onchange=()=>{const f=$('storyCoverFile').files[0];if(f)proc
 $('removeStoryCover').onclick=()=>{$('storyCoverFile').value='';setStoryCoverPreview('')};
 
 function cropWorldCoverTo169(file, callback){
-    worldCoverCropCallback = callback;
+    imageCropCallback = callback;
 
     openImageCropModal(
         file,
