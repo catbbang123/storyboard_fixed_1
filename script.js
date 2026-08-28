@@ -1939,3 +1939,100 @@ if (imageCropCanvas) {
         }
     });
 }
+
+// ==============================
+// 세계관 대표 사진 16:9 조절 연결
+// ==============================
+
+let imageCropCallback = null;
+
+function cropWorldCoverTo169(file, callback) {
+    imageCropCallback = callback;
+
+    openImageCropModal(
+        file,
+        'worldCover',
+        16 / 9
+    );
+}
+
+// 이미지 조절 - 적용
+const imageCropApply = $('imageCropApply');
+
+if (imageCropApply) {
+    imageCropApply.addEventListener('click', function() {
+
+        if (!imageCropImage) return;
+
+        const width = 1600;
+        const height = 900;
+
+        const canvas = document.createElement('canvas');
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+
+        const img = imageCropImage;
+
+        const baseScale = Math.max(
+            width / img.width,
+            height / img.height
+        );
+
+        const scale = baseScale * imageCropScale;
+
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
+
+        const drawX =
+            (width - drawWidth) / 2 + imageCropX;
+
+        const drawY =
+            (height - drawHeight) / 2 + imageCropY;
+
+        ctx.drawImage(
+            img,
+            drawX,
+            drawY,
+            drawWidth,
+            drawHeight
+        );
+
+        const result =
+            canvas.toDataURL('image/jpeg', 0.9);
+
+        if (imageCropCallback) {
+            imageCropCallback(result);
+        }
+
+        imageCropCallback = null;
+
+        $('imageCropModal')?.classList.remove('show');
+    });
+}
+
+// 이미지 조절 - 취소
+const imageCropCancel = $('imageCropCancel');
+
+if (imageCropCancel) {
+    imageCropCancel.addEventListener('click', function() {
+
+        imageCropCallback = null;
+
+        $('imageCropModal')?.classList.remove('show');
+    });
+}
+
+// 이미지 조절 - 닫기
+const imageCropClose = $('imageCropClose');
+
+if (imageCropClose) {
+    imageCropClose.addEventListener('click', function() {
+
+        imageCropCallback = null;
+
+        $('imageCropModal')?.classList.remove('show');
+    });
+}
