@@ -1282,6 +1282,16 @@ $('mclose').onclick=$('mcancel').onclick=()=>{$('modal').classList.remove('show'
 $('storyCoverFile').onchange=()=>{const f=$('storyCoverFile').files[0];if(f)processStoryCover(f)};
 $('removeStoryCover').onclick=()=>{$('storyCoverFile').value='';setStoryCoverPreview('')};
 
+function cropWorldCoverTo169(file, callback){
+    worldCoverCropCallback = callback;
+
+    openImageCropModal(
+        file,
+        'worldCover',
+        16 / 9
+    );
+}
+
 $('coverFile').onchange=()=>{
  const file=$('coverFile').files[0]; if(!file)return;
  if(!file.type.startsWith('image/')){alert('이미지 파일만 선택할 수 있습니다.');return;}
