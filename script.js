@@ -349,13 +349,24 @@ function getGenreValue(){
 let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=null,editingCharacterId=null,editingStoryId=null,editingChapterId=null,storyCover='',chapterStoryId=null,editingGenericId=null,genericPhoto='',myWorldMemberships=[],currentUserId=null;
 
 const defaults=[];
+
 async function save(){
+    const { data: { user }, error: userError } =
+        await supabaseClient.auth.getUser();
+
+    if(userError || !user){
+        console.error('로그인 사용자 확인 실패:', userError);
+        alert('로그인 상태를 확인할 수 없습니다. 다시 로그인해주세요.');
+        return false;
+    }
+
     const rows = worlds.map(w => ({
         id: w.id,
         name: w.name,
         description: w.description,
         genre: w.genre,
         visibility: w.visibility,
+        owner_id: w.owner_id || user.id,
         members: w.members ?? 1,
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
@@ -374,7 +385,6 @@ async function save(){
 
     return true;
 }
-
 
 async function deleteWorldFromSupabase(id){
     const { data, error } = await supabaseClient
