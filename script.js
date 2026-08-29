@@ -712,18 +712,10 @@ function setStoryCoverPreview(src=''){
  if($('removeStoryCover')) $('removeStoryCover').style.display=src?'inline-block':'none';
 }
 function processStoryCover(file){
- const reader=new FileReader();
- reader.onload=e=>{
-  const img=new Image();
-  img.onload=()=>{
-   const W=600,H=800,canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
-   const ctx=canvas.getContext('2d'),scale=Math.max(W/img.width,H/img.height),nw=img.width*scale,nh=img.height*scale;
-   ctx.drawImage(img,(W-nw)/2,(H-nh)/2,nw,nh);
-   setStoryCoverPreview(canvas.toDataURL('image/jpeg',0.82));
-  };
-  img.src=e.target.result;
- };
- reader.readAsDataURL(file);
+ if(!file) return;
+ openImageCropModal(file,'storyCover',3/4,result=>{
+  setStoryCoverPreview(result);
+ });
 }
 async function saveStoryToSupabase(story){
  const row={
@@ -1283,13 +1275,7 @@ $('storyCoverFile').onchange=()=>{const f=$('storyCoverFile').files[0];if(f)proc
 $('removeStoryCover').onclick=()=>{$('storyCoverFile').value='';setStoryCoverPreview('')};
 
 function cropWorldCoverTo169(file, callback){
-    imageCropCallback = callback;
-
-    openImageCropModal(
-        file,
-        'worldCover',
-        16 / 9
-    );
+    openImageCropModal(file,'worldCover',16/9,callback);
 }
 
 $('coverFile').onchange=()=>{
@@ -1420,11 +1406,9 @@ function setCharacterPhotoPreview(src=''){
 function processCharacterPhoto(file){
     if(!file) return;
 
-    openImageCropModal(
-        file,
-        'character',
-        3 / 4
-    );
+    openImageCropModal(file,'character',3/4,result=>{
+        setCharacterPhotoPreview(result);
+    });
 }
 
 $('characterPhoto').onchange=()=>{const f=$('characterPhoto').files[0];if(f)processCharacterPhoto(f)};
@@ -1505,7 +1489,12 @@ async function deleteCharacter(id){
 }
 
 function setGenericPhotoPreview(src=''){genericPhoto=src||'';const p=$('genericPhotoPreview');p.innerHTML=src?`<img src="${src}" alt="사진 미리보기">`:`<span>🖼️</span><small>사진을 선택하세요.</small>`;$('removeGenericPhoto').style.display=src?'inline-block':'none';}
-function processGenericPhoto(file){const reader=new FileReader();reader.onload=e=>{const img=new Image();img.onload=()=>{const W=600,H=800,canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d'),scale=Math.max(W/img.width,H/img.height),nw=img.width*scale,nh=img.height*scale;ctx.drawImage(img,(W-nw)/2,(H-nh)/2,nw,nh);setGenericPhotoPreview(canvas.toDataURL('image/jpeg',0.82));};img.src=e.target.result;};reader.readAsDataURL(file);}
+function processGenericPhoto(file){
+ if(!file) return;
+ openImageCropModal(file,'generic',3/4,result=>{
+  setGenericPhotoPreview(result);
+ });
+}
 function ensureGenericGroupField(){const s=$('genericGroup');if(!s)return;s.onchange=()=>{$('customGenericGroupWrap').classList.toggle('show',s.value==='기타');if(s.value!=='기타')$('customGenericGroup').value='';};}
 function getGenericGroupValue(){return $('genericGroup').value==='기타'?($('customGenericGroup').value.trim()||'기타'):$('genericGroup').value;}
 function openGenericEdit(id){const w=get(current),arr=w?.[tab]||[],x=arr.find(v=>v.id===id);if(!x)return;editingGenericId=id;itemType=tab;$('ititle').textContent=tab==='locations'?'지역 수정':'세계관 설정 수정';$('iname').value=x.name||'';$('idesc').value=x.description||'';$('characterFields').style.display='none';$('storyFields').style.display='none';$('genericFields').style.display='block';ensureGenericGroupField();const standard=['기본','주요 지역','도시','국가','特别한 장소','세계관 기본 설정','역사','사회','마법','기술','기타'];$('genericGroup').value=standard.includes(x.group)?x.group:'기타';$('customGenericGroup').value=standard.includes(x.group)?'':(x.group||'');$('customGenericGroupWrap').classList.toggle('show',$('genericGroup').value==='기타');$('genericPhoto').value='';setGenericPhotoPreview(x.photo||'');$('itemModal').classList.add('show');}
@@ -1794,7 +1783,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 // ==============================
-// 이미지 조정 기능
+// 공통 이미지 조정 기능
+// 세계관 테마 16:9 / 캐릭터·지역·소설·세계관 설정 3:4
+// PC 마우스 + 모바일 터치(드래그/핀치 줌) 지원
 // ==============================
 
 let imageCropTarget = null;
@@ -1806,8 +1797,11 @@ let imageCropY = 0;
 let imageCropDragging = false;
 let imageCropStartX = 0;
 let imageCropStartY = 0;
+let imageCropPointers = new Map();
+let imageCropLastPinchDistance = 0;
+let imageCropCallback = null;
 
-function openImageCropModal(file, target, ratio) {
+function openImageCropModal(file, target, ratio, callback) {
     if (!file) return;
 
     const reader = new FileReader();
@@ -1815,12 +1809,12 @@ function openImageCropModal(file, target, ratio) {
     reader.onload = function(e) {
         imageCropTarget = target;
         imageCropRatio = ratio;
+        imageCropCallback = typeof callback === 'function' ? callback : null;
 
-        if(target === 'character'){
-    imageCropCallback = function(result){
-        setCharacterPhotoPreview(result);
-    };
-}
+        const title = $('imageCropTitle');
+        if(title){
+            title.textContent = ratio === 16 / 9 ? '세계관 대표 사진 조정' : '사진 조정';
+        }
 
         imageCropImage = new Image();
 
@@ -1828,12 +1822,14 @@ function openImageCropModal(file, target, ratio) {
             imageCropScale = 1;
             imageCropX = 0;
             imageCropY = 0;
+            imageCropDragging = false;
+            imageCropPointers.clear();
+            imageCropLastPinchDistance = 0;
 
             const zoom = $('imageZoom');
             if (zoom) zoom.value = '1';
 
             $('imageCropModal')?.classList.add('show');
-
             drawImageCrop();
         };
 
@@ -1843,207 +1839,235 @@ function openImageCropModal(file, target, ratio) {
     reader.readAsDataURL(file);
 }
 
+function getCropCanvasSize(){
+    const area = $('cropArea');
+    const availableWidth = area ? area.clientWidth : 520;
+    const isMobile = window.matchMedia && window.matchMedia('(max-width:700px)').matches;
+    const maxHeight = isMobile
+        ? Math.max(280, Math.min(window.innerHeight * 0.55, window.innerHeight - 260))
+        : Math.max(320, Math.min(window.innerHeight * 0.62, 620));
+
+    let width = Math.min(520, availableWidth, maxHeight * imageCropRatio);
+
+    // 아주 작은 화면에서도 조작 영역이 지나치게 작아지지 않도록 합니다.
+    width = Math.max(240, width);
+
+    // 3:4 이미지가 세로로 긴 모바일 화면에서 모달 밖으로 튀어나가지 않게 합니다.
+    if(width / imageCropRatio > maxHeight){
+        width = maxHeight * imageCropRatio;
+    }
+
+    return {width, height:width / imageCropRatio};
+}
+
 function drawImageCrop() {
     const canvas = $('imageCropCanvas');
     if (!canvas || !imageCropImage) return;
 
     const ctx = canvas.getContext('2d');
+    const size = getCropCanvasSize();
+    const width = size.width;
+    const height = size.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    const width = 360;
-    const height = width / imageCropRatio;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
 
-    canvas.width = width;
-    canvas.height = height;
-
-    ctx.clearRect(0, 0, width, height);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,width,height);
 
     const img = imageCropImage;
-
-    const baseScale = Math.max(
-        width / img.width,
-        height / img.height
-    );
-
+    const baseScale = Math.max(width / img.width, height / img.height);
     const scale = baseScale * imageCropScale;
 
     const drawWidth = img.width * scale;
     const drawHeight = img.height * scale;
 
-    const drawX =
-        (width - drawWidth) / 2 + imageCropX;
+    // 사진이 잘라낼 영역 밖으로 완전히 빠져 빈 공간이 생기지 않도록 위치를 제한합니다.
+    const maxOffsetX = Math.max(0,(drawWidth-width)/2);
+    const maxOffsetY = Math.max(0,(drawHeight-height)/2);
+    imageCropX = Math.max(-maxOffsetX,Math.min(maxOffsetX,imageCropX));
+    imageCropY = Math.max(-maxOffsetY,Math.min(maxOffsetY,imageCropY));
 
-    const drawY =
-        (height - drawHeight) / 2 + imageCropY;
+    const drawX = (width-drawWidth)/2 + imageCropX;
+    const drawY = (height-drawHeight)/2 + imageCropY;
 
-    ctx.drawImage(
-        img,
-        drawX,
-        drawY,
-        drawWidth,
-        drawHeight
-    );
+    ctx.drawImage(img,drawX,drawY,drawWidth,drawHeight);
 }
 
-// 이미지 조정 - 줌 기능
+function setImageCropScale(value, centerX, centerY){
+    const next = Math.max(1,Math.min(3,Number(value)||1));
+
+    // 핀치 줌 시 손가락 사이의 지점을 중심으로 확대/축소
+    if(centerX != null && centerY != null && imageCropScale > 0){
+        const factor = next / imageCropScale;
+        imageCropX = centerX - (centerX - imageCropX) * factor;
+        imageCropY = centerY - (centerY - imageCropY) * factor;
+    }
+
+    imageCropScale = next;
+
+    const zoom = $('imageZoom');
+    if(zoom) zoom.value = String(next);
+
+    drawImageCrop();
+}
+
+// 줌 컨트롤
 const imageZoom = $('imageZoom');
 const imageZoomIn = $('imageZoomIn');
 const imageZoomOut = $('imageZoomOut');
+const imageCropReset = $('imageCropReset');
 
-if (imageZoom) {
-    imageZoom.addEventListener('input', function() {
-        imageCropScale = Number(this.value);
+if(imageZoom){
+    imageZoom.addEventListener('input',function(){
+        setImageCropScale(Number(this.value));
+    });
+}
+if(imageZoomIn){
+    imageZoomIn.addEventListener('click',function(){
+        setImageCropScale(imageCropScale + 0.1);
+    });
+}
+if(imageZoomOut){
+    imageZoomOut.addEventListener('click',function(){
+        setImageCropScale(imageCropScale - 0.1);
+    });
+}
+if(imageCropReset){
+    imageCropReset.addEventListener('click',function(){
+        imageCropScale=1;
+        imageCropX=0;
+        imageCropY=0;
+        if(imageZoom) imageZoom.value='1';
         drawImageCrop();
     });
 }
 
-if (imageZoomIn) {
-    imageZoomIn.addEventListener('click', function() {
-        imageCropScale = Math.min(3, imageCropScale + 0.1);
-
-        if (imageZoom) {
-            imageZoom.value = String(imageCropScale);
-        }
-
-        drawImageCrop();
-    });
-}
-
-if (imageZoomOut) {
-    imageZoomOut.addEventListener('click', function() {
-        imageCropScale = Math.max(1, imageCropScale - 0.1);
-
-        if (imageZoom) {
-            imageZoom.value = String(imageCropScale);
-        }
-
-        drawImageCrop();
-    });
-}
-
-// 이미지 조정 - 마우스/터치 드래그 이동
+// PC 마우스 + 모바일 터치
 const imageCropCanvas = $('imageCropCanvas');
 
-if (imageCropCanvas) {
-
-    imageCropCanvas.style.cursor = 'grab';
-    imageCropCanvas.style.touchAction = 'none';
-
-    imageCropCanvas.addEventListener('pointerdown', function(e) {
-
-        if (!imageCropImage) return;
-
-        imageCropDragging = true;
-
-        imageCropStartX = e.clientX - imageCropX;
-        imageCropStartY = e.clientY - imageCropY;
-
-        imageCropCanvas.style.cursor = 'grabbing';
-
-        try {
-            imageCropCanvas.setPointerCapture(e.pointerId);
-        } catch (err) {}
-
-        e.preventDefault();
-    });
-
-    imageCropCanvas.addEventListener('pointermove', function(e) {
-
-        if (!imageCropDragging) return;
-
-        imageCropX = e.clientX - imageCropStartX;
-        imageCropY = e.clientY - imageCropStartY;
-
-        drawImageCrop();
-
-        e.preventDefault();
-    });
-
-    imageCropCanvas.addEventListener('pointerup', function(e) {
-
-        imageCropDragging = false;
-
-        imageCropCanvas.style.cursor = 'grab';
-
-        try {
-            imageCropCanvas.releasePointerCapture(e.pointerId);
-        } catch (err) {}
-
-        e.preventDefault();
-    });
-
-    imageCropCanvas.addEventListener('pointercancel', function(e) {
-
-        imageCropDragging = false;
-
-        imageCropCanvas.style.cursor = 'grab';
-
-        try {
-            imageCropCanvas.releasePointerCapture(e.pointerId);
-        } catch (err) {}
-    });
+function pointerDistance(a,b){
+    return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
 }
 
-// 이미지 조정 - 취소 / 적용
-const imageCropClose = $('imageCropClose');
-const imageCropCancel = $('imageCropCancel');
-const imageCropApply = $('imageCropApply');
+if(imageCropCanvas){
+    imageCropCanvas.style.cursor='grab';
+    imageCropCanvas.style.touchAction='none';
+
+    imageCropCanvas.addEventListener('pointerdown',function(e){
+        if(!imageCropImage) return;
+
+        imageCropPointers.set(e.pointerId,e);
+        try{ imageCropCanvas.setPointerCapture(e.pointerId); }catch(err){}
+
+        if(imageCropPointers.size===2){
+            const pts=[...imageCropPointers.values()];
+            imageCropLastPinchDistance=pointerDistance(pts[0],pts[1]);
+            imageCropDragging=false;
+        }else{
+            imageCropDragging=true;
+            imageCropStartX=e.clientX-imageCropX;
+            imageCropStartY=e.clientY-imageCropY;
+            imageCropCanvas.style.cursor='grabbing';
+        }
+
+        e.preventDefault();
+    });
+
+    imageCropCanvas.addEventListener('pointermove',function(e){
+        if(!imageCropImage) return;
+
+        if(imageCropPointers.has(e.pointerId)){
+            imageCropPointers.set(e.pointerId,e);
+        }
+
+        if(imageCropPointers.size>=2){
+            const pts=[...imageCropPointers.values()].slice(0,2);
+            const distance=pointerDistance(pts[0],pts[1]);
+
+            if(imageCropLastPinchDistance>0){
+                const rect=imageCropCanvas.getBoundingClientRect();
+                const centerX=((pts[0].clientX+pts[1].clientX)/2)-rect.left;
+                const centerY=((pts[0].clientY+pts[1].clientY)/2)-rect.top;
+                const factor=distance/imageCropLastPinchDistance;
+                setImageCropScale(imageCropScale*factor,centerX,centerY);
+            }
+
+            imageCropLastPinchDistance=distance;
+            imageCropDragging=false;
+        }else if(imageCropDragging){
+            imageCropX=e.clientX-imageCropStartX;
+            imageCropY=e.clientY-imageCropStartY;
+            drawImageCrop();
+        }
+
+        e.preventDefault();
+    });
+
+    function finishCropPointer(e){
+        imageCropPointers.delete(e.pointerId);
+
+        if(imageCropPointers.size<2){
+            imageCropLastPinchDistance=0;
+        }
+        if(imageCropPointers.size===0){
+            imageCropDragging=false;
+            imageCropCanvas.style.cursor='grab';
+        }
+
+        try{ imageCropCanvas.releasePointerCapture(e.pointerId); }catch(err){}
+        e.preventDefault();
+    }
+
+    imageCropCanvas.addEventListener('pointerup',finishCropPointer);
+    imageCropCanvas.addEventListener('pointercancel',finishCropPointer);
+}
+
+window.addEventListener('resize',()=>{
+    if($('imageCropModal')?.classList.contains('show')) drawImageCrop();
+});
+
+// 취소 / 적용
+const imageCropClose=$('imageCropClose');
+const imageCropCancel=$('imageCropCancel');
+const imageCropApply=$('imageCropApply');
 
 function closeImageCropModal(){
     $('imageCropModal')?.classList.remove('show');
-
-    imageCropTarget = null;
-    imageCropImage = null;
-    imageCropDragging = false;
-    imageCropCallback = null;
+    imageCropTarget=null;
+    imageCropImage=null;
+    imageCropDragging=false;
+    imageCropPointers.clear();
+    imageCropLastPinchDistance=0;
+    imageCropCallback=null;
 }
 
-if(imageCropClose){
-    imageCropClose.addEventListener('click', closeImageCropModal);
-}
-
-if(imageCropCancel){
-    imageCropCancel.addEventListener('click', closeImageCropModal);
-}
+if(imageCropClose) imageCropClose.addEventListener('click',closeImageCropModal);
+if(imageCropCancel) imageCropCancel.addEventListener('click',closeImageCropModal);
 
 if(imageCropApply){
-    imageCropApply.addEventListener('click', function(){
-
+    imageCropApply.addEventListener('click',function(){
         if(!imageCropImage){
             closeImageCropModal();
             return;
         }
 
-        const canvas = $('imageCropCanvas');
-
+        const canvas=$('imageCropCanvas');
         if(!canvas){
             closeImageCropModal();
             return;
         }
 
-        // 현재 조정된 16:9 화면을 이미지로 저장
-        const result = canvas.toDataURL(
-            'image/jpeg',
-            0.85
-        );
+        const result=canvas.toDataURL('image/jpeg',0.85);
 
-if(imageCropCallback){
-    imageCropCallback(result);
-}
+        if(imageCropCallback){
+            imageCropCallback(result);
+        }
 
         closeImageCropModal();
     });
 }
-// ==============================
-// 세계관 대표 사진 16:9 조절 연결
-// ==============================
 
-let imageCropCallback = null;
-
-if (imageCropClose) {
-    imageCropClose.addEventListener('click', function() {
-
-        imageCropCallback = null;
-
-        $('imageCropModal')?.classList.remove('show');
-    });
-}

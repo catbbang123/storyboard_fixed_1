@@ -151,12 +151,12 @@
       <button id="imageCropClose" type="button">×</button>
     </header>
 
-    <div class="crop-area">
+    <div id="cropArea" class="crop-area">
       <canvas id="imageCropCanvas"></canvas>
     </div>
 
     <div class="crop-controls">
-      <button id="imageZoomOut" type="button">−</button>
+      <button id="imageZoomOut" type="button" aria-label="축소">−</button>
 
       <input
         id="imageZoom"
@@ -167,12 +167,13 @@
         value="1"
       >
 
-      <button id="imageZoomIn" type="button">＋</button>
+      <button id="imageZoomIn" type="button" aria-label="확대">＋</button>
+      <button id="imageCropReset" type="button" class="crop-reset">↺</button>
     </div>
 
     <small class="crop-help">
-      사진을 마우스로 드래그하여 원하는 위치로 이동하세요.<br>
-      아래 버튼으로 사진을 확대하거나 축소할 수 있습니다.
+      PC: 사진을 드래그하여 위치를 이동하세요.<br>
+      모바일: 한 손가락으로 이동하고 두 손가락으로 확대·축소하세요.
     </small>
 
     <footer>

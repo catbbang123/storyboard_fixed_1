@@ -491,11 +491,22 @@
 @media(max-width:700px){
   .image-crop-box{
     width:calc(100vw - 24px);
-    padding:18px;
+    max-height:calc(100vh - 20px);
+    padding:16px;
   }
 
   .crop-area{
     margin-top:12px;
+    max-height:55vh;
+  }
+
+  .crop-controls{
+    gap:7px;
+  }
+
+  .crop-controls button{
+    width:42px;
+    height:42px;
   }
 
   .crop-help{
