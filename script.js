@@ -763,12 +763,38 @@ async function openWorld(id){
     renderWorld();
 }
 
-function renderWorld(){let w=get(current);$('home').classList.add('hidden');$('world').classList.remove('hidden');let tabs=[['overview','개요'],['characters','캐릭터'],['locations','지역'],['stories','소설'],['settings','세계관 설정']];let body;if(tab==='overview')body=`<div class="join"><span><b>${w.joined?'가입한 세계관입니다.':'이 세계관에 참여해보세요.'}</b><br><small>${w.members}명이 함께하고 있습니다.</small></span><button id="pageJoin">${w.joined?'가입 취소':'세계관 가입'}</button></div><h2>세계관 소개</h2><p>${esc(w.description)}</p>`;else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${esc(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;$('editPage').onclick=()=>openModal(w.id);$('decoratePage').onclick=()=>openModal(w.id,true);document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
+function renderWorld(){
+    let w=get(current);
+    const isOwner = w.owner_id === currentUserId;
+    const isApprovedMember = myWorldMemberships.some(
+        member => member.world_id === w.id && member.status === 'approved'
+    );
+    
+    $('home').classList.add('hidden');
+    $('world').classList.remove('hidden');let tabs=[['overview','개요'],['characters','캐릭터'],['locations','지역'],['stories','소설'],['settings','세계관 설정']];let body;if(tab==='overview')body=`<div class="join"><span><b>${w.joined?'가입한 세계관입니다.':'이 세계관에 참여해보세요.'}</b><br><small>${w.members}명이 함께하고 있습니다.</small></span><button id="pageJoin">${w.joined?'가입 취소':'세계관 가입'}</button></div><h2>세계관 소개</h2><p>${esc(w.description)}</p>`;else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${esc(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+    $('editPage').onclick=()=>{
+    if(!isOwner && !isApprovedMember){
+        alert('로그인 후 수정할 수 있습니다.');
+        return;
+    }
+    openModal(w.id);
+};
+
+$('decoratePage').onclick=()=>{
+    if(!isOwner && !isApprovedMember){
+        alert('로그인 후 꾸밀 수 있습니다.');
+        return;
+    }
+    openModal(w.id,true);
+};
+
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
     tab=b.dataset.tab;
     sessionStorage.setItem('storyboard_current_tab',tab);
     renderWorld();
 });
 if($('pageJoin'))$('pageJoin').onclick=()=>join(w.id);if($('add'))$('add').onclick=()=>openItem(tab);requestAnimationFrame(force16x9)}
+
 function section(w){
  let labels={characters:'캐릭터',locations:'지역',stories:'소설',settings:'세계관 설정'};
  if(tab==='stories'){
