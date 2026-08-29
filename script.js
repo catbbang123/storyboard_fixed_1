@@ -41,6 +41,9 @@ async function updateAuthUI(session = null){
     // =========================
     if(!session){
 
+        currentUserId = null;
+        myWorldMemberships = [];
+        
         if(googleLoginBtn){
             googleLoginBtn.style.display = '';
         }
@@ -191,12 +194,21 @@ document.addEventListener('DOMContentLoaded', async function () {
     // ==========================================
     // 로그인 / 로그아웃 상태 변화 감지
     // ==========================================
-    supabaseClient.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
 
-        console.log('인증 상태 변경:', event, session);
+    console.log('인증 상태 변경:', event, session);
 
-        updateAuthUI(session);
-    });
+    // 로그아웃되면 비공개 세계관 관련 정보 즉시 초기화
+    if(!session){
+        currentUserId = null;
+        myWorldMemberships = [];
+
+        // 현재 화면의 세계관 목록도 즉시 다시 그리기
+        renderHome($('search').value);
+    }
+
+    updateAuthUI(session);
+});
 
 
     // ==========================================
