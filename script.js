@@ -1707,7 +1707,7 @@ if(itemType==='settings'){
          name:n,
          description:d,
          group_name:group,
-         photo:genericPhoto||''
+         photo:genericPhoto||'',
          created_by: (await supabaseClient.auth.getUser()).data.user?.id || null
      };
 
