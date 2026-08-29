@@ -522,6 +522,7 @@ async function load(){
         description: w.description,
         genre: w.genre,
         visibility: w.visibility,
+        owner_id: w.owner_id,
         members: w.members ?? 1,
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
