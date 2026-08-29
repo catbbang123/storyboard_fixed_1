@@ -346,7 +346,7 @@ function getGenreValue(){
  return $("genre").value==="기타" ? ($("customGenre").value.trim() || "기타") : $("genre").value;
 }
 
-let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=null,editingCharacterId=null,editingStoryId=null,editingChapterId=null,storyCover='',chapterStoryId=null,editingGenericId=null,genericPhoto='';
+let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=null,editingCharacterId=null,editingStoryId=null,editingChapterId=null,storyCover='',chapterStoryId=null,editingGenericId=null,genericPhoto='',myWorldMemberships=[],currentUserId=null;
 
 const defaults=[];
 async function save(){
@@ -423,6 +423,31 @@ async function load(){
         return;
     }
 
+    // ①-1 현재 로그인 사용자의 세계관 멤버십 불러오기
+    myWorldMemberships = [];
+
+    const { data: currentUserData } =
+        await supabaseClient.auth.getUser();
+
+    currentUserId = currentUserData?.user?.id;
+
+    if(currentUserId){
+        const { data: membershipData, error: membershipError } =
+            await supabaseClient
+                .from('world_members')
+                .select('world_id, role, status')
+                .eq('user_id', currentUserId);
+
+        if(membershipError){
+            console.error(
+                'Supabase world_members 불러오기 실패:',
+                membershipError
+            );
+        }else{
+            myWorldMemberships = membershipData || [];
+        }
+    }
+    
     // ② 캐릭터 불러오기
     const { data: characterData, error: characterError } = await supabaseClient
         .from('characters')
@@ -646,7 +671,55 @@ function home(){
     $('world').classList.add('hidden');
     renderHome($('search').value);
 }
-function renderHome(q=''){let k=q.toLowerCase().trim(),list=worlds.filter(w=>(w.name+w.description+w.genre).toLowerCase().includes(k));$('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">🔍<br>검색 결과가 없습니다.</div>';$('recent').innerHTML=[...worlds].sort((a,b)=>b.createdAt-a.createdAt).slice(0,5).map(w=>`<div data-open="${w.id}"><i>${esc(w.icon)}</i><section><b>${esc(w.name)}</b><p>${esc(w.description)}</p></section></div>`).join('');bind();requestAnimationFrame(force16x9)}
+function renderHome(q=''){
+    let k=q.toLowerCase().trim();
+
+    // 로그아웃 상태에서는 비공개 세계관을 목록에서 숨김
+    let visibleWorlds = worlds.filter(w => {
+if(w.visibility === 'private'){
+    const isOwner = w.owner_id === currentUserId;
+
+    const isApprovedMember = myWorldMemberships.some(
+        member =>
+            member.world_id === w.id &&
+            member.status === 'approved'
+    );
+
+    if(!isOwner && !isApprovedMember){
+        return false;
+    }
+}
+
+        return true;
+    });
+
+    let list = visibleWorlds.filter(w =>
+        (w.name + w.description + w.genre)
+            .toLowerCase()
+            .includes(k)
+    );
+
+    $('grid').innerHTML = list.length
+        ? list.map(card).join('')
+        : '<div class="empty">🔍<br>검색 결과가 없습니다.</div>';
+
+    $('recent').innerHTML = [...visibleWorlds]
+        .sort((a,b) => b.createdAt - a.createdAt)
+        .slice(0,5)
+        .map(w => `
+            <div data-open="${w.id}">
+                <i>${esc(w.icon)}</i>
+                <section>
+                    <b>${esc(w.name)}</b>
+                    <p>${esc(w.description)}</p>
+                </section>
+            </div>
+        `)
+        .join('');
+
+    bind();
+    requestAnimationFrame(force16x9);
+}
 function card(w){return `<article class="card" data-id="${w.id}"><div class="cover ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}>${w.coverImage?'':esc(w.icon)}</div><div class="more"><button>⋮</button><div class="menu"><button class="edit">✏️ 수정</button><button class="decorate">🎨 꾸미기</button><button class="join">👥 ${w.joined?'가입됨':'가입하기'}</button><button class="del">🗑️ 세계관 삭제</button></div></div><div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta"><span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${w.visibility==='public'?'공개':'비공개'}</span></div></div></article>`}
 function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()=>openWorld(x.dataset.open));document.querySelectorAll('.card').forEach(c=>{let id=c.dataset.id,m=c.querySelector('.menu');c.onclick=e=>{if(!e.target.closest('.more'))openWorld(id)};c.querySelector('.more>button').onclick=e=>{e.stopPropagation();document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'));m.classList.add('show')};c.querySelector('.edit').onclick=()=>openModal(id);c.querySelector('.decorate').onclick=()=>openModal(id,true);c.querySelector('.join').onclick=()=>join(id);c.querySelector('.del').onclick=()=>openDelete(id)})}
 
@@ -1635,6 +1708,7 @@ if(itemType==='settings'){
          description:d,
          group_name:group,
          photo:genericPhoto||''
+         created_by: (await supabaseClient.auth.getUser()).data.user?.id || null
      };
 
      const {error}=await supabaseClient
