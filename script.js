@@ -411,6 +411,12 @@ async function save(){
 }
 
 async function deleteWorldFromSupabase(id){
+
+    if(!currentUserId){
+        alert('로그인 후 세계관을 삭제할 수 있습니다.');
+        return false;
+    }
+    
     const { data, error } = await supabaseClient
         .from('worlds')
         .delete()
