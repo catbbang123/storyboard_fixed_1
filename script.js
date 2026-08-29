@@ -364,13 +364,24 @@ const defaults=[];
 
 async function save(){
 
+    const { data: { session } } =
+      await supabaseClient.auth.getSession();
+
+    const user = session?.user;
+
+    if(!user){
+        console.error('Supabase worlds 저장 실패: 로그인 세션이 없습니다.');
+        alert('로그인 후 저장할 수 있습니다.');
+        return false;
+    }
+
     const rows = worlds.map(w => ({
         id: w.id,
         name: w.name,
         description: w.description,
         genre: w.genre,
         visibility: w.visibility,
-        owner_id: w.owner_id || currentUserId,
+        owner_id: w.owner_id || user.id,
         members: w.members ?? 1,
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
