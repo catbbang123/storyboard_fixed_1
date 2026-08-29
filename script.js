@@ -2061,7 +2061,48 @@ if(imageCropApply){
             return;
         }
 
-        const result=canvas.toDataURL('image/jpeg',0.85);
+        // 화면용 캔버스(약 520px)를 그대로 저장하면 세계관 테마 이미지가
+        // 500px대 저해상도로 저장됩니다. 따라서 적용할 때는 원본을 기준으로
+        // 지정된 최종 해상도 캔버스에 다시 그려서 저장합니다.
+        const outputSize = imageCropTarget === 'worldCover'
+            ? { width: 1280, height: 720 }
+            : { width: 600, height: 800 };
+
+        const outputCanvas = document.createElement('canvas');
+        outputCanvas.width = outputSize.width;
+        outputCanvas.height = outputSize.height;
+
+        const outputCtx = outputCanvas.getContext('2d', { alpha: false });
+        const img = imageCropImage;
+        const baseScale = Math.max(
+            outputSize.width / img.width,
+            outputSize.height / img.height
+        );
+        const scale = baseScale * imageCropScale;
+
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
+
+        // 화면에서 움직인 거리(px)를 최종 해상도에 맞게 비례 확대합니다.
+        const displaySize = getCropCanvasSize();
+        const offsetScale = outputSize.width / displaySize.width;
+        const outputOffsetX = imageCropX * offsetScale;
+        const outputOffsetY = imageCropY * offsetScale;
+
+        const maxOffsetX = Math.max(0,(drawWidth-outputSize.width)/2);
+        const maxOffsetY = Math.max(0,(drawHeight-outputSize.height)/2);
+        const safeOffsetX = Math.max(-maxOffsetX,Math.min(maxOffsetX,outputOffsetX));
+        const safeOffsetY = Math.max(-maxOffsetY,Math.min(maxOffsetY,outputOffsetY));
+
+        const drawX = (outputSize.width-drawWidth)/2 + safeOffsetX;
+        const drawY = (outputSize.height-drawHeight)/2 + safeOffsetY;
+
+        outputCtx.imageSmoothingEnabled = true;
+        outputCtx.imageSmoothingQuality = 'high';
+        outputCtx.drawImage(img,drawX,drawY,drawWidth,drawHeight);
+
+        // JPEG 품질을 높여 사진의 디테일과 텍스트 가독성을 최대한 유지합니다.
+        const result=outputCanvas.toDataURL('image/jpeg',0.94);
 
         if(imageCropCallback){
             imageCropCallback(result);
