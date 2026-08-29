@@ -363,14 +363,6 @@ let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=nul
 const defaults=[];
 
 async function save(){
-    const { data: { user }, error: userError } =
-        await supabaseClient.auth.getUser();
-
-    if(userError || !user){
-        console.error('로그인 사용자 확인 실패:', userError);
-        alert('로그인 상태를 확인할 수 없습니다. 다시 로그인해주세요.');
-        return false;
-    }
 
     const rows = worlds.map(w => ({
         id: w.id,
@@ -378,7 +370,7 @@ async function save(){
         description: w.description,
         genre: w.genre,
         visibility: w.visibility,
-        owner_id: w.owner_id || user.id,
+        owner_id: w.owner_id || currentUserId,
         members: w.members ?? 1,
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
