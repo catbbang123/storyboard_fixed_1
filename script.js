@@ -375,13 +375,15 @@ async function save(){
         return false;
     }
 
-    const rows = worlds.map(w => ({
+    const rows = worlds
+    .filter(w => w.owner_id === user.id)
+    .map(w => ({
         id: w.id,
         name: w.name,
         description: w.description,
         genre: w.genre,
         visibility: w.visibility,
-        owner_id: w.owner_id || user.id,
+        owner_id: w.owner_id,
         members: w.members ?? 1,
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
