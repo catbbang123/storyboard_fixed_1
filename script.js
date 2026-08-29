@@ -1379,6 +1379,12 @@ function setCoverPreview(src=''){
 }
 
 function openModal(id=null){
+
+ if(!currentUserId){
+  alert('로그인 후 세계관을 수정하거나 만들 수 있습니다.');
+  return;
+ }
+    
  editId=id;let w=id?get(id):null;
  $('mtitle').textContent=id?'세계관 수정':'새로운 세계관 만들기';
  $('name').value=w?.name||'';$('desc').value=w?.description||'';$('genre').value=['판타지','SF','현대','역사','공포','기타'].includes(w?.genre)?(w?.genre||'판타지'):'기타';$('customGenre').value=(w?.genre&& !['판타지','SF','현대','역사','공포'].includes(w.genre))?w.genre:'';updateCustomGenreField();$('visibility').value=w?.visibility||'public';$('theme').value=w?.theme||'purple';
