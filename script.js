@@ -375,6 +375,13 @@ async function save(){
         return false;
     }
 
+    // 새로 만든 세계관에는 현재 로그인한 사용자를 소유자로 지정
+    worlds.forEach(w => {
+        if(!w.owner_id){
+            w.owner_id = user.id;
+        }
+    });
+    
     const rows = worlds
     .filter(w => w.owner_id === user.id)
     .map(w => ({
