@@ -1864,6 +1864,16 @@ if(itemType==='settings'){
     photo:selectedCharacterPhoto || ''
   };
 
+const { data: { session } } =
+    await supabaseClient.auth.getSession();
+
+const user = session?.user;
+
+if(!user){
+    alert('로그인 후 저장할 수 있습니다.');
+    return;
+}
+
   const {error}=await supabaseClient
     .from('characters')
     .upsert(characterData);
