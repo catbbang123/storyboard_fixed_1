@@ -1958,15 +1958,22 @@ async function deleteCharacter(id){
 
     const user = session?.user;
 
-    if(!user){
-        alert('로그인 후 삭제할 수 있습니다.');
-        return;
-    }
+if(!user){
+    alert('로그인 후 삭제할 수 있습니다.');
+    return;
+}
 
-    const w=get(current);
-    const c=w?.characters.find(x=>x.id===id);
+const w=get(current);
+const c=w?.characters.find(x=>x.id===id);
 
-    if(!c)return;
+if(!c)return;
+
+// 세계관 소유자는 모든 캐릭터 삭제 가능
+// 그 외에는 본인이 만든 캐릭터만 삭제 가능
+if(w.owner_id !== user.id && c.owner_id !== user.id){
+    alert('본인이 만든 캐릭터만 삭제할 수 있습니다.');
+    return;
+}
 
     // 세계관 소유자는 모든 캐릭터를 관리할 수 있음
     // 가입자는 자신이 만든 캐릭터만 삭제할 수 있음
