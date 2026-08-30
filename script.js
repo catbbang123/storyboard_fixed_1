@@ -1540,7 +1540,35 @@ $('dconfirm').onclick=async ()=>{
     alert('세계관이 삭제되었습니다.');
 };
 
-function join(id){let w=get(id);if(w.visibility==='private')return alert('비공개 세계관에는 가입할 수 없습니다.');w.joined=!w.joined;w.members=Math.max(0,w.members+(w.joined?1:-1));save();current===id?renderWorld():renderHome($('search').value)}
+async function join(id){
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    const user = session?.user;
+
+    // 로그인하지 않은 상태에서는 가입 상태를 변경하지 않음
+    if(!user){
+        alert('로그인 후 가입할 수 있습니다.');
+        return;
+    }
+
+    let w=get(id);
+
+    if(w.visibility==='private'){
+        alert('비공개 세계관에는 가입할 수 없습니다.');
+        return;
+    }
+
+    w.joined=!w.joined;
+    w.members=Math.max(0,w.members+(w.joined?1:-1));
+
+    await save();
+
+    current===id
+        ? renderWorld()
+        : renderHome($('search').value);
+}
+
 let selectedCharacterPhoto='';
 function setCharacterPhotoPreview(src=''){
  selectedCharacterPhoto=src||'';
