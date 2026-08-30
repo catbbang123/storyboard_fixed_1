@@ -1683,7 +1683,19 @@ function processGenericPhoto(file){
 function ensureGenericGroupField(){const s=$('genericGroup');if(!s)return;s.onchange=()=>{$('customGenericGroupWrap').classList.toggle('show',s.value==='기타');if(s.value!=='기타')$('customGenericGroup').value='';};}
 function getGenericGroupValue(){return $('genericGroup').value==='기타'?($('customGenericGroup').value.trim()||'기타'):$('genericGroup').value;}
 function openGenericEdit(id){const w=get(current),arr=w?.[tab]||[],x=arr.find(v=>v.id===id);if(!x)return;editingGenericId=id;itemType=tab;$('ititle').textContent=tab==='locations'?'지역 수정':'세계관 설정 수정';$('iname').value=x.name||'';$('idesc').value=x.description||'';$('characterFields').style.display='none';$('storyFields').style.display='none';$('genericFields').style.display='block';ensureGenericGroupField();const standard=['기본','주요 지역','도시','국가','特别한 장소','세계관 기본 설정','역사','사회','마법','기술','기타'];$('genericGroup').value=standard.includes(x.group)?x.group:'기타';$('customGenericGroup').value=standard.includes(x.group)?'':(x.group||'');$('customGenericGroupWrap').classList.toggle('show',$('genericGroup').value==='기타');$('genericPhoto').value='';setGenericPhotoPreview(x.photo||'');$('itemModal').classList.add('show');}
+
 async function deleteGeneric(id){
+
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    const user = session?.user;
+
+    if(!user){
+        alert('로그인 후 삭제할 수 있습니다.');
+        return;
+    }
+
     const w=get(current);
     const arr=w?.[tab]||[];
     const x=arr.find(v=>v.id===id);
@@ -1716,6 +1728,7 @@ async function deleteGeneric(id){
     w[tab]=arr.filter(v=>v.id!==id);
     renderWorld();
 }
+
 function openItem(type){if(type==='stories'){openStoryModal();return;}editingCharacterId=null;editingGenericId=null;itemType=type;$('ititle').textContent=({characters:'캐릭터',locations:'지역',stories:'소설',settings:'세계관 설정'}[type]||'항목')+' 추가';$('iname').value='';$('idesc').value='';$('characterFields').style.display=type==='characters'?'block':'none';$('genericFields').style.display=(type==='locations'||type==='settings')?'block':'none';$('storyFields').style.display='none';editingStoryId=null;storyCover='';genericPhoto='';if(type==='characters'){ensureCustomCharacterGroupField();$('characterGroup').value='주요 인물';$('customCharacterGroup').value='';$('customCharacterGroupWrap').classList.remove('show');$('characterPhoto').value='';setCharacterPhotoPreview('');}else{ensureGenericGroupField();$('genericGroup').value=type==='locations'?'기본':'세계관 기본 설정';$('customGenericGroup').value='';$('customGenericGroupWrap').classList.remove('show');$('genericPhoto').value='';setGenericPhotoPreview('');}$('itemModal').classList.add('show')}$('iclose').onclick=$('icancel').onclick=()=>{$('itemModal').classList.remove('show');itemType=null;editingCharacterId=null;editingStoryId=null;editingGenericId=null;selectedCharacterPhoto='';storyCover='';genericPhoto=''};$('isave').onclick=async()=>{
  let n=$('iname').value.trim(),d=$('idesc').value.trim();
  if(!n)return alert('이름을 입력해주세요.');
@@ -1767,15 +1780,25 @@ if(itemType==='locations'){
         photo: genericPhoto || ''
     };
 
-    const {error} = await supabaseClient
-        .from('locations')
-        .upsert(locationData);
+const { data: { session } } =
+    await supabaseClient.auth.getSession();
 
-    if(error){
-        console.error('Supabase 지역 저장 실패:', error);
-        alert('지역 저장에 실패했습니다.\n'+error.message);
-        return;
-    }
+const user = session?.user;
+
+if(!user){
+    alert('로그인 후 저장할 수 있습니다.');
+    return;
+}
+
+const {error} = await supabaseClient
+    .from('locations')
+    .upsert(locationData);
+
+if(error){
+    console.error('Supabase 지역 저장 실패:', error);
+    alert('지역 저장에 실패했습니다.\n'+error.message);
+    return;
+}
 
     if(editingGenericId){
         const x=arr.find(v=>v.id===editingGenericId);
@@ -1939,9 +1962,15 @@ document.addEventListener("click",function(e){
  const del=e.target.closest(".character-delete");
  if(del){e.stopPropagation();deleteCharacter(del.dataset.characterId);return;}
  const ged=e.target.closest("[data-generic-edit]");
+    
  if(ged){e.stopPropagation();openGenericEdit(ged.dataset.genericEdit);return;}
  const gdel=e.target.closest("[data-generic-delete]");
- if(gdel){e.stopPropagation();deleteGeneric(gdel.dataset.genericDelete);return;}
+ if(gdel){
+     e.stopPropagation();
+     deleteGeneric(gdel.dataset.genericDelete);
+     return;
+ }
+    
 });
 $('chapterClose').onclick=$('chapterCancel').onclick=()=>{$('chapterModal').classList.remove('show');editingChapterId=null;chapterStoryId=null};
 $('chapterSave').onclick=saveChapter;
