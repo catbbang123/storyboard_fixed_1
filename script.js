@@ -1861,7 +1861,6 @@ async function join(id){
 
     const user = session?.user;
 
-    // 로그인하지 않은 상태에서는 가입 상태를 변경하지 않음
     if(!user){
         alert('로그인 후 가입할 수 있습니다.');
         return;
@@ -1874,10 +1873,73 @@ async function join(id){
         return;
     }
 
-    w.joined=!w.joined;
-    w.members=Math.max(0,w.members+(w.joined?1:-1));
+    // 이미 가입되어 있는지 확인
+    const { data: existingMember, error: memberCheckError } =
+        await supabaseClient
+            .from('world_members')
+            .select('world_id, user_id, status')
+            .eq('world_id', id)
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-    await save();
+    if(memberCheckError){
+        console.error('세계관 가입 상태 확인 실패:', memberCheckError);
+        alert('세계관 가입 상태를 확인하지 못했습니다.');
+        return;
+    }
+
+    // 이미 가입되어 있으면 가입 취소
+    if(existingMember){
+        const { error } = await supabaseClient
+            .from('world_members')
+            .delete()
+            .eq('world_id', id)
+            .eq('user_id', user.id);
+
+        if(error){
+            console.error('세계관 가입 취소 실패:', error);
+            alert('세계관 가입 취소에 실패했습니다.\n' + error.message);
+            return;
+        }
+
+        myWorldMemberships =
+            myWorldMemberships.filter(
+                member =>
+                    !(member.world_id === id &&
+                      member.user_id === user.id)
+            );
+
+        w.joined=false;
+        w.members=Math.max(0,w.members-1);
+
+    }else{
+
+        // 세계관 가입
+        const { error } = await supabaseClient
+            .from('world_members')
+            .insert({
+                world_id:id,
+                user_id:user.id,
+                role:'member',
+                status:'approved'
+            });
+
+        if(error){
+            console.error('세계관 가입 실패:', error);
+            alert('세계관 가입에 실패했습니다.\n' + error.message);
+            return;
+        }
+
+        myWorldMemberships.push({
+            world_id:id,
+            user_id:user.id,
+            role:'member',
+            status:'approved'
+        });
+
+        w.joined=true;
+        w.members=(w.members||0)+1;
+    }
 
     current===id
         ? renderWorld()
