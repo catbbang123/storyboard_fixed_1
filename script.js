@@ -726,6 +726,8 @@ if(w.visibility === 'private'){
             member.status === 'approved'
     );
 
+    const canAddContent = isOwner || isApprovedMember;
+
     if(!isOwner && !isApprovedMember){
         return false;
     }
@@ -814,35 +816,257 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
 if($('pageJoin'))$('pageJoin').onclick=()=>join(w.id);if($('add'))$('add').onclick=()=>openItem(tab);requestAnimationFrame(force16x9)}
 
 function section(w){
- let labels={characters:'캐릭터',locations:'지역',stories:'소설',settings:'세계관 설정'};
- if(tab==='stories'){
-   return `<div class="content-head"><div><h2>소설</h2><small>스토리 표지를 만들고, 설정에서 회차를 작성할 수 있습니다.</small></div><button id="add">＋ 스토리 추가</button></div>`+
-   (w.stories.length?`<div class="story-grid">${w.stories.map(s=>`<article class="story-card">
-      <div class="story-card-cover">${s.coverImage?`<img src="${s.coverImage}" alt="${esc(s.name)}">`:'📖'}</div>
-      <div class="story-card-info"><h3>${esc(s.name)}</h3><p>${esc(s.description||'')}</p>
-      <div class="meta"><span>📚 ${s.chapters?.length||0}화</span><span>${s.visibility==='public'?'공개':'비공개'}</span></div>
-      <div class="story-card-actions"><button class="story-chapter-btn" data-story-chapters="${s.id}">✍️ 회차 쓰기</button><button class="story-edit-btn" data-story-edit="${s.id}">⚙️ 설정</button><button class="story-delete-btn" data-story-delete="${s.id}">🗑️ 삭제</button></div>
-      </div></article>`).join('')}</div>`:'<div class="empty">아직 스토리가 없습니다.<br><br>＋ 스토리 추가 버튼을 눌러 표지와 기본 설정부터 만들어보세요.</div>');
- }
- if(tab==='characters'){
-   const order=['주요 인물','조연','적대 세력','왕족 / 귀족','군대 / 기사단','기타'];
-   const groups=[...new Set(w.characters.map(c=>c.group||'기타'))].sort((a,b)=>{
-     let ai=order.indexOf(a),bi=order.indexOf(b); if(ai<0)ai=99;if(bi<0)bi=99;return ai-bi;
-   });
-   return `<div class="content-head"><div><h2>캐릭터</h2><small>캐릭터를 그룹별로 정리합니다.</small></div><button id="add">＋ 캐릭터 추가</button></div>`+
-   (groups.length?groups.map(g=>{
-      const chars=w.characters.filter(c=>(c.group||'기타')===g);
-      return `<div class="character-group-title"><h3>${esc(g)}</h3><span class="character-group-count">${chars.length}명</span></div>
-      <div class="character-grid">${chars.map(c=>`<article class="character-card">
-      <div class="character-card-photo">${c.photo?`<img src="${c.photo}" alt="${esc(c.name)}">`:'🧑‍🎨'}</div>
-      <div class="character-card-info"><h3>${esc(c.name)}</h3><p>${esc(c.description||'')}</p><div class="character-card-actions"><button class="character-edit" data-character-id="${c.id}">✏️ 수정</button><button class="character-delete" data-character-id="${c.id}">🗑️ 삭제</button></div></div>
-      </article>`).join('')}</div>`;
-   }).join(''):'<div class="empty">아직 캐릭터가 없습니다.<br><br>＋ 캐릭터 추가 버튼으로 첫 캐릭터를 만들어보세요.</div>');
- }
- let arr=w[tab]||[];
- const groupNames=[...new Set(arr.map(x=>x.group||'기본'))];
- return `<div class="content-head"><div><h2>${labels[tab]}</h2><small>${tab==='locations'?'지역을 그룹별로 정리하고 사진을 넣을 수 있습니다.':'세계관 설정을 그룹별로 정리하고 사진을 넣을 수 있습니다.'}</small></div><button id="add">＋ 추가</button></div>`+
- (arr.length?groupNames.map(g=>{const items=arr.filter(x=>(x.group||'기본')===g);return `<div class="generic-group-title"><h3>${esc(g)}</h3><span class="generic-group-count">${items.length}개</span></div><div class="generic-grid">${items.map(x=>`<article class="generic-card"><div class="generic-card-photo">${x.photo?`<img src="${x.photo}" alt="${esc(x.name)}">`:'🖼️'}</div><div class="generic-card-info"><h3>${esc(x.name)}</h3><p>${esc(x.description||'')}</p><div class="generic-card-actions"><button class="generic-edit" data-generic-edit="${x.id}">✏️ 수정</button><button class="generic-delete" data-generic-delete="${x.id}">🗑️ 삭제</button></div></div></article>`).join('')}</div>`}).join(''):'<div class="empty">아직 등록된 항목이 없습니다.<br><br>＋ 추가 버튼으로 첫 항목을 만들어보세요.</div>');
+    let labels={
+        characters:'캐릭터',
+        locations:'지역',
+        stories:'소설',
+        settings:'세계관 설정'
+    };
+
+    const isOwner = w.owner_id === currentUserId;
+
+    const isApprovedMember = myWorldMemberships.some(
+        member =>
+            member.world_id === w.id &&
+            member.status === 'approved'
+    );
+
+    const canAddContent = isOwner || isApprovedMember;
+
+    if(tab==='stories'){
+        return `<div class="content-head">
+            <div>
+                <h2>소설</h2>
+                <small>스토리 표지를 만들고, 설정에서 회차를 작성할 수 있습니다.</small>
+            </div>
+            ${canAddContent ? '<button id="add">＋ 스토리 추가</button>' : ''}
+        </div>`+
+
+        (w.stories.length
+        ? `<div class="story-grid">${w.stories.map(s=>`
+            <article class="story-card">
+                <div class="story-card-cover">
+                    ${s.coverImage
+                        ? `<img src="${s.coverImage}" alt="${esc(s.name)}">`
+                        : '📖'}
+                </div>
+
+                <div class="story-card-info">
+                    <h3>${esc(s.name)}</h3>
+                    <p>${esc(s.description||'')}</p>
+
+                    <div class="meta">
+                        <span>📚 ${s.chapters?.length||0}화</span>
+                        <span>${s.visibility==='public'?'공개':'비공개'}</span>
+                    </div>
+
+                    <div class="story-card-actions">
+
+                        ${canAddContent
+                            ? `<button class="story-chapter-btn"
+                                data-story-chapters="${s.id}">
+                                ✍️ 회차 쓰기
+                               </button>`
+                            : ''}
+
+                        ${canAddContent
+                            ? `<button class="story-edit-btn"
+                                data-story-edit="${s.id}">
+                                ⚙️ 설정
+                               </button>`
+                            : ''}
+
+                        ${canAddContent
+                            ? `<button class="story-delete-btn"
+                                data-story-delete="${s.id}">
+                                🗑️ 삭제
+                               </button>`
+                            : ''}
+
+                    </div>
+                </div>
+            </article>
+        `).join('')}</div>`
+        : `<div class="empty">
+            아직 스토리가 없습니다.<br><br>
+            ${canAddContent
+                ? '＋ 스토리 추가 버튼을 눌러 표지와 기본 설정부터 만들어보세요.'
+                : '이 세계관에 가입하면 스토리를 추가할 수 있습니다.'}
+        </div>`);
+    }
+
+    if(tab==='characters'){
+        const order=[
+            '주요 인물',
+            '조연',
+            '적대 세력',
+            '왕족 / 귀족',
+            '군대 / 기사단',
+            '기타'
+        ];
+
+        const groups=[
+            ...new Set(
+                w.characters.map(c=>c.group||'기타')
+            )
+        ].sort((a,b)=>{
+            let ai=order.indexOf(a),
+                bi=order.indexOf(b);
+
+            if(ai<0)ai=99;
+            if(bi<0)bi=99;
+
+            return ai-bi;
+        });
+
+        return `<div class="content-head">
+            <div>
+                <h2>캐릭터</h2>
+                <small>캐릭터를 그룹별로 정리합니다.</small>
+            </div>
+            ${canAddContent
+                ? '<button id="add">＋ 캐릭터 추가</button>'
+                : ''}
+        </div>`+
+
+        (groups.length
+        ? groups.map(g=>{
+            const chars=w.characters.filter(
+                c=>(c.group||'기타')===g
+            );
+
+            return `
+                <div class="character-group-title">
+                    <h3>${esc(g)}</h3>
+                    <span class="character-group-count">
+                        ${chars.length}명
+                    </span>
+                </div>
+
+                <div class="character-grid">
+                    ${chars.map(c=>`
+                        <article class="character-card">
+
+                            <div class="character-card-photo">
+                                ${c.photo
+                                    ? `<img src="${c.photo}" alt="${esc(c.name)}">`
+                                    : '🧑‍🎨'}
+                            </div>
+
+                            <div class="character-card-info">
+                                <h3>${esc(c.name)}</h3>
+                                <p>${esc(c.description||'')}</p>
+
+                                <div class="character-card-actions">
+
+                                    <button
+                                        class="character-edit"
+                                        data-character-id="${c.id}">
+                                        ✏️ 수정
+                                    </button>
+
+                                    <button
+                                        class="character-delete"
+                                        data-character-id="${c.id}">
+                                        🗑️ 삭제
+                                    </button>
+
+                                </div>
+                            </div>
+
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }).join('')
+        : `<div class="empty">
+            아직 캐릭터가 없습니다.<br><br>
+            ${canAddContent
+                ? '＋ 캐릭터 추가 버튼으로 첫 캐릭터를 만들어보세요.'
+                : '이 세계관에 가입하면 캐릭터를 추가할 수 있습니다.'}
+        </div>`);
+    }
+
+    let arr=w[tab]||[];
+
+    const groupNames=[
+        ...new Set(
+            arr.map(x=>x.group||'기본')
+        )
+    ];
+
+    return `
+        <div class="content-head">
+            <div>
+                <h2>${labels[tab]}</h2>
+                <small>
+                    ${tab==='locations'
+                        ? '지역을 그룹별로 정리하고 사진을 넣을 수 있습니다.'
+                        : '세계관 설정을 그룹별로 정리하고 사진을 넣을 수 있습니다.'}
+                </small>
+            </div>
+
+            ${canAddContent
+                ? '<button id="add">＋ 추가</button>'
+                : ''}
+        </div>`+
+
+        (arr.length
+        ? groupNames.map(g=>{
+            const items=arr.filter(
+                x=>(x.group||'기본')===g
+            );
+
+            return `
+                <div class="generic-group-title">
+                    <h3>${esc(g)}</h3>
+                    <span class="generic-group-count">
+                        ${items.length}개
+                    </span>
+                </div>
+
+                <div class="generic-grid">
+                    ${items.map(x=>`
+                        <article class="generic-card">
+
+                            <div class="generic-card-photo">
+                                ${x.photo
+                                    ? `<img src="${x.photo}" alt="${esc(x.name)}">`
+                                    : '🖼️'}
+                            </div>
+
+                            <div class="generic-card-info">
+                                <h3>${esc(x.name)}</h3>
+                                <p>${esc(x.description||'')}</p>
+
+                                <div class="generic-card-actions">
+
+                                    <button
+                                        class="generic-edit"
+                                        data-generic-edit="${x.id}">
+                                        ✏️ 수정
+                                    </button>
+
+                                    <button
+                                        class="generic-delete"
+                                        data-generic-delete="${x.id}">
+                                        🗑️ 삭제
+                                    </button>
+
+                                </div>
+                            </div>
+
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }).join('')
+        : `<div class="empty">
+            아직 등록된 항목이 없습니다.<br><br>
+            ${canAddContent
+                ? '＋ 추가 버튼으로 첫 항목을 만들어보세요.'
+                : '이 세계관에 가입하면 등록할 수 있습니다.'}
+        </div>`);
 }
 
 function setStoryCoverPreview(src=''){
