@@ -1790,14 +1790,22 @@ if(!user){
     return;
 }
 
+const table = tab === 'locations'
+    ? 'locations'
+    : 'world_settings';
+
 const {error} = await supabaseClient
-    .from('locations')
+    .from(table)
     .upsert(locationData);
 
-if(error){
-    console.error('Supabase 지역 저장 실패:', error);
-    alert('지역 저장에 실패했습니다.\n'+error.message);
-    return;
+if(error){ 
+    const typeName = tab === 'locations'
+        ? '지역'
+        : '세계관 설정';
+
+    console.error(`Supabase ${typeName} 저장 실패:`, error);
+    alert(`${typeName} 저장에 실패했습니다.\n` + error.message);
+    return; 
 }
 
     if(editingGenericId){
