@@ -857,28 +857,39 @@ function processStoryCover(file){
   setStoryCoverPreview(result);
  });
 }
+
 async function saveStoryToSupabase(story){
- const row={
-   id:story.id,
-   world_id:current,
-   name:story.name,
-   description:story.description || '',
-   visibility:story.visibility || 'public',
-   cover_image:story.coverImage || '',
-   updated_at:new Date().toISOString()
- };
+    const row={
+        id:story.id,
+        world_id:current,
+        name:story.name,
+        description:story.description || '',
+        visibility:story.visibility || 'public',
+        cover_image:story.coverImage || '',
+        updated_at:new Date().toISOString()
+    };
 
- const {data,error}=await supabaseClient
-   .from('stories')
-   .upsert(row,{onConflict:'id'})
-   .select()
-   .single();
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
 
- if(error){
-   console.error('Supabase 소설 저장 실패:',error);
-   alert('소설 저장에 실패했습니다.\\n'+error.message);
-   return false;
- }
+    const user = session?.user;
+
+    if(!user){
+        alert('로그인 후 저장할 수 있습니다.');
+        return false;
+    }
+
+    const {data,error}=await supabaseClient
+        .from('stories')
+        .upsert(row,{onConflict:'id'})
+        .select()
+        .single();
+
+    if(error){
+        console.error('Supabase 소설 저장 실패:',error);
+        alert('소설 저장에 실패했습니다.\n'+error.message);
+        return false;
+    }
 
  story.createdAt=data?.created_at ? new Date(data.created_at).getTime() : (story.createdAt || Date.now());
  story.updatedAt=data?.updated_at ? new Date(data.updated_at).getTime() : Date.now();
