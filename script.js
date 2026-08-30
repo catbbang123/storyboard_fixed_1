@@ -1726,6 +1726,7 @@ function openCharacterEdit(id){
  setCharacterPhotoPreview(c.photo||"");
  $("itemModal").classList.add("show");
 }
+
 async function deleteCharacter(id){
 
     const { data: { session } } =
@@ -1737,11 +1738,18 @@ async function deleteCharacter(id){
         alert('로그인 후 삭제할 수 있습니다.');
         return;
     }
-    
+
     const w=get(current);
     const c=w?.characters.find(x=>x.id===id);
 
     if(!c)return;
+
+    // 세계관 소유자는 모든 캐릭터를 관리할 수 있음
+    // 가입자는 자신이 만든 캐릭터만 삭제할 수 있음
+    if(w.owner_id !== user.id && c.owner_id !== user.id){
+        alert('본인이 만든 캐릭터만 삭제할 수 있습니다.');
+        return;
+    }
 
     if(!confirm(`"${c.name}" 캐릭터를 삭제하시겠습니까?\n삭제하면 되돌릴 수 없습니다.`)){
         return;
@@ -2004,14 +2012,44 @@ if(itemType==='settings'){
   const characterId=editingCharacterId
     || 'char-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
 
-  const characterData={
+const { data: { session } } =
+    await supabaseClient.auth.getSession();
+
+const user = session?.user;
+
+if(!user){
+    alert('로그인 후 캐릭터를 추가하거나 수정할 수 있습니다.');
+    return;
+}
+
+const world = get(current);
+
+if(!world){
+    alert('세계관을 찾을 수 없습니다.');
+    return;
+}
+
+const isOwner = world.owner_id === user.id;
+const existingCharacter = editingCharacterId
+    ? world.characters.find(x => x.id === editingCharacterId)
+    : null;
+
+if(editingCharacterId && existingCharacter){
+    if(existingCharacter.owner_id !== user.id){
+        alert('본인이 만든 캐릭터만 수정할 수 있습니다.');
+        return;
+    }
+}
+
+const characterData={
     id:characterId,
     world_id:current,
+    owner_id:existingCharacter?.owner_id || user.id,
     name:n,
     description:d,
     group_name:group,
     photo:selectedCharacterPhoto || ''
-  };
+};
 
 const { data: { session } } =
     await supabaseClient.auth.getSession();
