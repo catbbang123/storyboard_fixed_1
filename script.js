@@ -2041,16 +2041,6 @@ if(editingCharacterId && existingCharacter){
     }
 }
 
-const characterData={
-    id:characterId,
-    world_id:current,
-    owner_id:existingCharacter?.owner_id || user.id,
-    name:n,
-    description:d,
-    group_name:group,
-    photo:selectedCharacterPhoto || ''
-};
-
 const { data: { session } } =
     await supabaseClient.auth.getSession();
 
@@ -2061,6 +2051,16 @@ if(!user){
     return;
 }
 
+const characterData={
+    id:characterId,
+    world_id:current,
+    owner_id:existingCharacter?.owner_id || user.id,
+    name:n,
+    description:d,
+    group_name:group,
+    photo:selectedCharacterPhoto || ''
+};
+     
   const {error}=await supabaseClient
     .from('characters')
     .upsert(characterData);
