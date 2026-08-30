@@ -1764,7 +1764,18 @@ function openItem(type){if(type==='stories'){openStoryModal();return;}editingCha
    renderWorld();
    return;
  }
-if(itemType==='locations'){
+
+const { data: { session } } =
+    await supabaseClient.auth.getSession();
+
+const user = session?.user;
+
+if(!user){
+    alert('로그인 후 저장할 수 있습니다.');
+    return;
+}
+    
+    if(itemType==='locations'){
     const arr=w.locations;
     const group=getGenericGroupValue();
 
