@@ -992,37 +992,56 @@ async function openChapterModal(storyId,chapterId=null){
 }
 
 async function saveChapter(){
- const w=get(current),s=w?.stories.find(x=>x.id===chapterStoryId);if(!s)return;
- const name=$('chapterName').value.trim(),body=$('chapterBody').value;
- if(!name)return alert('회차 제목을 입력해주세요.');
+    const w=get(current),s=w?.stories.find(x=>x.id===chapterStoryId);
+    if(!s)return;
 
- const chapterId = editingChapterId || ('chapter-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
+    const name=$('chapterName').value.trim(),body=$('chapterBody').value;
+    if(!name)return alert('회차 제목을 입력해주세요.');
 
- // Supabase chapters 테이블에 저장할 데이터
-const chapterRow = {
-  id: chapterId,
-  story_id: chapterStoryId,
-  chapter_number: editingChapterId
-    ? (s.chapters.findIndex(x => x.id === editingChapterId) + 1)
-    : (s.chapters.length + 1),
-  name: name,
-  body: body,
-  updated_at: new Date().toISOString()
-};
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
 
- const { error } = await supabaseClient
-   .from('chapters')
-   .upsert(chapterRow);
+    const user=session?.user;
 
- if(error){
-   console.error('Supabase 회차 저장 실패:', error);
-   alert('회차 저장에 실패했습니다.\n' + error.message);
-   return;
- }
+    if(!user){
+        alert('로그인 후 회차를 작성하거나 수정할 수 있습니다.');
+        return;
+    }
 
- if(editingChapterId){
-   const c=s.chapters.find(x=>x.id===editingChapterId);
-   if(c){c.name=name;c.body=body;}
+    if(w.owner_id !== user.id){
+        alert('이 세계관의 소유자만 회차를 작성하거나 수정할 수 있습니다.');
+        return;
+    }
+
+    const chapterId = editingChapterId
+        || ('chapter-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
+
+    // Supabase chapters 테이블에 저장할 데이터
+    const chapterRow = {
+        id: chapterId,
+        story_id: chapterStoryId,
+        chapter_number: editingChapterId
+            ? (s.chapters.findIndex(x => x.id === editingChapterId) + 1)
+            : (s.chapters.length + 1),
+        name: name,
+        body: body,
+        updated_at: new Date().toISOString()
+    };
+
+    const { error } = await supabaseClient
+        .from('chapters')
+        .upsert(chapterRow);
+
+    if(error){
+        console.error('Supabase 회차 저장 실패:', error);
+        alert('회차 저장에 실패했습니다.\n' + error.message);
+        return;
+    }
+
+    if(editingChapterId){
+        const c=s.chapters.find(x=>x.id===editingChapterId);
+        if(c){c.name=name;c.body=body;}
+
  }else{
    s.chapters.push({
      id: chapterId,
@@ -1408,22 +1427,39 @@ sessionStorage.setItem('storyboard_current_chapter', String(index));
 }
 
 async function deleteChapter(storyId,chapterId){
- const w=get(current),s=w?.stories.find(x=>x.id===storyId);
- if(!s)return;
- const c=s.chapters.find(x=>x.id===chapterId);
- if(!c)return;
- if(!confirm(`"${c.name}" 회차를 삭제하시겠습니까?\n삭제하면 되돌릴 수 없습니다.`))return;
+    const w=get(current),s=w?.stories.find(x=>x.id===storyId);
+    if(!s)return;
 
-const { error } = await supabaseClient
-  .from('chapters')
-  .delete()
-  .eq('id', chapterId);
+    const c=s.chapters.find(x=>x.id===chapterId);
+    if(!c)return;
 
-if(error){
-  console.error('Supabase 회차 삭제 실패:', error);
-  alert('회차 삭제에 실패했습니다.\n' + error.message);
-  return;
-}
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    const user=session?.user;
+
+    if(!user){
+        alert('로그인 후 회차를 삭제할 수 있습니다.');
+        return;
+    }
+
+    if(w.owner_id !== user.id){
+        alert('이 세계관의 소유자만 회차를 삭제할 수 있습니다.');
+        return;
+    }
+
+    if(!confirm(`"${c.name}" 회차를 삭제하시겠습니까?\n삭제하면 되돌릴 수 없습니다.`))return;
+
+    const { error } = await supabaseClient
+        .from('chapters')
+        .delete()
+        .eq('id', chapterId);
+
+    if(error){
+        console.error('Supabase 회차 삭제 실패:', error);
+        alert('회차 삭제에 실패했습니다.\n' + error.message);
+        return;
+    }
 
 s.chapters = s.chapters.filter(x => x.id !== chapterId);
 
