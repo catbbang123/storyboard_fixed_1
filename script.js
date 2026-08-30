@@ -2046,6 +2046,13 @@ if(!user){
     return;
 }
 
+if(editingCharacterId && existingCharacter){
+    if(existingCharacter.owner_id !== user.id){
+        alert('본인이 만든 캐릭터만 수정할 수 있습니다.');
+        return;
+    }
+}
+
 const characterData={
     id:characterId,
     world_id:current,
