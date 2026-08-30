@@ -1636,6 +1636,17 @@ function openCharacterEdit(id){
  $("itemModal").classList.add("show");
 }
 async function deleteCharacter(id){
+
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    const user = session?.user;
+
+    if(!user){
+        alert('로그인 후 삭제할 수 있습니다.');
+        return;
+    }
+    
     const w=get(current);
     const c=w?.characters.find(x=>x.id===id);
 
