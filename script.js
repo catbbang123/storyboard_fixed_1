@@ -917,6 +917,23 @@ async function deleteStory(id){
  const w=get(current),s=w?.stories.find(x=>x.id===id);if(!s)return;
  if(!confirm(`"${s.name}" 스토리를 삭제하시겠습니까?\\n스토리와 모든 회차가 삭제됩니다.`))return;
 
+const { data: { session } } =
+    await supabaseClient.auth.getSession();
+
+const user = session?.user;
+
+if(!user){
+    alert('로그인 후 소설을 삭제할 수 있습니다.');
+    return false;
+}
+
+const world = get(current);
+
+if(!world || world.owner_id !== user.id){
+    alert('이 세계관의 소유자만 소설을 삭제할 수 있습니다.');
+    return false;
+}
+    
  const {data,error}=await supabaseClient
    .from('stories')
    .delete()
