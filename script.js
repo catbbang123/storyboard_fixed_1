@@ -954,14 +954,41 @@ if(!world || world.owner_id !== user.id){
  w.stories=w.stories.filter(x=>x.id!==id);
  renderWorld();
 }
-function openChapterModal(storyId,chapterId=null){
- const w=get(current),s=w?.stories.find(x=>x.id===storyId);if(!s)return;
- const c=chapterId?s.chapters.find(x=>x.id===chapterId):null;
- chapterStoryId=storyId;editingChapterId=chapterId;
- $('chapterTitle').textContent=chapterId?'회차 수정':'새 회차 쓰기';
- $('chapterName').value=c?.name||`${(s.chapters.length||0)+1}화`;
- $('chapterBody').value=c?.body||'';
- $('chapterModal').classList.add('show');
+
+async function openChapterModal(storyId,chapterId=null){
+
+    const w=get(current);
+
+    if(!w)return;
+
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    const user=session?.user;
+
+    if(!user){
+        alert('로그인 후 회차를 작성하거나 수정할 수 있습니다.');
+        return;
+    }
+
+    if(w.owner_id !== user.id){
+        alert('이 세계관의 소유자만 회차를 작성하거나 수정할 수 있습니다.');
+        return;
+    }
+
+    const s=w.stories.find(x=>x.id===storyId);
+    if(!s)return;
+
+    const c=chapterId?s.chapters.find(x=>x.id===chapterId):null;
+
+    chapterStoryId=storyId;
+    editingChapterId=chapterId;
+
+    $('chapterTitle').textContent=chapterId?'회차 수정':'새 회차 쓰기';
+    $('chapterName').value=c?.name||`${(s.chapters.length||0)+1}화`;
+    $('chapterBody').value=c?.body||'';
+
+    $('chapterModal').classList.add('show');
 }
 
 async function saveChapter(){
