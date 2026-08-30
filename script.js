@@ -1802,13 +1802,18 @@ function openItem(type){if(type==='stories'){openStoryModal();return;}editingCha
      createdAt:Date.now()
    };
 
-   story.name=storyName;
-   story.description=storyDesc;
-   story.visibility=storyVisibility;
-   story.coverImage=storyCover||'';
+const updatedStory = {
+    ...story,
+    name: storyName,
+    description: storyDesc,
+    visibility: storyVisibility,
+    coverImage: storyCover || ''
+};
 
-   const success=await saveStoryToSupabase(story);
-   if(!success)return;
+const success = await saveStoryToSupabase(updatedStory);
+if(!success)return;
+
+Object.assign(story, updatedStory);
 
    if(!existing)w.stories.push(story);
 
