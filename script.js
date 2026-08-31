@@ -423,7 +423,7 @@ async function save(){
         description: w.description,
         genre: w.genre,
         visibility: w.visibility,
-        owner_id: w.owner_id,
+        owner_id: w.owner_id || w.created_by || null,
         members: w.members ?? 1,
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
@@ -775,7 +775,10 @@ function renderHome(q=''){
     // 로그아웃 상태에서는 비공개 세계관을 목록에서 숨김
     let visibleWorlds = worlds.filter(w => {
 if(w.visibility === 'private'){
-    const isOwner = w.owner_id === currentUserId;
+    const isOwner = !!currentUserId && (
+        w.owner_id === currentUserId ||
+        w.created_by === currentUserId
+    );
 
     const isApprovedMember = myWorldMemberships.some(
         member =>
@@ -842,7 +845,10 @@ async function openWorld(id){
 
 function renderWorld(){
     let w=get(current);
-    const isOwner = w.owner_id === currentUserId;
+    const isOwner = !!currentUserId && (
+        w.owner_id === currentUserId ||
+        w.created_by === currentUserId
+    );
     const isApprovedMember = myWorldMemberships.some(
         member => member.world_id === w.id && member.status === 'approved'
     );
@@ -1848,6 +1854,8 @@ $('msave').onclick = async () => {
             genre: getGenreValue(),
             visibility: $('visibility').value,
             members: 1,
+            owner_id: currentUserId || null,
+            created_by: currentUserId || null,
             icon: '✦',
             theme: $('theme').value,
             coverImage: selectedCover || '',
