@@ -2342,7 +2342,8 @@ if(itemType==='settings'){
              name:n,
              description:d,
              group:group,
-             photo:genericPhoto||''
+             photo:genericPhoto||'',
+             created_by:user.id
          });
      }
 
@@ -2470,6 +2471,13 @@ renderWorld();
 
 $('search').oninput=e=>renderHome(e.target.value);document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);$('logo').onclick=home;document.addEventListener('click',e=>{if(!e.target.closest('.more'))document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'))});document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal.show').forEach(x=>x.classList.remove('show'));editId=null;selectedCover=''}});
 document.addEventListener("click",function(e){
+ const addButton=e.target.closest("#add");
+ if(addButton){
+   e.preventDefault();
+   e.stopPropagation();
+   openItem(tab);
+   return;
+ }
  const storyChapter=e.target.closest("[data-story-chapters]");
  if(storyChapter){e.stopPropagation();renderStorySettings(storyChapter.dataset.storyChapters);return;}
  const storyEdit=e.target.closest("[data-story-edit]");
