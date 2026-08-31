@@ -33,11 +33,39 @@
         <span id="profileAvatar">👤</span>
     </button>
 
-    <div id="profileMenu" style="display:none;">
-        <div id="profileName"></div>
-        <div id="profileEmail"></div>
-        <button id="logoutBtn" type="button">로그아웃</button>
+<div id="profileMenu" style="display:none;">
+
+    <div id="profileName"></div>
+    <div id="profileEmail"></div>
+
+    <div class="profile-nickname">
+        <label for="nicknameInput">닉네임</label>
+
+        <input
+            id="nicknameInput"
+            type="text"
+            maxlength="20"
+            placeholder="닉네임을 입력하세요"
+        >
+
+        <button
+            id="saveNicknameBtn"
+            type="button"
+        >
+            닉네임 저장
+        </button>
+
+        <small>
+            다른 사용자에게 표시되는 이름입니다.
+        </small>
     </div>
+
+    <button id="logoutBtn" type="button">
+        로그아웃
+    </button>
+
+</div>
+  
 </div>
 </div>
 </header>
