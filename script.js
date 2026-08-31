@@ -545,9 +545,9 @@ async function load(){
     // 내가 소유한 세계관의 가입 대기 요청
     pendingWorldMembers = [];
     if(currentUserId){
-        const ownedWorldIds = worlds
-            .filter(w => w.owner_id === currentUserId)
-            .map(w => w.id);
+        const ownedWorldIds = (data || [])
+        .filter(w => w.owner_id === currentUserId)
+        .map(w => w.id);
 
         if(ownedWorldIds.length){
             const { data: pendingData, error: pendingError } =
