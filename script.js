@@ -326,7 +326,8 @@ async function loadCharactersFromSupabase(worldId){
         name: c.name,
         description: c.description || '',
         group: c.group_name || '',
-        photo: c.photo || ''
+        photo: c.photo || '',
+         owner_id: c.owner_id || null
     }));
 }
 
@@ -975,9 +976,14 @@ function section(w){
                                     : '🧑‍🎨'}
                             </div>
 
-                            <div class="character-card-info">
-                                <h3>${esc(c.name)}</h3>
-                                <p>${esc(c.description||'')}</p>
+<div class="character-card-info">
+    <h3>${esc(c.name)}</h3>
+
+    <small class="author-name">
+        👤 ${esc(profilesCache[c.owner_id] || '사용자')}
+    </small>
+
+    <p>${esc(c.description||'')}</p>
 
                                 <div class="character-card-actions">
 
@@ -2345,6 +2351,19 @@ if(!world){
 }
 
 const isOwner = world.owner_id === user.id;
+
+const isApprovedMember = myWorldMemberships.some(
+    member =>
+        member.world_id === world.id &&
+        member.user_id === user.id &&
+        member.status === 'approved'
+);
+
+if(!isOwner && !isApprovedMember){
+    alert('이 세계관에 가입한 사용자만 캐릭터를 추가할 수 있습니다.');
+    return;
+}
+     
 const existingCharacter = editingCharacterId
     ? world.characters.find(x => x.id === editingCharacterId)
     : null;
