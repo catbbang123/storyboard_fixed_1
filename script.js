@@ -633,7 +633,8 @@ async function load(){
                 name: l.name,
                 description: l.description || '',
                 group: l.group_name || '',
-                photo: l.photo || ''
+                photo: l.photo || '',
+                created_by: l.created_by || null
             })),
 
 // 소설 (수정)
@@ -2238,15 +2239,6 @@ if(!user){
     const locationId = editingGenericId
         || 'loc-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
 
-    const locationData = {
-        id: locationId,
-        world_id: current,
-        name: n,
-        description: d,
-        group_name: group,
-        photo: genericPhoto || ''
-    };
-
 const { data: { session } } =
     await supabaseClient.auth.getSession();
 
@@ -2256,6 +2248,16 @@ if(!user){
     alert('로그인 후 저장할 수 있습니다.');
     return;
 }
+
+const locationData = {
+    id: locationId,
+    world_id: current,
+    name: n,
+    description: d,
+    group_name: group,
+    photo: genericPhoto || '',
+    created_by: user.id
+};
 
 const table = tab === 'locations'
     ? 'locations'
