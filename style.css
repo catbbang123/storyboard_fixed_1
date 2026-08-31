@@ -517,3 +517,11 @@
     font-size:11px;
   }
 }
+
+.author-name{
+    display:block;
+    margin:4px 0 8px;
+    font-size:13px;
+    color:#777;
+    font-weight:500;
+}
