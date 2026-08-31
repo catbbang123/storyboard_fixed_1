@@ -3055,13 +3055,53 @@ document.addEventListener('DOMContentLoaded', function(){
             return;
         }
 
-        const { error } =
-            await supabaseClient
-                .from('profiles')
-                .update({
-                    nickname: nickname
-                })
-                .eq('user_id', user.id);
+const { data: existingProfile, error: profileCheckError } =
+    await supabaseClient
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+if(profileCheckError){
+    console.error('프로필 확인 실패:', profileCheckError);
+    alert('프로필을 확인하지 못했습니다.\n' + profileCheckError.message);
+    return;
+}
+
+let saveError = null;
+
+if(existingProfile){
+    // 기존 프로필이 있으면 닉네임 변경
+    const { error } = await supabaseClient
+        .from('profiles')
+        .update({
+            nickname: nickname
+        })
+        .eq('user_id', user.id);
+
+    saveError = error;
+}else{
+    // 새 계정이라 프로필이 없으면 새로 생성
+    const { error } = await supabaseClient
+        .from('profiles')
+        .insert({
+            user_id: user.id,
+            nickname: nickname
+        });
+
+    saveError = error;
+}
+
+if(saveError){
+    console.error('닉네임 저장 실패:', saveError);
+
+    alert(
+        '닉네임 저장에 실패했습니다.\n' +
+        saveError.message
+    );
+
+    return;
+}
 
         if(error){
 
