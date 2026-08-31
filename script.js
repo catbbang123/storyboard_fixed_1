@@ -591,7 +591,8 @@ async function load(){
                 name: c.name,
                 description: c.description || '',
                 group: c.group_name || '',
-                photo: c.photo || ''
+                photo: c.photo || '',
+                owner_id: c.owner_id || null
             })),
 
         // 지역
