@@ -667,7 +667,8 @@ async function load(){
                 name: s.name,
                 description: s.description || '',
                 group: s.group_name || '세계관 기본 설정',
-                photo: s.photo || ''
+                photo: s.photo || '',
+                created_by: s.created_by || null
             }))
     }));
 
@@ -868,7 +869,7 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
     sessionStorage.setItem('storyboard_current_tab',tab);
     renderWorld();
 });
-if($('pageJoin'))$('pageJoin').onclick=()=>join(w.id);if($('add'))$('add').onclick=()=>openItem(tab);requestAnimationFrame(force16x9)}
+if($('pageJoin'))$('pageJoin').onclick=()=>join(w.id);requestAnimationFrame(force16x9)}
 
 function section(w){
     let labels={
@@ -1145,6 +1146,16 @@ function processStoryCover(file){
 }
 
 async function saveStoryToSupabase(story){
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    const user = session?.user;
+
+    if(!user){
+        alert('로그인 후 저장할 수 있습니다.');
+        return false;
+    }
+
     const row={
         id:story.id,
         world_id:current,
@@ -2324,7 +2335,7 @@ if(itemType==='settings'){
          description:d,
          group_name:group,
          photo:genericPhoto||'',
-         created_by: (await supabaseClient.auth.getUser()).data.user?.id || null
+         created_by: user.id
      };
 
      const {error}=await supabaseClient
@@ -2948,4 +2959,3 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 
 });
-
