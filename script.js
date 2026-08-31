@@ -2416,6 +2416,7 @@ const characterData={
       c.description=d;
       c.group=group;
       c.photo=selectedCharacterPhoto;
+        c.owner_id=existingCharacter?.owner_id || user.id;
     }
   }else{
     w.characters.push({
@@ -2423,7 +2424,8 @@ const characterData={
       name:n,
       description:d,
       group:group,
-      photo:selectedCharacterPhoto||''
+      photo:selectedCharacterPhoto||'',
+        owner_id:user.id
     });
   }
 
