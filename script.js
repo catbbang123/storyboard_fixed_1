@@ -908,9 +908,7 @@ function section(w){
 
                 <div class="story-card-info">
                     <h3>${esc(s.name)}</h3>
-                    <small class="author-name">
-                        👤 익명
-                    </small>
+                    <small class="author-name">👤 ${esc(profilesCache[s.created_by] || '사용자')}</small>
                     <p>${esc(s.description||'')}</p>
 
                     <div class="meta">
@@ -1100,9 +1098,7 @@ function section(w){
 
                             <div class="generic-card-info">
                                 <h3>${esc(x.name)}</h3>
-                                <small class="author-name">
-                                    👤 익명
-                                </small>
+                                <small class="author-name">👤 ${esc(profilesCache[x.created_by] || '사용자')}</small>
                                 <p>${esc(x.description||'')}</p>
 
                                 <div class="generic-card-actions">
@@ -1156,6 +1152,7 @@ async function saveStoryToSupabase(story){
         description:story.description || '',
         visibility:story.visibility || 'public',
         cover_image:story.coverImage || '',
+        created_by:story.created_by || user.id,
         updated_at:new Date().toISOString()
     };
 
