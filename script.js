@@ -360,6 +360,8 @@ function getGenreValue(){
 
 let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=null,editingCharacterId=null,editingStoryId=null,editingChapterId=null,storyCover='',chapterStoryId=null,editingGenericId=null,genericPhoto='',myWorldMemberships=[],currentUserId=null;
 
+let profilesCache={};
+
 const defaults=[];
 
 async function save(){
@@ -471,6 +473,26 @@ async function load(){
 
     currentUserId = currentUserData?.user?.id;
 
+    // ①-2 사용자 닉네임 불러오기
+    const { data: profileData, error: profileError } =
+        await supabaseClient
+            .from('profiles')
+            .select('user_id, nickname');
+
+    if(profileError){
+        console.error(
+            'Supabase profiles 불러오기 실패:',
+            profileError
+        );
+    }else{
+        profilesCache = {};
+
+        (profileData || []).forEach(profile => {
+            profilesCache[profile.user_id] =
+                profile.nickname || '사용자';
+        });
+    }
+    
     if(currentUserId){
         const { data: membershipData, error: membershipError } =
             await supabaseClient
