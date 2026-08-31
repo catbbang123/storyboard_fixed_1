@@ -2292,7 +2292,8 @@ if(error){
             name:n,
             description:d,
             group:group,
-            photo:genericPhoto || ''
+            photo:genericPhoto || '',
+            created_by:user.id
         });
     }
 
