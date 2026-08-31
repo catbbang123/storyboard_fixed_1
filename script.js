@@ -646,7 +646,8 @@ async function load(){
                 description: st.description || '',
                 visibility: st.visibility || 'public',
                 coverImage: st.cover_image || '',
-                // Supabase의 chapters 테이블에서 해당 story_id와 일치하는 회차들을 매핑
+                created_by: st.created_by || null,
+                 // Supabase의 chapters 테이블에서 해당 story_id와 일치하는 회차들을 매핑
                 chapters: (chapterData || [])
                     .filter(ch => ch.story_id === st.id)
                     .map(ch => ({
@@ -2199,7 +2200,8 @@ function openItem(type){if(type==='stories'){openStoryModal();return;}editingCha
      description:'',
      visibility:'public',
      coverImage:'',
-     chapters:[],
+     created_by:currentUserId || null,
+      chapters:[],
      createdAt:Date.now()
    };
 
@@ -2342,8 +2344,7 @@ if(itemType==='settings'){
              name:n,
              description:d,
              group:group,
-             photo:genericPhoto||'',
-             created_by:user.id
+             photo:genericPhoto||''
          });
      }
 
@@ -2471,13 +2472,6 @@ renderWorld();
 
 $('search').oninput=e=>renderHome(e.target.value);document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);$('logo').onclick=home;document.addEventListener('click',e=>{if(!e.target.closest('.more'))document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'))});document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal.show').forEach(x=>x.classList.remove('show'));editId=null;selectedCover=''}});
 document.addEventListener("click",function(e){
- const addButton=e.target.closest("#add");
- if(addButton){
-   e.preventDefault();
-   e.stopPropagation();
-   openItem(tab);
-   return;
- }
  const storyChapter=e.target.closest("[data-story-chapters]");
  if(storyChapter){e.stopPropagation();renderStorySettings(storyChapter.dataset.storyChapters);return;}
  const storyEdit=e.target.closest("[data-story-edit]");
