@@ -3103,21 +3103,6 @@ if(saveError){
     return;
 }
 
-        if(error){
-
-            console.error(
-                '닉네임 저장 실패:',
-                error
-            );
-
-            alert(
-                '닉네임 저장에 실패했습니다.\n' +
-                error.message
-            );
-
-            return;
-        }
-
         // 현재 사용자의 닉네임 캐시도 즉시 변경
         profilesCache[user.id] = nickname;
 
