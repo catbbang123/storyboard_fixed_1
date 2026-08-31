@@ -316,6 +316,24 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
     }
 
+    const mobileMyInfoBtn =
+    document.querySelector('.mobile button:last-child');
+
+if(mobileMyInfoBtn && profileMenu){
+
+    mobileMyInfoBtn.addEventListener('click', (e) => {
+
+        e.stopPropagation();
+
+        const isOpen =
+            profileMenu.style.display === 'block';
+
+        profileMenu.style.display =
+            isOpen ? 'none' : 'block';
+
+    });
+
+}
 
     // ==========================================
     // 메뉴 바깥 클릭 → 닫기
