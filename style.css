@@ -21,14 +21,18 @@
     padding-top:12px;
     background:#fff;
 }
+
 @media(max-width:700px){
     .box{
         width:calc(100vw - 24px);
         max-height:calc(100dvh - 20px);
         padding:20px;
     }
+
     .cover-preview{
-        height:150px;
+        width:100%;
+        height:auto;
+        aspect-ratio:16 / 9;
     }
 }
 
