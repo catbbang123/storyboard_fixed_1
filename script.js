@@ -1146,16 +1146,6 @@ function processStoryCover(file){
 }
 
 async function saveStoryToSupabase(story){
-    const { data: { session } } =
-        await supabaseClient.auth.getSession();
-
-    const user = session?.user;
-
-    if(!user){
-        alert('로그인 후 저장할 수 있습니다.');
-        return false;
-    }
-
     const row={
         id:story.id,
         world_id:current,
@@ -1163,7 +1153,7 @@ async function saveStoryToSupabase(story){
         description:story.description || '',
         visibility:story.visibility || 'public',
         cover_image:story.coverImage || '',
-        created_by:story.created_by || user.id,
+        created_by:story.created_by || currentUserId || null,
         updated_at:new Date().toISOString()
     };
 
@@ -2253,16 +2243,6 @@ if(!user){
     const locationId = editingGenericId
         || 'loc-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
 
-const { data: { session } } =
-    await supabaseClient.auth.getSession();
-
-const user = session?.user;
-
-if(!user){
-    alert('로그인 후 저장할 수 있습니다.');
-    return;
-}
-
 const locationData = {
     id: locationId,
     world_id: current,
@@ -2959,3 +2939,4 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 
 });
+
