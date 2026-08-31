@@ -80,6 +80,28 @@ async function updateAuthUI(session = null){
         user.email?.split('@')[0] ||
         '사용자';
 
+    // ==========================================
+// 사이트 닉네임 불러오기
+// Google 이름/이메일은 공개 닉네임으로 사용하지 않음
+// ==========================================
+let nickname = '사용자';
+
+const { data: myProfile, error: myProfileError } =
+    await supabaseClient
+        .from('profiles')
+        .select('nickname')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+if(myProfileError){
+    console.error(
+        '내 프로필 불러오기 실패:',
+        myProfileError
+    );
+}else if(myProfile?.nickname){
+    nickname = myProfile.nickname;
+}
+
     const avatar =
         metadata.avatar_url ||
         metadata.picture ||
@@ -96,9 +118,17 @@ async function updateAuthUI(session = null){
     }
 
     // 프로필 이름
-    if(profileName){
-        profileName.textContent = name;
-    }
+if(profileName){
+    profileName.textContent = nickname;
+}
+
+const nicknameInput =
+    document.getElementById('nicknameInput');
+
+if(nicknameInput){
+    nicknameInput.value =
+        nickname === '사용자' ? '' : nickname;
+}
 
     // 프로필 이메일
     if(profileEmail){
@@ -2828,4 +2858,88 @@ if(imageCropApply){
         closeImageCropModal();
     });
 }
+
+// ==========================================
+// 닉네임 저장
+// ==========================================
+document.addEventListener('DOMContentLoaded', function(){
+
+    const saveNicknameBtn =
+        document.getElementById('saveNicknameBtn');
+
+    if(!saveNicknameBtn) return;
+
+    saveNicknameBtn.addEventListener('click', async function(){
+
+        const { data: userData, error: userError } =
+            await supabaseClient.auth.getUser();
+
+        if(userError || !userData?.user){
+
+            alert('로그인 상태를 확인하지 못했습니다.');
+            return;
+
+        }
+
+        const user = userData.user;
+
+        const nicknameInput =
+            document.getElementById('nicknameInput');
+
+        const nickname =
+            nicknameInput?.value.trim() || '';
+
+        if(!nickname){
+
+            alert('닉네임을 입력해주세요.');
+            nicknameInput?.focus();
+
+            return;
+        }
+
+        if(nickname.length > 20){
+
+            alert('닉네임은 20자 이하로 입력해주세요.');
+            return;
+        }
+
+        const { error } =
+            await supabaseClient
+                .from('profiles')
+                .update({
+                    nickname: nickname
+                })
+                .eq('user_id', user.id);
+
+        if(error){
+
+            console.error(
+                '닉네임 저장 실패:',
+                error
+            );
+
+            alert(
+                '닉네임 저장에 실패했습니다.\n' +
+                error.message
+            );
+
+            return;
+        }
+
+        // 현재 사용자의 닉네임 캐시도 즉시 변경
+        profilesCache[user.id] = nickname;
+
+        // 프로필 메뉴 이름 변경
+        const profileName =
+            document.getElementById('profileName');
+
+        if(profileName){
+            profileName.textContent = nickname;
+        }
+
+        alert('닉네임이 저장되었습니다.');
+
+    });
+
+});
 
