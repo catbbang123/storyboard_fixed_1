@@ -909,7 +909,7 @@ function section(w){
                 <div class="story-card-info">
                     <h3>${esc(s.name)}</h3>
                     <small class="author-name">
-                        👤 ${esc(profilesCache[s.created_by] || '사용자')}
+                        👤 익명
                     </small>
                     <p>${esc(s.description||'')}</p>
 
@@ -1101,7 +1101,7 @@ function section(w){
                             <div class="generic-card-info">
                                 <h3>${esc(x.name)}</h3>
                                 <small class="author-name">
-                                    👤 ${esc(profilesCache[x.created_by] || '사용자')}
+                                    👤 익명
                                 </small>
                                 <p>${esc(x.description||'')}</p>
 
@@ -1149,6 +1149,16 @@ function processStoryCover(file){
 }
 
 async function saveStoryToSupabase(story){
+    const row={
+        id:story.id,
+        world_id:current,
+        name:story.name,
+        description:story.description || '',
+        visibility:story.visibility || 'public',
+        cover_image:story.coverImage || '',
+        updated_at:new Date().toISOString()
+    };
+
     const { data: { session } } =
         await supabaseClient.auth.getSession();
 
@@ -1158,17 +1168,6 @@ async function saveStoryToSupabase(story){
         alert('로그인 후 저장할 수 있습니다.');
         return false;
     }
-
-    const row={
-        id:story.id,
-        world_id:current,
-        name:story.name,
-        description:story.description || '',
-        visibility:story.visibility || 'public',
-        cover_image:story.coverImage || '',
-        created_by:story.created_by || user.id,
-        updated_at:new Date().toISOString()
-    };
 
     const {data,error}=await supabaseClient
         .from('stories')
