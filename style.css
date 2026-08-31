@@ -525,3 +525,24 @@
     color:#777;
     font-weight:500;
 }
+
+/* 모바일에서도 닉네임 변경 메뉴 표시 */
+@media (max-width: 768px) {
+    .profile-nickname {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    #nicknameInput {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    #saveNicknameBtn {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+}
