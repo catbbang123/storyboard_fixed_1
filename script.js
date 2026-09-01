@@ -3474,9 +3474,9 @@ const monthlyColorMap = {
 
 /**
  * 👤 기호가 포함된 닉네임 영역을 찾아 평행사변형 커스텀 아이콘으로 교체하는 함수
- * @param {string} customImageSrc - 사용할 아이콘 이미지 경로 (기본값: 'icon-192.png')
+ * @param {string} customImageSrc - 사용할 아이콘 이미지 경로
  */
-function applyMonthlyCustomIcons(customImageSrc = 'icon-192.png') {
+function applyMonthlyCustomIcons(customImageSrc = 'icons/icon-192.png') {
     const currentMonth = new Date().getMonth() + 1;
     const colorConfig = monthlyColorMap[currentMonth] || monthlyColorMap[1];
 
@@ -3488,7 +3488,7 @@ function applyMonthlyCustomIcons(customImageSrc = 'icon-192.png') {
             // 이미 변환된 적이 있다면 패스
             if (el.dataset.iconApplied === "true") return;
 
-            const originalText = el.textContent; // 예: "👤 빵냥" 또는 "👤  빵냥" 등
+            const originalText = el.textContent; // 예: "👤 빵냥"
             const nickname = originalText.replace('👤', '').trim(); // 👤 기호 제거 후 닉네임만 추출
 
             // 기존 내용을 비우고 커스텀 이미지와 닉네임 조합으로 재구성
@@ -3514,12 +3514,12 @@ function applyMonthlyCustomIcons(customImageSrc = 'icon-192.png') {
 
 // 1. 페이지가 처음 로드될 때 실행
 document.addEventListener('DOMContentLoaded', () => {
-    applyMonthlyCustomIcons('icon-192.png');
+    applyMonthlyCustomIcons('icons/icon-192.png');
 });
 
 // 2. 동적으로 데이터가 로드되거나 화면이 바뀔 때를 대비해 주기적으로 감지하여 적용 (0.5초 간격)
 setInterval(() => {
-    applyMonthlyCustomIcons('icon-192.png');
+    applyMonthlyCustomIcons('icons/icon-192.png');
 }, 500);
 
 // 3. 필요시 수동으로 이미지 경로를 바꿀 수 있는 함수
