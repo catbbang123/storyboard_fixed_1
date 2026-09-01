@@ -3458,7 +3458,7 @@ if(saveError){
 // [설정] 월별 무지개 아이콘 색상 매핑 (1월 ~ 12월)
 // ==========================================
 const monthlyColorMap = {
-    1: { name: "흰색", filter: "brightness(0) invert(1)" },
+    1: { name: "흰색 (테두리 추가)", filter: "brightness(0) invert(1) drop-shadow(1px 1px 0px #000) drop-shadow(-1px -1px 0px #000)" }, // 1월: 흰색 + 검은 테두리 효과
     2: { name: "빨간색", filter: "invert(15%) sepia(95%) saturate(7483%) hue-rotate(0deg) brightness(95%) contrast(105%)" },
     3: { name: "주황색", filter: "invert(53%) sepia(89%) saturate(2474%) hue-rotate(1deg) brightness(101%) contrast(101%)" },
     4: { name: "노란색", filter: "invert(89%) sepia(61%) saturate(1478%) hue-rotate(359deg) brightness(103%) contrast(103%)" },
