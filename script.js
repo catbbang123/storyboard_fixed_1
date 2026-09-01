@@ -720,7 +720,9 @@ if(currentUserId){
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
         coverImage: w.cover_image ?? '',
-        joined: false,
+        joined: myWorldMemberships.some(
+            m => m.world_id === w.id && m.status === 'approved'
+        ),
         createdAt: w.created_at ? new Date(w.created_at).getTime() : 0,
 
         // 캐릭터
