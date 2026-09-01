@@ -56,11 +56,6 @@ async function updateAuthUI(session = null){
             profileMenu.style.display = 'none';
         }
 
-        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
-        if(deleteAccountBtn){
-            deleteAccountBtn.style.display = 'none';
-        }
-
         // 세계관 만들기 버튼 비활성화
         createButtons.forEach(btn => {
             if(btn){
@@ -116,9 +111,6 @@ if(myProfileError){
     if(googleLoginBtn){
         googleLoginBtn.style.display = 'none';
     }
-
-    // 회원 탈퇴 버튼 준비
-    ensureDeleteAccountButton();
 
     // 프로필 버튼 표시
     if(profileBtn){
@@ -183,127 +175,6 @@ async function requireLogin(){
     }
 
     return true;
-}
-
-// ==========================================
-// 회원 탈퇴
-// - Supabase Auth 계정을 완전히 삭제합니다.
-// - 같은 Google 계정으로 나중에 다시 로그인/가입할 수 있습니다.
-// - 탈퇴 전에 사용자가 직접 "탈퇴"를 입력하도록 2단계 확인합니다.
-// ==========================================
-async function deleteMyAccount(){
-
-    const { data, error: userError } =
-        await supabaseClient.auth.getUser();
-
-    const user = data?.user;
-
-    if(userError || !user){
-        alert('로그인 상태를 확인하지 못했습니다.');
-        return;
-    }
-
-    const firstConfirm = confirm(
-        '정말 회원 탈퇴를 진행하시겠습니까?\n\n' +
-        '회원 탈퇴를 하면 현재 계정과 이 계정으로 만든 데이터가 삭제될 수 있습니다.\n' +
-        '탈퇴 후에는 같은 Google 계정으로 다시 가입할 수 있지만, 기존 계정과 동일한 계정으로 복구되지는 않습니다.\n\n' +
-        '계속하시려면 확인을 눌러주세요.'
-    );
-
-    if(!firstConfirm) return;
-
-    const typed = prompt(
-        '회원 탈퇴를 최종 확인합니다.\n\n' +
-        '정말 탈퇴하시려면 아래 입력창에 정확히 "탈퇴"라고 입력해주세요.'
-    );
-
-    if(typed !== '탈퇴'){
-        alert('회원 탈퇴가 취소되었습니다.');
-        return;
-    }
-
-    const secondConfirm = confirm(
-        '마지막 확인입니다.\n\n회원 탈퇴를 진행하시겠습니까?'
-    );
-
-    if(!secondConfirm) return;
-
-    const { error } = await supabaseClient.rpc('delete_my_account');
-
-    if(error){
-        console.error('회원 탈퇴 실패:', error);
-        alert(
-            '회원 탈퇴에 실패했습니다.\n\n' +
-            error.message +
-            '\n\nSupabase SQL Editor에서 회원 탈퇴용 SQL을 먼저 실행했는지 확인해주세요.'
-        );
-        return;
-    }
-
-    // 브라우저에 남아 있는 로그인/임시 상태 정리
-    currentUserId = null;
-    myWorldMemberships = [];
-    current = null;
-    tab = 'overview';
-
-    try{
-        sessionStorage.removeItem('storyboard_current_world');
-        sessionStorage.removeItem('storyboard_current_tab');
-        sessionStorage.removeItem('storyboard_current_reader');
-        sessionStorage.removeItem('storyboard_current_story');
-        sessionStorage.removeItem('storyboard_current_chapter');
-    }catch(e){
-        console.warn('세션 저장정보 정리 실패:', e);
-    }
-
-    // 현재 세션도 정리합니다. 이미 Auth 계정이 삭제된 경우에는
-    // signOut에서 오류가 나더라도 로컬 상태 정리는 계속 진행합니다.
-    try{
-        await supabaseClient.auth.signOut({ scope: 'local' });
-    }catch(e){
-        console.warn('탈퇴 후 로컬 세션 정리:', e);
-    }
-
-    alert(
-        '회원 탈퇴가 완료되었습니다.\n\n' +
-        '나중에 마음이 바뀌면 같은 Google 계정으로 다시 가입할 수 있습니다.'
-    );
-
-    window.location.reload();
-}
-
-function ensureDeleteAccountButton(){
-
-    const profileMenu = document.getElementById('profileMenu');
-    if(!profileMenu) return;
-
-    let btn = document.getElementById('deleteAccountBtn');
-
-    if(!btn){
-        btn = document.createElement('button');
-        btn.id = 'deleteAccountBtn';
-        btn.type = 'button';
-        btn.textContent = '🗑️ 회원 탈퇴';
-        btn.style.width = '100%';
-        btn.style.marginTop = '8px';
-        btn.style.cursor = 'pointer';
-        btn.style.color = '#b00020';
-        btn.style.background = 'transparent';
-        btn.style.border = '0';
-        btn.style.padding = '8px 10px';
-        btn.style.textAlign = 'left';
-        btn.style.borderTop = '1px solid rgba(0,0,0,.08)';
-
-        profileMenu.appendChild(btn);
-    }
-
-    btn.onclick = async function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        await deleteMyAccount();
-    };
-
-    btn.style.display = 'block';
 }
 
 async function logout(){
@@ -576,7 +447,7 @@ function getGenreValue(){
  return $("genre").value==="기타" ? ($("customGenre").value.trim() || "기타") : $("genre").value;
 }
 
-let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=null,editingCharacterId=null,editingStoryId=null,editingChapterId=null,storyCover='',chapterStoryId=null,editingGenericId=null,genericPhoto='',myWorldMemberships=[],currentUserId=null;
+let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=null,editingCharacterId=null,editingStoryId=null,editingChapterId=null,storyCover='',chapterStoryId=null,editingGenericId=null,genericPhoto='',myWorldMemberships=[],currentUserId=null,worldsLeftByMe=new Set(JSON.parse(sessionStorage.getItem('storyboard_left_worlds')||'[]'));
 
 let profilesCache={};
 let pendingWorldMembers=[];
@@ -1067,6 +938,8 @@ function card(w){return `<article class="card" data-id="${w.id}"><div class="cov
         ? '👑 소유자'
         : w.joined
             ? '🚪 탈퇴'
+            : worldsLeftByMe.has(w.id)
+                ? '🔄 재가입'
             : getMembershipStatus(w.id) === 'pending'
                 ? '⏳ 승인 대기'
                 : '👥 가입하기'
@@ -1143,6 +1016,20 @@ async function updateMembershipStatus(worldId,userId,status){
     pendingWorldMembers=pendingWorldMembers.filter(
         m=>!(m.world_id===worldId && m.user_id===userId)
     );
+
+    const existingLocal=myWorldMemberships.find(
+        m=>m.world_id===worldId && m.user_id===userId
+    );
+    if(existingLocal){
+        existingLocal.status=status;
+    }else{
+        myWorldMemberships.push({
+            world_id:worldId,
+            user_id:userId,
+            role:'member',
+            status
+        });
+    }
 
     renderWorld();
 }
@@ -1231,8 +1118,12 @@ function renderWorld(){
       : isPendingMember
         ? '<button id="pageJoin" disabled>⏳ 승인 대기 중</button>'
         : isApprovedMember
-          ? '<button id="pageJoin" disabled>가입 완료</button>'
-          : '<button id="pageJoin">'+(membershipStatus==='rejected'?'가입 재요청':'세계관 가입')+'</button>'
+          ? '<button id="pageJoin">🚪 세계관 탈퇴</button>'
+          : '<button id="pageJoin">'+(
+              worldsLeftByMe.has(w.id)
+                ? '🔄 세계관 재가입'
+                : (membershipStatus==='rejected'?'가입 재요청':'세계관 가입')
+            )+'</button>'
   }
 </div>
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
@@ -1260,7 +1151,13 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
     renderWorld();
 });
 if($('manageMembers'))$('manageMembers').onclick=()=>openMembershipRequests(w.id);
-if($('pageJoin') && !isPendingMember && !isApprovedMember)$('pageJoin').onclick=()=>join(w.id);
+if($('pageJoin')){
+    if(isApprovedMember){
+        $('pageJoin').onclick=()=>leaveWorld(w.id);
+    }else if(!isPendingMember){
+        $('pageJoin').onclick=()=>join(w.id);
+    }
+}
 requestAnimationFrame(force16x9)}
 
 function section(w){
@@ -2390,6 +2287,11 @@ async function join(id){
     myWorldMemberships=myWorldMemberships.filter(
         m=>!(m.world_id===id && m.user_id===user.id)
     );
+    worldsLeftByMe.delete(id);
+    sessionStorage.setItem(
+        'storyboard_left_worlds',
+        JSON.stringify([...worldsLeftByMe])
+    );
     myWorldMemberships.push({
         world_id:id,
         user_id:user.id,
@@ -2454,7 +2356,14 @@ if(world){
     world.joined = false;
 }
 
-alert('세계관에서 탈퇴했습니다.');
+// 탈퇴한 세계관은 이 브라우저에서 '재가입'으로 표시
+worldsLeftByMe.add(id);
+sessionStorage.setItem(
+    'storyboard_left_worlds',
+    JSON.stringify([...worldsLeftByMe])
+);
+
+alert('세계관에서 탈퇴했습니다. 다시 가입하려면 「세계관 재가입」을 눌러주세요.');
 
 renderWorld();
 }
