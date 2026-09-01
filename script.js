@@ -933,7 +933,7 @@ if(w.visibility === 'private'){
     requestAnimationFrame(force16x9);
 }
 function card(w){return `<article class="card" data-id="${w.id}"><div class="cover ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}>${w.coverImage?'':esc(w.icon)}</div><div class="more"><button>⋮</button><div class="menu"><button class="edit">✏️ 수정</button><button class="decorate">🎨 꾸미기</button>
-<button class="join">${w.joined ? '🚪 탈퇴' : '👥 가입하기'}</button>
+<button class="join">${w.owner_id === currentUserId ? '👑 소유자' : (w.joined ? '🚪 탈퇴' : '👥 가입하기')}</button>
 <button class="del">🗑️ 세계관 삭제</button></div></div><div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta"><span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${w.visibility==='public'?'공개':'비공개'}</span></div></div></article>`}
 function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()=>openWorld(x.dataset.open));
                 document.querySelectorAll('.card').forEach(c=>{let id=c.dataset.id,m=c.querySelector('.menu');
@@ -943,9 +943,15 @@ function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()
                  c.querySelector('.edit').onclick=()=>openModal(id);
                 c.querySelector('.decorate').onclick=()=>openModal(id,true);
                 c.querySelector('.join').onclick=()=>{
-                    const world=get(id);
+                    const world = get(id);
                 
-                    if(world?.joined){
+                    if(!world) return;
+                
+                    if(world.owner_id === currentUserId){
+                        return;
+                    }
+                
+                    if(world.joined){
                         leaveWorld(id);
                     }else{
                         join(id);
