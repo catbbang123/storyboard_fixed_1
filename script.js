@@ -3454,74 +3454,77 @@ if(saveError){
 
 });
 
-/**
- * 세계관 웹사이트 - 사용자 닉네임 옆 월별 무지개 아이콘 시스템 스크립트
- * 작성일: 2026-09-02
- */
-
-// 1. 월별 무지개 색상 매핑 (1월부터 12월까지 순서대로 지정)
+// ==========================================
+// [설정] 월별 무지개 아이콘 색상 매핑 (1월 ~ 12월)
+// ==========================================
 const monthlyColorMap = {
-    1: { name: "흰색", filter: "brightness(0) invert(1)" }, // 1월: 흰색
-    2: { name: "빨간색", filter: "invert(15%) sepia(95%) saturate(7483%) hue-rotate(0deg) brightness(95%) contrast(105%)" }, // 2월: 빨주노...
-    3: { name: "주황색", filter: "invert(53%) sepia(89%) saturate(2474%) hue-rotate(1deg) brightness(101%) contrast(101%)" }, // 3월: 주황
-    4: { name: "노란색", filter: "invert(89%) sepia(61%) saturate(1478%) hue-rotate(359deg) brightness(103%) contrast(103%)" }, // 4월: 노랑
-    5: { name: "초록색", filter: "invert(48%) sepia(79%) saturate(497%) hue-rotate(86deg) brightness(95%) contrast(93%)" }, // 5월: 초록
-    6: { name: "하늘색", filter: "invert(70%) sepia(55%) saturate(544%) hue-rotate(165deg) brightness(98%) contrast(91%)" }, // 6월: 하늘
-    7: { name: "파란색", filter: "invert(14%) sepia(98%) saturate(7413%) hue-rotate(247deg) brightness(96%) contrast(115%)" }, // 7월: 파랑
-    8: { name: "보라색", filter: "invert(23%) sepia(85%) saturate(3419%) hue-rotate(274deg) brightness(91%) contrast(102%)" }, // 8월: 보라
-    9: { name: "검은색", filter: "brightness(0)" }, // 9월: 검은색
-    10: { name: "무지개특수", filter: "hue-rotate(90deg) saturate(200%)" }, // 10월 이후 순환
+    1: { name: "흰색", filter: "brightness(0) invert(1)" },
+    2: { name: "빨간색", filter: "invert(15%) sepia(95%) saturate(7483%) hue-rotate(0deg) brightness(95%) contrast(105%)" },
+    3: { name: "주황색", filter: "invert(53%) sepia(89%) saturate(2474%) hue-rotate(1deg) brightness(101%) contrast(101%)" },
+    4: { name: "노란색", filter: "invert(89%) sepia(61%) saturate(1478%) hue-rotate(359deg) brightness(103%) contrast(103%)" },
+    5: { name: "초록색", filter: "invert(48%) sepia(79%) saturate(497%) hue-rotate(86deg) brightness(95%) contrast(93%)" },
+    6: { name: "하늘색", filter: "invert(70%) sepia(55%) saturate(544%) hue-rotate(165deg) brightness(98%) contrast(91%)" },
+    7: { name: "파란색", filter: "invert(14%) sepia(98%) saturate(7413%) hue-rotate(247deg) brightness(96%) contrast(115%)" },
+    8: { name: "보라색", filter: "invert(23%) sepia(85%) saturate(3419%) hue-rotate(274deg) brightness(91%) contrast(102%)" },
+    9: { name: "검은색", filter: "brightness(0)" },
+    10: { name: "무지개특수1", filter: "hue-rotate(90deg) saturate(200%)" },
     11: { name: "무지개특수2", filter: "hue-rotate(180deg) saturate(200%)" },
     12: { name: "무지개특수3", filter: "hue-rotate(270deg) saturate(200%)" }
 };
 
 /**
- * 닉네임 옆에 월별 아이콘을 동적으로 생성하고 삽입하는 함수
- * @param {string} nicknameSelector - 닉네임이 담긴 HTML 요소 선택자 (예: '.user-nickname')
- * @param {string} customImageSrc - 사용자가 원할 경우 넣을 커스텀 이미지 경로 (선택사항)
+ * 👤 기호가 포함된 닉네임 영역을 찾아 평행사변형 커스텀 아이콘으로 교체하는 함수
+ * @param {string} customImageSrc - 사용할 아이콘 이미지 경로 (기본값: 'icon-192.png')
  */
-function initMonthlyUserIcon(nicknameSelector = '.user-nickname', customImageSrc = 'icon-192.png') {
-    const nicknameElements = document.querySelectorAll(nicknameSelector);
-    
-    // 현재 몇 월인지 확인 (1 ~ 12)
+function applyMonthlyCustomIcons(customImageSrc = 'icon-192.png') {
     const currentMonth = new Date().getMonth() + 1;
     const colorConfig = monthlyColorMap[currentMonth] || monthlyColorMap[1];
 
-    nicknameElements.forEach(el => {
-        // 중복 생성 방지
-        if (el.querySelector('.dynamic-user-icon')) return;
+    // 페이지 내 모든 요소 중 '👤' 문자가 포함된 곳을 탐색
+    const allElements = document.querySelectorAll('*');
+    allElements.forEach(el => {
+        // 자식 요소가 없고 텍스트에 '👤'가 포함된 경우에만 안전하게 교체
+        if (el.children.length === 0 && el.textContent && el.textContent.includes('👤')) {
+            // 이미 변환된 적이 있다면 패스
+            if (el.dataset.iconApplied === "true") return;
 
-        // 아이콘 이미지 엘리먼트 생성
-        const iconImg = document.createElement('img');
-        iconImg.src = customImageSrc;
-        iconImg.className = 'dynamic-user-icon';
-        
-        // 스타일 적용 (크기 및 월별 색상 필터)
-        iconImg.style.width = '16px';
-        iconImg.style.height = '16px';
-        iconImg.style.marginLeft = '5px';
-        iconImg.style.verticalAlign = 'middle';
-        iconImg.style.objectFit = 'contain';
-        iconImg.style.filter = colorConfig.filter;
-        
-        // 툴팁으로 현재 적용된 색상 표시
-        iconImg.title = `이번 달 (${currentMonth}월) 아이콘 색상: ${colorConfig.name}`;
+            const originalText = el.textContent; // 예: "👤 빵냥" 또는 "👤  빵냥" 등
+            const nickname = originalText.replace('👤', '').trim(); // 👤 기호 제거 후 닉네임만 추출
 
-        // 닉네임 바로 뒤에 아이콘 붙이기
-        el.appendChild(iconImg);
+            // 기존 내용을 비우고 커스텀 이미지와 닉네임 조합으로 재구성
+            el.innerHTML = '';
+            
+            const iconImg = document.createElement('img');
+            iconImg.src = customImageSrc;
+            iconImg.className = 'dynamic-user-icon';
+            iconImg.style.width = '13px';
+            iconImg.style.height = '13px';
+            iconImg.style.marginRight = '4px';
+            iconImg.style.verticalAlign = 'middle';
+            iconImg.style.objectFit = 'contain';
+            iconImg.style.filter = colorConfig.filter;
+            iconImg.title = `이번 달 (${currentMonth}월) 아이콘 색상: ${colorConfig.name}`;
+
+            el.appendChild(iconImg);
+            el.append(` ${nickname}`);
+            el.dataset.iconApplied = "true";
+        }
     });
 }
 
-// 웹페이지 로딩 완료 시 실행
+// 1. 페이지가 처음 로드될 때 실행
 document.addEventListener('DOMContentLoaded', () => {
-    // 닉네임 클래스 이름(.user-nickname)은 웹사이트 환경에 맞게 수정해서 쓰시면 됩니다.
-    initMonthlyUserIcon('.user-nickname', 'icon-192.png');
+    applyMonthlyCustomIcons('icon-192.png');
 });
 
-// 사용자가 원할 때 언제든 다른 사진으로바꿀 수 있는 커스텀 함수 제공
+// 2. 동적으로 데이터가 로드되거나 화면이 바뀔 때를 대비해 주기적으로 감지하여 적용 (0.5초 간격)
+setInterval(() => {
+    applyMonthlyCustomIcons('icon-192.png');
+}, 500);
+
+// 3. 필요시 수동으로 이미지 경로를 바꿀 수 있는 함수
 window.changeUserCustomIcon = function(newImagePath) {
-    const icons = document.querySelectorAll('.dynamic-user-icon');
-    icons.forEach(icon => {
+    document.querySelectorAll('.dynamic-user-icon').forEach(icon => {
         icon.src = newImagePath;
     });
 };
