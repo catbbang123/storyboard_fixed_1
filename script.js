@@ -1,5 +1,4 @@
 const $=id=>document.getElementById(id);
-let myWorldMemberships = [];
 
 const SUPABASE_URL = 'https://udskdmndzupdgsrxjfbt.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hFt0uuyB5EVIn7gCN-aQJQ_QVeAFWBB';
