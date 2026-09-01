@@ -933,7 +933,15 @@ if(w.visibility === 'private'){
     requestAnimationFrame(force16x9);
 }
 function card(w){return `<article class="card" data-id="${w.id}"><div class="cover ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}>${w.coverImage?'':esc(w.icon)}</div><div class="more"><button>⋮</button><div class="menu"><button class="edit">✏️ 수정</button><button class="decorate">🎨 꾸미기</button>
-<button class="join">${w.owner_id === currentUserId ? '👑 소유자' : (w.joined ? '🚪 탈퇴' : '👥 가입하기')}</button>
+<button class="join">${
+    w.owner_id === currentUserId
+        ? '👑 소유자'
+        : w.joined
+            ? '🚪 탈퇴'
+            : getMembershipStatus(w.id) === 'pending'
+                ? '⏳ 승인 대기'
+                : '👥 가입하기'
+}</button>
 <button class="del">🗑️ 세계관 삭제</button></div></div><div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta"><span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${w.visibility==='public'?'공개':'비공개'}</span></div></div></article>`}
 function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()=>openWorld(x.dataset.open));
                 document.querySelectorAll('.card').forEach(c=>{let id=c.dataset.id,m=c.querySelector('.menu');
@@ -951,8 +959,12 @@ function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()
                         return;
                     }
                 
-                    if(world.joined){
+                    const membershipStatus = getMembershipStatus(id);
+                
+                    if(membershipStatus === 'approved'){
                         leaveWorld(id);
+                    }else if(membershipStatus === 'pending'){
+                        alert('현재 가입 승인 대기 중입니다.');
                     }else{
                         join(id);
                     }
@@ -2303,13 +2315,19 @@ async function leaveWorld(id){
         return;
     }
 
-    myWorldMemberships = myWorldMemberships.filter(
-        m => !(m.world_id === id && m.user_id === user.id)
-    );
+myWorldMemberships = myWorldMemberships.filter(
+    m => !(m.world_id === id && m.user_id === user.id)
+);
 
-    alert('세계관에서 탈퇴했습니다.');
+const world = get(id);
 
-    renderWorld();
+if(world){
+    world.joined = false;
+}
+
+alert('세계관에서 탈퇴했습니다.');
+
+renderWorld();
 }
 
 let selectedCharacterPhoto='';
