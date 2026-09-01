@@ -3457,18 +3457,16 @@ if(saveError){
 // ==========================================
 // [설정] 기간별 아이콘 이미지 경로 매핑
 // ==========================================
-// 기본 검은색/흰색 등 일반 기간에는 기본 아이콘을 쓰고,
-// 무지개 기간(예: 9개월 차 등)에는 직접 만드신 무지개 이미지를 지정합니다.
 function getIconPathByMonths(monthsPassed) {
     const defaultIcon = 'icons/icon-192.png';     // 기본 아이콘 (검은색 등)
-    const rainbowIcon = 'icons/rainbow-icon.png'; // 포토샵으로 만드신 세련된 무지개 평행사변형 이미지
+    const rainbowIcon = 'icons/rainbow-icon.png'; // 무지개 평행사변형 아이콘
 
-    // 사용자가 직접 커스텀 이미지를 등록한 적이 있다면 우선 적용
+    // 사용자가 커스텀 아이콘을 등록한 적이 있다면 우선 적용
     let customImageSrc = localStorage.getItem('my_custom_icon_path');
     if (customImageSrc) return customImageSrc;
 
-    // 9개월 차(또는 원하는 무지개 주기)일 때 무지개 이미지 반환, 나머지는 기본 아이콘
-    if (monthsPassed % 12 === 9) { 
+    // 9개월 차 이상일 때 무지개 아이콘 적용 (무지개 자격 부여)
+    if (monthsPassed % 12 >= 9) { 
         return rainbowIcon; 
     }
     
@@ -3476,7 +3474,7 @@ function getIconPathByMonths(monthsPassed) {
 }
 
 /**
- * 본문 닉네임 앞 아이콘 적용 함수
+ * 1. 본문 닉네임 앞 아이콘 적용 및 무지개 사용자 클릭 이벤트 연결
  */
 function applyPersonalMonthlyIcons() {
     let joinDateStr = localStorage.getItem('my_platform_join_date');
@@ -3490,17 +3488,15 @@ function applyPersonalMonthlyIcons() {
     let monthsPassed = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth());
     if (monthsPassed < 0) monthsPassed = 0;
 
-    // 기간에 맞는 이미지 경로 가져오기
     const targetIconSrc = getIconPathByMonths(monthsPassed);
+    const isRainbowUser = (monthsPassed % 12 >= 9) || localStorage.getItem('my_custom_icon_path'); // 무지개 자격 여부
 
     const allElements = document.querySelectorAll('*');
     allElements.forEach(el => {
-        // 우측 상단 로그인 버튼 및 프로필 관련 영역은 절대 건드리지 않음
         if (el.closest('#googleLoginBtn') || el.closest('#profileBtn') || el.closest('#profileMenu') || el.id === 'profileName') {
             return;
         }
 
-        // 자식 요소가 없고 텍스트에 '👤'가 포함된 본문 영역만 대상 지정
         if (el.children.length === 0 && el.textContent && el.textContent.includes('👤')) {
             if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === targetIconSrc) return;
 
@@ -3517,8 +3513,18 @@ function applyPersonalMonthlyIcons() {
             iconImg.style.marginRight = '4px';
             iconImg.style.verticalAlign = 'middle';
             iconImg.style.objectFit = 'contain';
-            // 필터를 쓰지 않고 이미지 원본 그대로 출력하므로 색감이 포토샵에서 보신 그대로 세련되게 나옵니다!
-            iconImg.title = `활동 경과: ${monthsPassed}개월 차`;
+            
+            // 🌈 무지개 아이콘을 가진 자들만 클릭 가능 및 마우스 커서 변경
+            if (isRainbowUser) {
+                iconImg.style.cursor = 'pointer';
+                iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
+                iconImg.onclick = (e) => {
+                    e.stopPropagation();
+                    openIconChangeModal();
+                };
+            } else {
+                iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`;
+            }
 
             el.appendChild(iconImg);
             el.append(` ${nickname}`);
@@ -3528,7 +3534,76 @@ function applyPersonalMonthlyIcons() {
     });
 }
 
-// 1. 페이지 로드 시 및 동적 렌더링 대응
+/**
+ * 2. 500x500 아이콘 변경 전용 모달 창 생성 및 열기 함수
+ */
+function openIconChangeModal() {
+    // 이미 모달이 있다면 중복 생성 방지
+    let existingModal = document.getElementById('iconChangeModal');
+    if (existingModal) existingModal.remove();
+
+    const modalHTML = `
+        <div id="iconChangeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+            <div style="background: white; padding: 25px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <h3 style="margin-top: 0; color: #333; font-size: 18px;">✨ 나만의 아이콘 변경</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">500 x 500 px 규격의 이미지를 업로드해 주세요.</p>
+                
+                <input type="file" id="iconFileInput" accept="image/*" style="margin-bottom: 15px; width: 100%; font-size: 12px;">
+                
+                <div style="margin-bottom: 15px;">
+                    <img id="iconPreview" src="" style="width: 80px; height: 80px; object-fit: contain; border: 1px dashed #ccc; border-radius: 8px; display: none; margin: 0 auto;" alt="미리보기">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="saveIconButton" style="background: #6c5ce7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">저장하기</button>
+                    <button id="closeIconButton" style="background: #b2bec3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">닫기</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const fileInput = document.getElementById('iconFileInput');
+    const previewImg = document.getElementById('iconPreview');
+    let base64Image = '';
+
+    // 이미지 선택 시 미리보기 및 Base64 변환 (500x500 권장 안내 포함)
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (uploadEvent) => {
+                base64Image = uploadEvent.target.result;
+                previewImg.src = base64Image;
+                previewImg.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // 저장 버튼 클릭 시
+    document.getElementById('saveIconButton').onclick = () => {
+        if (!base64Image) {
+            alert('변경할 이미지를 선택해 주세요!');
+            return;
+        }
+        localStorage.setItem('my_custom_icon_path', base64Image);
+        alert('아이콘이 성공적으로 변경되었습니다!');
+        document.getElementById('iconChangeModal').remove();
+
+        // 화면 갱신
+        document.querySelectorAll('[data-icon-applied="true"]').forEach(el => el.dataset.iconApplied = "false");
+        applyPersonalMonthlyIcons();
+    };
+
+    // 닫기 버튼 클릭 시
+    document.getElementById('closeIconButton').onclick = () => {
+        document.getElementById('iconChangeModal').remove();
+    };
+}
+
+// 페이지 로드 및 주기적 렌더링
 document.addEventListener('DOMContentLoaded', () => {
     applyPersonalMonthlyIcons();
 });
@@ -3537,10 +3612,7 @@ setInterval(() => {
     applyPersonalMonthlyIcons();
 }, 500);
 
-// ==========================================
-// 💡 [테스트 함수] 개월 수 변경 테스트
-// 콘솔창에 window.testMonthsLater(9)를 치면 무지개 평행사변형이 즉시 나타납니다!
-// ==========================================
+// 테스트용 함수 (9개월 차로 설정하여 무지개 권한 부여 및 테스트)
 window.testMonthsLater = function(months) {
     const fakeJoinDate = new Date();
     fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
@@ -3552,21 +3624,5 @@ window.testMonthsLater = function(months) {
         }
     });
     applyPersonalMonthlyIcons();
-    console.log(`[테스트 성공] 가입 후 ${months}개월 차로 설정되었습니다!`);
-};
-
-// ==========================================
-// 💡 [아이콘 직접 변경 함수]
-// 콘솔창에 window.changeUserIcon('경로/이미지.png')를 치면 언제든 원하는 이미지로 교체 가능
-// ==========================================
-window.changeUserIcon = function(newImagePath) {
-    localStorage.setItem('my_custom_icon_path', newImagePath);
-    
-    document.querySelectorAll('[data-icon-applied="true"]').forEach(el => {
-        if (!el.closest('#googleLoginBtn') && !el.closest('#profileBtn') && !el.closest('#profileMenu')) {
-            el.dataset.iconApplied = "false";
-        }
-    });
-    applyPersonalMonthlyIcons();
-    console.log(`[아이콘 변경 완료] ${newImagePath}`);
+    console.log(`[테스트 완료] 가입 후 ${months}개월 차로 설정되었습니다. (무지개 권한 여부: ${months % 12 >= 9 ? '있음' : '없음'})`);
 };
