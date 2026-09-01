@@ -3459,13 +3459,13 @@ if(saveError){
 // ==========================================
 function getIconPathByMonths(monthsPassed) {
     const defaultIcon = 'icons/icon-192.png';     // 기본 아이콘 (검은색 등)
-    const rainbowIcon = 'icons/rainbow-icon.png'; // 무지개 평행사변형 아이콘
+    const rainbowIcon = 'icons/rainbow-icon.png'; // 포토샵 시안의 무지개 평행사변형 아이콘
 
     // 사용자가 커스텀 아이콘을 등록한 적이 있다면 우선 적용
     let customImageSrc = localStorage.getItem('my_custom_icon_path');
     if (customImageSrc) return customImageSrc;
 
-    // 9개월 차 이상일 때 무지개 아이콘 적용 (무지개 자격 부여)
+    // 9개월 차 이상일 때 무지개 아이콘 적용 (무지개 권한 부여)
     if (monthsPassed % 12 >= 9) { 
         return rainbowIcon; 
     }
@@ -3498,12 +3498,8 @@ function applyPersonalMonthlyIcons() {
             return;
         }
 
-        // 1. '👤' 기호가 포함된 영역이거나, 
-        // 2. 세계관 테마/카드 영역 등 닉네임과 아이콘이 함께 쓰이는 특정 클래스/요소 탐색
-        const hasEmoji = el.children.length === 0 && el.textContent && el.textContent.includes('👤');
-        
-        // 필요시 세계관 테마 영역의 특정 셀렉터가 있다면 추가 가능 (현재는 자식 없는 텍스트 노드 전반 확장)
-        if (hasEmoji) {
+        // '👤' 기호가 포함된 영역 탐색
+        if (el.children.length === 0 && el.textContent && el.textContent.includes('👤')) {
             if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === targetIconSrc) return;
 
             const originalText = el.textContent;
@@ -3520,7 +3516,7 @@ function applyPersonalMonthlyIcons() {
             iconImg.style.verticalAlign = 'middle';
             iconImg.style.objectFit = 'contain';
             
-            // 🌈 무지개 아이콘 권한이 있는 사용자만 클릭하여 500x500 아이콘 변경 창 띄우기 가능
+            // 🌈 무지개 아이콘(또는 커스텀 아이콘)을 가진 사용자만 클릭하여 500x500 아이콘 변경 창 띄우기 가능
             if (isRainbowUser) {
                 iconImg.style.cursor = 'pointer';
                 iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
@@ -3613,7 +3609,7 @@ setInterval(() => {
     applyPersonalMonthlyIcons();
 }, 500);
 
-// 테스트용 함수
+// 테스트용 함수 (콘솔창에 window.testMonthsLater(9)를 치면 무지개 아이콘이 나옵니다!)
 window.testMonthsLater = function(months) {
     const fakeJoinDate = new Date();
     fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
