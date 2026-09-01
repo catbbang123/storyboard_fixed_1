@@ -601,27 +601,55 @@ async function load(){
     }
     
     // 내가 소유한 세계관의 가입 대기 요청
+
     pendingWorldMembers = [];
-    if(currentUserId){
-        const ownedWorldIds = (data || [])
+
+if(currentUserId){
+    const ownedWorldIds = (data || [])
         .filter(w => w.owner_id === currentUserId)
         .map(w => w.id);
 
-        if(ownedWorldIds.length){
-            const { data: pendingData, error: pendingError } =
-                await supabaseClient
-                    .from('world_members')
-                    .select('world_id, user_id, role, status')
-                    .in('world_id', ownedWorldIds)
-                    .eq('status', 'pending');
+    if(ownedWorldIds.length){
+        const { data: pendingData, error: pendingError } =
+            await supabaseClient
+                .from('world_members')
+                .select('world_id, user_id, role, status')
+                .in('world_id', ownedWorldIds)
+                .eq('status', 'pending');
 
-            if(pendingError){
-                console.error('가입 대기 요청 불러오기 실패:', pendingError);
-            }else{
-                pendingWorldMembers = pendingData || [];
+        if(pendingError){
+            console.error('가입 대기 요청 불러오기 실패:', pendingError);
+        }else{
+            pendingWorldMembers = pendingData || [];
+
+            // 가입 신청자의 닉네임 가져오기
+            const userIds = pendingWorldMembers.map(m => m.user_id);
+
+            if(userIds.length){
+                const { data: profileData, error: profileError } =
+                    await supabaseClient
+                        .from('profiles')
+                        .select('user_id, nickname')
+                        .in('user_id', userIds);
+
+                if(profileError){
+                    console.error('가입 신청자 닉네임 불러오기 실패:', profileError);
+                }else{
+                    const nicknameMap = {};
+
+                    (profileData || []).forEach(profile => {
+                        nicknameMap[profile.user_id] = profile.nickname;
+                    });
+
+                    pendingWorldMembers = pendingWorldMembers.map(member => ({
+                        ...member,
+                        nickname: nicknameMap[member.user_id] || '닉네임 없음'
+                    }));
+                }
             }
         }
     }
+}
 
     // ② 캐릭터 불러오기
     const { data: characterData, error: characterError } = await supabaseClient
