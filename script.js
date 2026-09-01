@@ -3454,158 +3454,177 @@ if(saveError){
 
 });
 
-// ==========================================
-// [설정] 기간별 아이콘 이미지 경로 매핑
-// ==========================================
-function getIconPathByMonths(e){const o="icons/icon-192.png",s="icons/rainbow-icon.png";let n=localStorage.getItem("my_custom_icon_path");return n?n:e%12>=9?s:o}function applyPersonalMonthlyIcons(){let e=localStorage.getItem("my_platform_join_date");e||(e=new Date().toISOString(),localStorage.setItem("my_platform_join_date",e));const o=new Date(e),s=new Date();let n=(s.getFullYear()-o.getFullYear())*12+(s.getMonth()-o.getMonth());n<0&&(n=0);const t=getIconPathByMonths(n),c=n%12>=9||localStorage.getItem("my_custom_icon_path");document.querySelectorAll("#grid, #recent, #world").forEach(e=>{e.querySelectorAll("*").forEach(e=>{if(0===e.children.length&&e.textContent){const o=e.textContent.trim(),s=o.includes("👤"),n=o.endsWith("명")&&!o.includes("아이콘");(s||n)&&(e.dataset.iconApplied==="true"&&e.dataset.currentSrc===t||(e.innerHTML="",i=document.createElement("img"),i.src=t,i.className="dynamic-user-icon",i.style.width="13px",i.style.height="13px",i.style.marginRight="4px",i.style.verticalAlign="middle",i.style.objectFit="contain",c?(i.style.cursor="pointer",i.title=`클릭하여 500x500 아이콘 변경하기 (활동 경과: ${n}개월)`,i.onclick=e=>{e.stopPropagation(),openIconChangeModal()}):i.title=`활동 경과: ${n}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`,e.appendChild(i),e.append(` ${o.replace("👤","").trim()}`),e.dataset.iconApplied="true",e.dataset.currentSrc=t))}})}) }function openIconChangeModal(){let e=document.getElementById("iconChangeModal");e&&e.remove();document.body.insertAdjacentHTML("beforeend",'\n        <div id="iconChangeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">\n            <div style="background: white; padding: 25px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">\n                <h3 style="margin-top: 0; color: #333; font-size: 18px;">✨ 나만의 아이콘 변경</h3>\n                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">500 x 500 px 규격의 이미지를 업로드해 주세요.</p>\n                \n                <input type="file" id="iconFileInput" accept="image/*" style="margin-bottom: 15px; width: 100%; font-size: 12px;">\n                \n                <div style="margin-bottom: 15px;">\n                    <img id="iconPreview" src="" style="width: 80px; height: 80px; object-fit: contain; border: 1px dashed #ccc; border-radius: 8px; display: none; margin: 0 auto;" alt="미리보기">\n                </div>\n\n                <div style="display: flex; gap: 10px; justify-content: center;">\n                    <button id="saveIconButton" style="background: #6c5ce7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">저장하기</button>\n                    <button id="closeIconButton" style="background: #b2bec3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">닫기</button>\n                </div>\n            </div>\n        </div>\n    ');const o=document.getElementById("iconFileInput"),s=document.getElementById("iconPreview");let n="";o.onchange=e=>{const t=e.target.files[0];t&&(tag=new FileReader,tag.onload=e=>{n=e.target.result,s.src=n,s.style.display="block"},tag.readAsDataURL(t))},document.getElementById("saveIconButton").onclick=()=>{n?(localStorage.setItem("my_custom_icon_path",n),alert("아이콘이 성공적으로 변경되었습니다!"),document.getElementById("iconChangeModal").remove(),applyPersonalMonthlyIcons()):alert("변경할 이미지를 선택해 주세요!")},document.getElementById("closeIconButton").onclick=()=>{document.getElementById("iconChangeModal").remove()}}document.addEventListener("DOMContentLoaded",()=>{applyPersonalMonthlyIcons()}),setInterval(()=>{applyPersonalMonthlyIcons()},500),window.testMonthsLater=function(e){const o=new Date;o.setMonth(o.getMonth()-e),localStorage.setItem("my_platform_join_date",o.toISOString()),applyPersonalMonthlyIcons(),console.log(`[테스트 완료] 가입 후 ${e}개월 차로 설정되었습니다. (무지개 권한 여부: ${e%12>=9?"있음":"없음"})`)};
+/**
+ * Storyboard Icon & Authentication Controller (script.js)
+ */
+
+// 1. Color and Icon Configuration Palette
+const ICON_PALETTE = [
+  { id: 'white', name: '흰색', color: '#FFFFFF', icon: 'fa-solid fa-circle' },
+  { id: 'red', name: '빨강', color: '#FF4D4D', icon: 'fa-solid fa-circle' },
+  { id: 'orange', name: '주황', color: '#FF944D', icon: 'fa-solid fa-circle' },
+  { id: 'yellow', name: '노랑', color: '#FFDA4D', icon: 'fa-solid fa-circle' },
+  { id: 'green', name: '초록', color: '#4DFF88', icon: 'fa-solid fa-circle' },
+  { id: 'skyblue', name: '하늘', color: '#4DDAFF', icon: 'fa-solid fa-circle' },
+  { id: 'blue', name: '파랑', color: '#4D79FF', icon: 'fa-solid fa-circle' },
+  { id: 'purple', name: '보라', color: '#B34DFF', icon: 'fa-solid fa-circle' },
+  { id: 'black', name: '검정', color: '#1A1A1A', icon: 'fa-solid fa-circle' },
+  { id: 'rainbow_star', name: '무지개별', isRainbow: true, icon: 'fa-solid fa-star' }
+];
+
+// App State
+const state = {
+  isLoggedIn: false, // Set dynamically via auth
+  currentIcon: 'white',
+  user: null
+};
 
 /**
- * 세계관 영역(#grid, #recent) 내부의 카드 및 닉네임/인원수 영역에만 아이콘 적용
+ * Initialize application elements and handlers
  */
-function applyPersonalMonthlyIcons() {
-    let joinDateStr = localStorage.getItem('my_platform_join_date');
-    if (!joinDateStr) {
-        joinDateStr = new Date().toISOString();
-        localStorage.setItem('my_platform_join_date', joinDateStr);
-    }
-
-    const joinDate = new Date(joinDateStr);
-    const now = new Date();
-    let monthsPassed = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth());
-    if (monthsPassed < 0) monthsPassed = 0;
-
-    const targetIconSrc = getIconPathByMonths(monthsPassed);
-    const isRainbowUser = (monthsPassed % 12 >= 9) || localStorage.getItem('my_custom_icon_path');
-
-    // 💡 핵심: 전체를 다 뒤지지 않고, 세계관이 표시되는 #grid와 #recent 내부의 요소들만 타겟으로 지정합니다!
-    const worldContainers = document.querySelectorAll('#grid, #recent, #world');
-    
-    worldContainers.forEach(container => {
-        const targetElements = container.querySelectorAll('*');
-        targetElements.forEach(el => {
-            if (el.children.length === 0 && el.textContent) {
-                const text = el.textContent.trim();
-                
-                // 세계관 카드 안에서 👤 기호가 있거나 인원수/메타 정보가 포함된 텍스트 노드 탐색
-                const hasUserEmoji = text.includes('👤');
-                const isMemberCount = text.endsWith('명') && !text.includes('아이콘');
-
-                if (hasUserEmoji || isMemberCount) {
-                    if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === targetIconSrc) return;
-
-                    const cleanText = text.replace('👤', '').trim();
-
-                    el.innerHTML = '';
-                    
-                    const iconImg = document.createElement('img');
-                    iconImg.src = targetIconSrc;
-                    iconImg.className = 'dynamic-user-icon';
-                    iconImg.style.width = '13px';
-                    iconImg.style.height = '13px';
-                    iconImg.style.marginRight = '4px';
-                    iconImg.style.verticalAlign = 'middle';
-                    iconImg.style.objectFit = 'contain';
-                    
-                    // 🌈 무지개 아이콘 권한이 있는 사용자만 클릭하여 500x500 아이콘 변경 창 띄우기 가능
-                    if (isRainbowUser) {
-                        iconImg.style.cursor = 'pointer';
-                        iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
-                        iconImg.onclick = (e) => {
-                            e.stopPropagation();
-                            openIconChangeModal();
-                        };
-                    } else {
-                        iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`;
-                    }
-
-                    el.appendChild(iconImg);
-                    el.append(` ${cleanText}`);
-                    el.dataset.iconApplied = "true";
-                    el.dataset.currentSrc = targetIconSrc;
-                }
-            }
-        });
-    });
-}
-
-/**
- * 500x500 아이콘 변경 전용 모달 창 생성 및 열기 함수
- */
-function openIconChangeModal() {
-    let existingModal = document.getElementById('iconChangeModal');
-    if (existingModal) existingModal.remove();
-
-    const modalHTML = `
-        <div id="iconChangeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
-            <div style="background: white; padding: 25px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                <h3 style="margin-top: 0; color: #333; font-size: 18px;">✨ 나만의 아이콘 변경</h3>
-                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">500 x 500 px 규격의 이미지를 업로드해 주세요.</p>
-                
-                <input type="file" id="iconFileInput" accept="image/*" style="margin-bottom: 15px; width: 100%; font-size: 12px;">
-                
-                <div style="margin-bottom: 15px;">
-                    <img id="iconPreview" src="" style="width: 80px; height: 80px; object-fit: contain; border: 1px dashed #ccc; border-radius: 8px; display: none; margin: 0 auto;" alt="미리보기">
-                </div>
-
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button id="saveIconButton" style="background: #6c5ce7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">저장하기</button>
-                    <button id="closeIconButton" style="background: #b2bec3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">닫기</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    const fileInput = document.getElementById('iconFileInput');
-    const previewImg = document.getElementById('iconPreview');
-    let base64Image = '';
-
-    fileInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (uploadEvent) => {
-                base64Image = uploadEvent.target.result;
-                previewImg.src = base64Image;
-                previewImg.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    document.getElementById('saveIconButton').onclick = () => {
-        if (!base64Image) {
-            alert('변경할 이미지를 선택해 주세요!');
-            return;
-        }
-        localStorage.setItem('my_custom_icon_path', base64Image);
-        alert('아이콘이 성공적으로 변경되었습니다!');
-        document.getElementById('iconChangeModal').remove();
-
-        applyPersonalMonthlyIcons();
-    };
-
-    document.getElementById('closeIconButton').onclick = () => {
-        document.getElementById('iconChangeModal').remove();
-    };
-}
-
-// 페이지 로드 및 주기적 렌더링
 document.addEventListener('DOMContentLoaded', () => {
-    applyPersonalMonthlyIcons();
+  checkAuthStatus();
+  renderIconPalette();
+  setupEventListeners();
+  updateUI();
 });
 
-setInterval(() => {
-    applyPersonalMonthlyIcons();
-}, 500);
+/**
+ * Check login session state (e.g., from localStorage or auth token)
+ */
+function checkAuthStatus() {
+  const savedUser = localStorage.getItem('storyboard_user');
+  if (savedUser) {
+    try {
+      state.user = JSON.parse(savedUser);
+      state.isLoggedIn = true;
+    } catch (e) {
+      state.isLoggedIn = false;
+    }
+  } else {
+    state.isLoggedIn = false;
+  }
+}
 
-// 테스트용 함수
-window.testMonthsLater = function(months) {
-    const fakeJoinDate = new Date();
-    fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
-    localStorage.setItem('my_platform_join_date', fakeJoinDate.toISOString());
-    
-    applyPersonalMonthlyIcons();
-    console.log(`[테스트 완료] 가입 후 ${months}개월 차로 설정되었습니다. (무지개 권한 여부: ${months % 12 >= 9 ? '있음' : '없음'})`);
-};
+/**
+ * Render the color / rainbow star icon selector list dynamically
+ */
+function renderIconPalette() {
+  const paletteContainer = document.getElementById('icon-palette');
+  if (!paletteContainer) return;
+
+  paletteContainer.innerHTML = '';
+
+  ICON_PALETTE.forEach(item => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `icon-select-btn ${state.currentIcon === item.id ? 'active' : ''}`;
+    btn.setAttribute('data-icon-id', item.id);
+    btn.title = item.name;
+
+    // Render icon symbol
+    const iconEl = document.createElement('i');
+    iconEl.className = item.icon;
+
+    if (item.isRainbow) {
+      iconEl.classList.add('rainbow-text');
+    } else {
+      iconEl.style.color = item.color;
+    }
+
+    btn.appendChild(iconEl);
+
+    // Click handler with login state check
+    btn.addEventListener('click', () => {
+      handleIconChange(item.id);
+    });
+
+    paletteContainer.appendChild(btn);
+  });
+}
+
+/**
+ * Handle icon selection with strict login verification
+ */
+function handleIconChange(iconId) {
+  // Check permission requirement
+  if (!state.isLoggedIn) {
+    alert('아이콘을 변경하려면 먼저 로그인해주세요.');
+    return;
+  }
+
+  state.currentIcon = iconId;
+  localStorage.setItem('storyboard_selected_icon', iconId);
+
+  // Update UI display
+  updateSelectedIconDisplay();
+  renderIconPalette(); // Refresh active state
+}
+
+/**
+ * Update current active icon on the storyboard
+ */
+function updateSelectedIconDisplay() {
+  const displayTarget = document.getElementById('current-icon-display');
+  if (!displayTarget) return;
+
+  const activeItem = ICON_PALETTE.find(item => item.id === state.currentIcon) || ICON_PALETTE[0];
+
+  displayTarget.className = activeItem.icon;
+  if (activeItem.isRainbow) {
+    displayTarget.classList.add('rainbow-text');
+    displayTarget.style.color = '';
+  } else {
+    displayTarget.classList.remove('rainbow-text');
+    displayTarget.style.color = activeItem.color;
+  }
+}
+
+/**
+ * Update entire UI depending on login state
+ */
+function updateUI() {
+  const authBtn = document.getElementById('auth-toggle-btn');
+  const paletteContainer = document.getElementById('icon-palette');
+
+  if (authBtn) {
+    authBtn.textContent = state.isLoggedIn ? '로그아웃' : '로그인';
+  }
+
+  // Enable / disable palette interaction visual hints
+  if (paletteContainer) {
+    if (state.isLoggedIn) {
+      paletteContainer.classList.remove('read-only');
+    } else {
+      paletteContainer.classList.add('read-only');
+    }
+  }
+
+  updateSelectedIconDisplay();
+}
+
+/**
+ * Attach Auth Toggle / Login Simulation
+ */
+function setupEventListeners() {
+  const authBtn = document.getElementById('auth-toggle-btn');
+  if (authBtn) {
+    authBtn.addEventListener('click', () => {
+      if (state.isLoggedIn) {
+        // Logout action
+        state.isLoggedIn = false;
+        state.user = null;
+        localStorage.removeItem('storyboard_user');
+        alert('로그아웃 되었습니다.');
+      } else {
+        // Login action (Simulation)
+        state.isLoggedIn = true;
+        state.user = { id: 'user_1', name: 'User' };
+        localStorage.setItem('storyboard_user', JSON.stringify(state.user));
+        alert('성공적으로 로그인되었습니다. 이제 아이콘을 변경할 수 있습니다!');
+      }
+      updateUI();
+    });
+  }
+}
+
