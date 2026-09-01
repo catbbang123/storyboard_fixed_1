@@ -3455,176 +3455,127 @@ if(saveError){
 });
 
 /**
- * Storyboard Icon & Authentication Controller (script.js)
+ * 사용자 가입 기간(개월 수) 기반 아이콘 자동 변경 및 10개월 이상 시 사용자 지정 아이콘 설정 스크립트
  */
 
-// 1. Color and Icon Configuration Palette
-const ICON_PALETTE = [
-  { id: 'white', name: '흰색', color: '#FFFFFF', icon: 'fa-solid fa-circle' },
-  { id: 'red', name: '빨강', color: '#FF4D4D', icon: 'fa-solid fa-circle' },
-  { id: 'orange', name: '주황', color: '#FF944D', icon: 'fa-solid fa-circle' },
-  { id: 'yellow', name: '노랑', color: '#FFDA4D', icon: 'fa-solid fa-circle' },
-  { id: 'green', name: '초록', color: '#4DFF88', icon: 'fa-solid fa-circle' },
-  { id: 'skyblue', name: '하늘', color: '#4DDAFF', icon: 'fa-solid fa-circle' },
-  { id: 'blue', name: '파랑', color: '#4D79FF', icon: 'fa-solid fa-circle' },
-  { id: 'purple', name: '보라', color: '#B34DFF', icon: 'fa-solid fa-circle' },
-  { id: 'black', name: '검정', color: '#1A1A1A', icon: 'fa-solid fa-circle' },
-  { id: 'rainbow_star', name: '무지개별', isRainbow: true, icon: 'fa-solid fa-star' }
+// 아이콘 기본 GitHub 경로 (필요시 저장소 URL 수정 가능)
+const GITHUB_ICON_BASE_URL = "https://github.com/catbbang123/storyboard_fixed_1/blob/main/icons/icon-192.png";
+
+// 가입 기간별 아이콘 파일 목록 (인덱스 = 개월 수)
+// 0개월: 흰색, 1개월: 빨강, 2개월: 주황, 3개월: 노랑, 4개월: 초록,
+// 5개월: 하늘색, 6개월: 파랑, 7개월: 보라, 8개월: 검은색, 9개월 이상: 무지개 색상
+const PERIOD_ICONS = [
+    "white.png",    // 0개월차 (가입 직후)
+    "red.png",      // 1개월 경과
+    "orange.png",   // 2개월 경과
+    "yellow.png",   // 3개월 경과
+    "green.png",    // 4개월 경과
+    "skyblue.png",  // 5개월 경과
+    "blue.png",     // 6개월 경과
+    "purple.png",   // 7개월 경과
+    "black.png",    // 8개월 경과
+    "rainbow.png"   // 9개월 이상 (10개월차~)
 ];
 
-// App State
-const state = {
-  isLoggedIn: false, // Set dynamically via auth
-  currentIcon: 'white',
-  user: null
-};
+/**
+ * 가입 날짜를 기준으로 현재까지 경과한 개월 수를 계산합니다.
+ * @param {Date|string} createdAt - 가입 일자 (Date 객체 또는 날짜 문자열)
+ * @returns {number} 경과한 개월 수
+ */
+function calculateMonthsSinceSignup(createdAt) {
+    const signupDate = new Date(createdAt);
+    const now = new Date();
+    
+    let months = (now.getFullYear() - signupDate.getFullYear()) * 12 + (now.getMonth() - signupDate.getMonth());
+    
+    // 일자 비교: 가입일보다 현재 날짜의 일이 더 작으면 1개월 미만 경과로 처리
+    if (now.getDate() < signupDate.getDate()) {
+        months--;
+    }
+    
+    return months < 0 ? 0 : months;
+}
 
 /**
- * Initialize application elements and handlers
+ * 경과 개월 수에 따른 아이콘 파일명을 반환합니다.
+ * @param {number} months - 경과 개월 수
+ * @returns {string} 아이콘 파일명
  */
-document.addEventListener('DOMContentLoaded', () => {
-  checkAuthStatus();
-  renderIconPalette();
-  setupEventListeners();
-  updateUI();
+function getIconFileNameByPeriod(months) {
+    if (months >= 9) {
+        return PERIOD_ICONS[9]; // 9개월 이상(10개월차부터)은 무지개 색상 유지
+    }
+    return PERIOD_ICONS[months];
+}
+
+/**
+ * 사용자 닉네임 옆에 표시될 아이콘 URL을 가져옵니다.
+ * 가입 10개월차(경과 개월 수 9 이상)에 달하고 사용자 지정 이미지 URL이 있으면 우선 적용합니다.
+ * @param {Object} user - 사용자 정보 객체 { createdAt: string|Date, customIconUrl?: string }
+ * @returns {string} 최종 아이콘 Image URL
+ */
+function getUserIconUrl(user) {
+    if (!user || !user.createdAt) {
+        return GITHUB_ICON_BASE_URL + PERIOD_ICONS[0]; // 기본 0개월차 아이콘
+    }
+
+    const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
+    
+    // 가입 10개월차 이상(경과 개월 수 9 이상)이고 사용자가 원하는 사진/URL을 설정한 경우 우선 적용
+    if (monthsPassed >= 9 && user.customIconUrl) {
+        return user.customIconUrl;
+    }
+    
+    // 그 외에는 해당 기간에 맞는 GitHub 아이콘 파일명 반환
+    const iconFileName = getIconFileNameByPeriod(monthsPassed);
+    return GITHUB_ICON_BASE_URL + iconFileName;
+}
+
+/**
+ * DOM에 사용자 닉네임과 아이콘을 렌더링하는 함수
+ * @param {string} nicknameElementId - 닉네임 엘리먼트 ID
+ * @param {Object} user - 사용자 객체
+ */
+function renderUserBadge(nicknameElementId, user) {
+    const container = document.getElementById(nicknameElementId);
+    if (!container) return;
+
+    const iconUrl = getUserIconUrl(user);
+
+    container.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = iconUrl;
+    img.alt = "User Level Icon";
+    img.className = "user-nickname-icon";
+    img.style.width = "20px";
+    img.style.height = "20px";
+    img.style.verticalAlign = "middle";
+    img.style.marginRight = "6px";
+
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = user.nickname || "User";
+
+    container.appendChild(img);
+    container.appendChild(nameSpan);
+}
+
+// 사용 예시
+window.addEventListener("DOMContentLoaded", () => {
+    // 예시 1: 가입 0개월차 사용자
+    const newMember = {
+        nickname: "신규유저",
+        createdAt: "2026-09-01" // 오늘 가입 -> 흰색 아이콘
+    };
+
+    // 예시 2: 가입 10개월 이상 경과한 사용자 (사용자 지정 이미지 적용)
+    const veteranMember = {
+        nickname: "세계관마스터",
+        createdAt: "2025-10-01", // 10개월 이상 경과 -> 무지개 아이콘 또는 지정한 사진
+        customIconUrl: "https://example.com/my-custom-photo.png"
+    };
+
+    // renderUserBadge("user-profile-badge", veteranMember);
 });
 
-/**
- * Check login session state (e.g., from localStorage or auth token)
- */
-function checkAuthStatus() {
-  const savedUser = localStorage.getItem('storyboard_user');
-  if (savedUser) {
-    try {
-      state.user = JSON.parse(savedUser);
-      state.isLoggedIn = true;
-    } catch (e) {
-      state.isLoggedIn = false;
-    }
-  } else {
-    state.isLoggedIn = false;
-  }
-}
-
-/**
- * Render the color / rainbow star icon selector list dynamically
- */
-function renderIconPalette() {
-  const paletteContainer = document.getElementById('icon-palette');
-  if (!paletteContainer) return;
-
-  paletteContainer.innerHTML = '';
-
-  ICON_PALETTE.forEach(item => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `icon-select-btn ${state.currentIcon === item.id ? 'active' : ''}`;
-    btn.setAttribute('data-icon-id', item.id);
-    btn.title = item.name;
-
-    // Render icon symbol
-    const iconEl = document.createElement('i');
-    iconEl.className = item.icon;
-
-    if (item.isRainbow) {
-      iconEl.classList.add('rainbow-text');
-    } else {
-      iconEl.style.color = item.color;
-    }
-
-    btn.appendChild(iconEl);
-
-    // Click handler with login state check
-    btn.addEventListener('click', () => {
-      handleIconChange(item.id);
-    });
-
-    paletteContainer.appendChild(btn);
-  });
-}
-
-/**
- * Handle icon selection with strict login verification
- */
-function handleIconChange(iconId) {
-  // Check permission requirement
-  if (!state.isLoggedIn) {
-    alert('아이콘을 변경하려면 먼저 로그인해주세요.');
-    return;
-  }
-
-  state.currentIcon = iconId;
-  localStorage.setItem('storyboard_selected_icon', iconId);
-
-  // Update UI display
-  updateSelectedIconDisplay();
-  renderIconPalette(); // Refresh active state
-}
-
-/**
- * Update current active icon on the storyboard
- */
-function updateSelectedIconDisplay() {
-  const displayTarget = document.getElementById('current-icon-display');
-  if (!displayTarget) return;
-
-  const activeItem = ICON_PALETTE.find(item => item.id === state.currentIcon) || ICON_PALETTE[0];
-
-  displayTarget.className = activeItem.icon;
-  if (activeItem.isRainbow) {
-    displayTarget.classList.add('rainbow-text');
-    displayTarget.style.color = '';
-  } else {
-    displayTarget.classList.remove('rainbow-text');
-    displayTarget.style.color = activeItem.color;
-  }
-}
-
-/**
- * Update entire UI depending on login state
- */
-function updateUI() {
-  const authBtn = document.getElementById('auth-toggle-btn');
-  const paletteContainer = document.getElementById('icon-palette');
-
-  if (authBtn) {
-    authBtn.textContent = state.isLoggedIn ? '로그아웃' : '로그인';
-  }
-
-  // Enable / disable palette interaction visual hints
-  if (paletteContainer) {
-    if (state.isLoggedIn) {
-      paletteContainer.classList.remove('read-only');
-    } else {
-      paletteContainer.classList.add('read-only');
-    }
-  }
-
-  updateSelectedIconDisplay();
-}
-
-/**
- * Attach Auth Toggle / Login Simulation
- */
-function setupEventListeners() {
-  const authBtn = document.getElementById('auth-toggle-btn');
-  if (authBtn) {
-    authBtn.addEventListener('click', () => {
-      if (state.isLoggedIn) {
-        // Logout action
-        state.isLoggedIn = false;
-        state.user = null;
-        localStorage.removeItem('storyboard_user');
-        alert('로그아웃 되었습니다.');
-      } else {
-        // Login action (Simulation)
-        state.isLoggedIn = true;
-        state.user = { id: 'user_1', name: 'User' };
-        localStorage.setItem('storyboard_user', JSON.stringify(state.user));
-        alert('성공적으로 로그인되었습니다. 이제 아이콘을 변경할 수 있습니다!');
-      }
-      updateUI();
-    });
-  }
-}
 
