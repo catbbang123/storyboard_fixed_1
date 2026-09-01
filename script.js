@@ -3455,12 +3455,13 @@ if(saveError){
 });
 
 /**
- * 사용자 가입 기간(개월 수) 기반 아이콘 자동 변경 및 10개월 이상 시 사용자 지정 아이콘 설정 스크립트
+ * 사용자 가입 기간(개월 수) 기반 아이콘 자동 변경 및 사용자 지정 아이콘 설정 스크립트
  */
 
-// 아이콘 기본 GitHub 경로 (필요시 저장소 URL 수정 가능)
-const GITHUB_ICON_BASE_URL="https://raw.githubusercontent.com/catbbang123/storyboard_fixed_1/main/icons/";
-// 가입 기간별 아이콘 파일 목록 (인덱스 = 개월 수)
+// 아이콘 기본 GitHub raw 링크 경로
+const GITHUB_ICON_BASE_URL = "https://raw.githubusercontent.com/catbbang123/storyboard_fixed_1/main/icons/";
+
+// 가입 기간별 아이콘 파일 목록
 // 0개월: 흰색, 1개월: 빨강, 2개월: 주황, 3개월: 노랑, 4개월: 초록,
 // 5개월: 하늘색, 6개월: 파랑, 7개월: 보라, 8개월: 검은색, 9개월 이상: 무지개 색상
 const PERIOD_ICONS = [
@@ -3478,8 +3479,6 @@ const PERIOD_ICONS = [
 
 /**
  * 가입 날짜를 기준으로 현재까지 경과한 개월 수를 계산합니다.
- * @param {Date|string} createdAt - 가입 일자 (Date 객체 또는 날짜 문자열)
- * @returns {number} 경과한 개월 수
  */
 function calculateMonthsSinceSignup(createdAt) {
     const signupDate = new Date(createdAt);
@@ -3497,21 +3496,16 @@ function calculateMonthsSinceSignup(createdAt) {
 
 /**
  * 경과 개월 수에 따른 아이콘 파일명을 반환합니다.
- * @param {number} months - 경과 개월 수
- * @returns {string} 아이콘 파일명
  */
 function getIconFileNameByPeriod(months) {
     if (months >= 9) {
         return PERIOD_ICONS[9]; // 9개월 이상(10개월차부터)은 무지개 색상 유지
     }
-    return PERIOD_ICONS[months];
+    return PERIOD_ICONS[months] || PERIOD_ICONS[0];
 }
 
 /**
- * 사용자 닉네임 옆에 표시될 아이콘 URL을 가져옵니다.
- * 가입 10개월차(경과 개월 수 9 이상)에 달하고 사용자 지정 이미지 URL이 있으면 우선 적용합니다.
- * @param {Object} user - 사용자 정보 객체 { createdAt: string|Date, customIconUrl?: string }
- * @returns {string} 최종 아이콘 Image URL
+ * 사용자 닉네임 또는 정보 영역에 표시될 아이콘 URL을 가져옵니다.
  */
 function getUserIconUrl(user) {
     if (!user || !user.createdAt) {
@@ -3520,61 +3514,157 @@ function getUserIconUrl(user) {
 
     const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
     
-    // 가입 10개월차 이상(경과 개월 수 9 이상)이고 사용자가 원하는 사진/URL을 설정한 경우 우선 적용
+    // 가입 10개월차 이상(경과 개월 수 9 이상)이고 사용자가 원하는 사진을 설정한 경우 우선 적용
     if (monthsPassed >= 9 && user.customIconUrl) {
         return user.customIconUrl;
     }
     
-    // 그 외에는 해당 기간에 맞는 GitHub 아이콘 파일명 반환
     const iconFileName = getIconFileNameByPeriod(monthsPassed);
     return GITHUB_ICON_BASE_URL + iconFileName;
 }
 
 /**
- * DOM에 사용자 닉네임과 아이콘을 렌더링하는 함수
- * @param {string} nicknameElementId - 닉네임 엘리먼트 ID
- * @param {Object} user - 사용자 객체
+ * DOM 전체를 탐색하며 👤 이모지나 인원수 영역을 평행사변형 아이콘으로 대체하는 함수
  */
-function renderUserBadge(nicknameElementId, user) {
-    const container = document.getElementById(nicknameElementId);
-    if (!container) return;
+function applyPersonalMonthlyIcons() {
+    let joinDate = localStorage.getItem("my_platform_join_date");
+    if (!joinDate) {
+        joinDate = new Date().toISOString();
+        localStorage.setItem("my_platform_join_date", joinDate);
+    }
 
+    const user = {
+        nickname: localStorage.getItem("my_platform_nickname") || "창작자",
+        createdAt: joinDate,
+        customIconUrl: localStorage.getItem("my_custom_icon_path")
+    };
+
+    const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
     const iconUrl = getUserIconUrl(user);
+    const isRainbowUser = (monthsPassed >= 9) || localStorage.getItem("my_custom_icon_path");
 
-    container.innerHTML = "";
+    document.querySelectorAll("*").forEach(el => {
+        // 로그인 버튼이나 프로필 메뉴 등 예외 처리 영역 제외
+        if (el.closest("#googleLoginBtn") || el.closest("#profileBtn") || el.closest("#profileMenu") || el.id === "profileName") {
+            return;
+        }
 
-    const img = document.createElement("img");
-    img.src = iconUrl;
-    img.alt = "User Level Icon";
-    img.className = "user-nickname-icon";
-    img.style.width = "20px";
-    img.style.height = "20px";
-    img.style.verticalAlign = "middle";
-    img.style.marginRight = "6px";
+        if (el.children.length === 0 && el.textContent) {
+            const text = el.textContent.trim();
+            const hasUserEmoji = text.includes("👤");
+            const isMemberCount = text.endsWith("명") && !text.includes("아이콘");
 
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = user.nickname || "User";
+            if (hasUserEmoji || isMemberCount) {
+                if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === iconUrl) return;
 
-    container.appendChild(img);
-    container.appendChild(nameSpan);
+                el.innerHTML = "";
+
+                const iconImg = document.createElement("img");
+                iconImg.src = iconUrl;
+                iconImg.className = "dynamic-user-icon";
+                iconImg.style.width = "13px";
+                iconImg.style.height = "13px";
+                iconImg.style.marginRight = "4px";
+                iconImg.style.verticalAlign = "middle";
+                iconImg.style.objectFit = "contain";
+
+                // 9개월(10개월차) 이상인 사용자만 아이콘 클릭 시 500x500 이미지 변경 모달 실행
+                if (isRainbowUser) {
+                    iconImg.style.cursor = "pointer";
+                    iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
+                    iconImg.onclick = (e) => {
+                        e.stopPropagation();
+                        openIconChangeModal();
+                    };
+                } else {
+                    iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`;
+                }
+
+                el.appendChild(iconImg);
+                el.append(` ${text.replace("👤", "").trim()}`);
+                el.dataset.iconApplied = "true";
+                el.dataset.currentSrc = iconUrl;
+            }
+        }
+    });
 }
 
-// 사용 예시
-window.addEventListener("DOMContentLoaded", () => {
-    // 예시 1: 가입 0개월차 사용자
-    const newMember = {
-        nickname: "신규유저",
-        createdAt: "2026-09-01" // 오늘 가입 -> 흰색 아이콘
+/**
+ * 500x500 아이콘 변경 전용 모달 창 생성 및 열기 함수
+ */
+function openIconChangeModal() {
+    let existingModal = document.getElementById("iconChangeModal");
+    if (existingModal) existingModal.remove();
+
+    const modalHTML = `
+        <div id="iconChangeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+            <div style="background: white; padding: 25px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <h3 style="margin-top: 0; color: #333; font-size: 18px;">✨ 나만의 아이콘 변경</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">500 x 500 px 규격의 이미지를 업로드해 주세요.</p>
+                
+                <input type="file" id="iconFileInput" accept="image/*" style="margin-bottom: 15px; width: 100%; font-size: 12px;">
+                
+                <div style="margin-bottom: 15px;">
+                    <img id="iconPreview" src="" style="width: 80px; height: 80px; object-fit: contain; border: 1px dashed #ccc; border-radius: 8px; display: none; margin: 0 auto;" alt="미리보기">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="saveIconButton" style="background: #6c5ce7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">저장하기</button>
+                    <button id="closeIconButton" style="background: #b2bec3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">닫기</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+    const fileInput = document.getElementById("iconFileInput");
+    const previewImg = document.getElementById("iconPreview");
+    let base64Image = "";
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (uploadEvent) => {
+                base64Image = uploadEvent.target.result;
+                previewImg.src = base64Image;
+                previewImg.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
-    // 예시 2: 가입 10개월 이상 경과한 사용자 (사용자 지정 이미지 적용)
-    const veteranMember = {
-        nickname: "세계관마스터",
-        createdAt: "2025-10-01", // 10개월 이상 경과 -> 무지개 아이콘 또는 지정한 사진
-        customIconUrl: "https://example.com/my-custom-photo.png"
+    document.getElementById("saveIconButton").onclick = () => {
+        if (!base64Image) {
+            alert("변경할 이미지를 선택해 주세요!");
+            return;
+        }
+        localStorage.setItem("my_custom_icon_path", base64Image);
+        alert("아이콘이 성공적으로 변경되었습니다!");
+        document.getElementById("iconChangeModal").remove();
+        applyPersonalMonthlyIcons();
     };
 
-    // renderUserBadge("user-profile-badge", veteranMember);
+    document.getElementById("closeIconButton").onclick = () => {
+        document.getElementById("iconChangeModal").remove();
+    };
+}
+
+// 페이지 로드 시 실행 및 주기적 렌더링
+document.addEventListener("DOMContentLoaded", () => {
+    applyPersonalMonthlyIcons();
 });
 
+setInterval(() => {
+    applyPersonalMonthlyIcons();
+}, 500);
 
+// 테스트용 함수 (브라우저 콘솔창에 window.testMonthsLater(9) 등을 입력하여 테스트 가능)
+window.testMonthsLater = function(months) {
+    const fakeJoinDate = new Date();
+    fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
+    localStorage.setItem("my_platform_join_date", fakeJoinDate.toISOString());
+    applyPersonalMonthlyIcons();
+    console.log(`[테스트 완료] 가입 후 ${months}개월 차로 설정되었습니다.`);
+};
