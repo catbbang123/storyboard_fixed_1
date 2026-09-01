@@ -3455,43 +3455,53 @@ if(saveError){
 });
 
 // ==========================================
-// [설정] 월별 무지개 아이콘 색상 매핑 (1월 ~ 12월)
+// [설정] 1개월마다 순환하는 무지개 아이콘 색상 매핑 (순서: 흰, 빨, 주, 노, 초, 하, 파, 보, 검)
 // ==========================================
-const monthlyColorMap = {
-    1: { name: "흰색 (테두리 추가)", filter: "brightness(0) invert(1) drop-shadow(1px 1px 0px #000) drop-shadow(-1px -1px 0px #000)" }, // 1월: 흰색 + 검은 테두리 효과
-    2: { name: "빨간색", filter: "invert(15%) sepia(95%) saturate(7483%) hue-rotate(0deg) brightness(95%) contrast(105%)" },
-    3: { name: "주황색", filter: "invert(53%) sepia(89%) saturate(2474%) hue-rotate(1deg) brightness(101%) contrast(101%)" },
-    4: { name: "노란색", filter: "invert(89%) sepia(61%) saturate(1478%) hue-rotate(359deg) brightness(103%) contrast(103%)" },
-    5: { name: "초록색", filter: "invert(48%) sepia(79%) saturate(497%) hue-rotate(86deg) brightness(95%) contrast(93%)" },
-    6: { name: "하늘색", filter: "invert(70%) sepia(55%) saturate(544%) hue-rotate(165deg) brightness(98%) contrast(91%)" },
-    7: { name: "파란색", filter: "invert(14%) sepia(98%) saturate(7413%) hue-rotate(247deg) brightness(96%) contrast(115%)" },
-    8: { name: "보라색", filter: "invert(23%) sepia(85%) saturate(3419%) hue-rotate(274deg) brightness(91%) contrast(102%)" },
-    9: { name: "검은색", filter: "brightness(0)" },
-    10: { name: "무지개특수1", filter: "hue-rotate(90deg) saturate(200%)" },
-    11: { name: "무지개특수2", filter: "hue-rotate(180deg) saturate(200%)" },
-    12: { name: "무지개특수3", filter: "hue-rotate(270deg) saturate(200%)" }
+const rainbowColorSteps = {
+    0: { name: "흰색 (얇은 테두리)", filter: "brightness(0) invert(1) drop-shadow(0.5px 0.5px 0px #000)" }, // 0개월 차 (시작: 흰색)
+    1: { name: "빨간색", filter: "invert(15%) sepia(95%) saturate(7483%) hue-rotate(0deg) brightness(95%) contrast(105%)" },    // 1개월 차
+    2: { name: "주황색", filter: "invert(53%) sepia(89%) saturate(2474%) hue-rotate(1deg) brightness(101%) contrast(101%)" },  // 2개월 차
+    3: { name: "노란색", filter: "invert(89%) sepia(61%) saturate(1478%) hue-rotate(359deg) brightness(103%) contrast(103%)" }, // 3개월 차
+    4: { name: "초록색", filter: "invert(48%) sepia(79%) saturate(497%) hue-rotate(86deg) brightness(95%) contrast(93%)" },     // 4개월 차
+    5: { name: "하늘색", filter: "invert(70%) sepia(55%) saturate(544%) hue-rotate(165deg) brightness(98%) contrast(91%)" },    // 5개월 차
+    6: { name: "파란색", filter: "invert(14%) sepia(98%) saturate(7413%) hue-rotate(247deg) brightness(96%) contrast(115%)" },   // 6개월 차
+    7: { name: "보라색", filter: "invert(23%) sepia(85%) saturate(3419%) hue-rotate(274deg) brightness(91%) contrast(102%)" },   // 7개월 차
+    8: { name: "검은색", filter: "brightness(0)" }                                                                             // 8개월 차 이후 (검은색 고정 또는 무한 반복)
 };
 
 /**
- * 👤 기호가 포함된 닉네임 영역을 찾아 평행사변형 커스텀 아이콘으로 교체하는 함수
- * @param {string} customImageSrc - 사용할 아이콘 이미지 경로
+ * 사용자의 웹사이트 방문/가입 시작일을 기준으로 1개월마다 색상을 변경하는 함수
  */
-function applyMonthlyCustomIcons(customImageSrc = 'icons/icon-192.png') {
-    const currentMonth = new Date().getMonth() + 1;
-    const colorConfig = monthlyColorMap[currentMonth] || monthlyColorMap[1];
+function applyPersonalMonthlyIcons(customImageSrc = 'icons/icon-192.png') {
+    // 1. 내 브라우저에 저장된 시작일(가입일) 가져오기 (없으면 오늘 날짜로 자동 등록)
+    let joinDateStr = localStorage.getItem('my_platform_join_date');
+    if (!joinDateStr) {
+        joinDateStr = new Date().toISOString();
+        localStorage.setItem('my_platform_join_date', joinDateStr);
+    }
 
-    // 페이지 내 모든 요소 중 '👤' 문자가 포함된 곳을 탐색
+    const joinDate = new Date(joinDateStr);
+    const now = new Date();
+
+    // 2. 가입일로부터 몇 개월이 지났는지 계산 (년수 차이 * 12 + 월수 차이)
+    let monthsPassed = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth());
+    
+    // 혹시 날짜가 역행했거나 음수면 0으로 처리
+    if (monthsPassed < 0) monthsPassed = 0;
+
+    // 9단계(0~8) 순서대로 반복되도록 설정 (8개월이 지나면 다시 순환하거나 검은색 유지)
+    const colorIndex = monthsPassed % 9;
+    const colorConfig = rainbowColorSteps[colorIndex];
+
+    // 3. 화면의 👤 기호가 포함된 닉네임 찾아서 아이콘 적용
     const allElements = document.querySelectorAll('*');
     allElements.forEach(el => {
-        // 자식 요소가 없고 텍스트에 '👤'가 포함된 경우에만 안전하게 교체
         if (el.children.length === 0 && el.textContent && el.textContent.includes('👤')) {
-            // 이미 변환된 적이 있다면 패스
             if (el.dataset.iconApplied === "true") return;
 
-            const originalText = el.textContent; // 예: "👤 빵냥"
-            const nickname = originalText.replace('👤', '').trim(); // 👤 기호 제거 후 닉네임만 추출
+            const originalText = el.textContent;
+            const nickname = originalText.replace('👤', '').trim();
 
-            // 기존 내용을 비우고 커스텀 이미지와 닉네임 조합으로 재구성
             el.innerHTML = '';
             
             const iconImg = document.createElement('img');
@@ -3503,7 +3513,7 @@ function applyMonthlyCustomIcons(customImageSrc = 'icons/icon-192.png') {
             iconImg.style.verticalAlign = 'middle';
             iconImg.style.objectFit = 'contain';
             iconImg.style.filter = colorConfig.filter;
-            iconImg.title = `이번 달 (${currentMonth}월) 아이콘 색상: ${colorConfig.name}`;
+            iconImg.title = `활동 경과: ${monthsPassed}개월 차 (${colorConfig.name})`;
 
             el.appendChild(iconImg);
             el.append(` ${nickname}`);
@@ -3512,19 +3522,25 @@ function applyMonthlyCustomIcons(customImageSrc = 'icons/icon-192.png') {
     });
 }
 
-// 1. 페이지가 처음 로드될 때 실행
+// 1. 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', () => {
-    applyMonthlyCustomIcons('icons/icon-192.png');
+    applyPersonalMonthlyIcons('icons/icon-192.png');
 });
 
-// 2. 동적으로 데이터가 로드되거나 화면이 바뀔 때를 대비해 주기적으로 감지하여 적용 (0.5초 간격)
+// 2. 동적 렌더링 대응 (0.5초 간격 체크)
 setInterval(() => {
-    applyMonthlyCustomIcons('icons/icon-192.png');
+    applyPersonalMonthlyIcons('icons/icon-192.png');
 }, 500);
 
-// 3. 필요시 수동으로 이미지 경로를 바꿀 수 있는 함수
-window.changeUserCustomIcon = function(newImagePath) {
-    document.querySelectorAll('.dynamic-user-icon').forEach(icon => {
-        icon.src = newImagePath;
-    });
+// 💡 [테스트용 전역 함수] 만약 몇 달 지났을 때 색상이 바뀌는 걸 미리 보고 싶다면 
+// 브라우저 개발자 콘솔(F12)에 window.testMonthsLater(원하는개월수) 를 입력해 보세요!
+window.testMonthsLater = function(months) {
+    const fakeJoinDate = new Date();
+    fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
+    localStorage.setItem('my_platform_join_date', fakeJoinDate.toISOString());
+    
+    // 이미 적용된 플래그 초기화 후 재실행
+    document.querySelectorAll('[data-icon-applied="true"]').forEach(el => el.dataset.iconApplied = "false");
+    applyPersonalMonthlyIcons('icons/icon-192.png');
+    console.log(`[테스트] 가입 후 ${months}개월이 지난 시점으로 설정되었습니다!`);
 };
