@@ -3459,13 +3459,13 @@ if(saveError){
 // ==========================================
 function getIconPathByMonths(monthsPassed) {
     const defaultIcon = 'icons/icon-192.png';     // 기본 아이콘 (검은색 등)
-    const rainbowIcon = 'icons/rainbow-icon.png'; // 무지개 평행사변형 아이콘
+    const rainbowIcon = 'icons/rainbow-icon.png'; // 포토샵 시안의 무지개 평행사변형 아이콘
 
     // 사용자가 커스텀 아이콘을 등록한 적이 있다면 우선 적용
     let customImageSrc = localStorage.getItem('my_custom_icon_path');
     if (customImageSrc) return customImageSrc;
 
-    // 9개월 차 이상일 때 무지개 아이콘 적용 (무지개 권한 부여)
+    // 9개월 차 이상일 때 무지개 아이콘 적용 (무지개 자격 부여)
     if (monthsPassed % 12 >= 9) { 
         return rainbowIcon; 
     }
@@ -3474,7 +3474,7 @@ function getIconPathByMonths(monthsPassed) {
 }
 
 /**
- * 닉네임(`👤`) 영역 및 세계관 인원수(`1명` 등) 영역에 아이콘 적용 및 클릭 이벤트 연결
+ * 세계관 영역(#grid, #recent) 내부의 카드 및 닉네임/인원수 영역에만 아이콘 적용
  */
 function applyPersonalMonthlyIcons() {
     let joinDateStr = localStorage.getItem('my_platform_join_date');
@@ -3491,56 +3491,54 @@ function applyPersonalMonthlyIcons() {
     const targetIconSrc = getIconPathByMonths(monthsPassed);
     const isRainbowUser = (monthsPassed % 12 >= 9) || localStorage.getItem('my_custom_icon_path');
 
-    const allElements = document.querySelectorAll('*');
-    allElements.forEach(el => {
-        // 우측 상단 로그인 버튼 및 프로필 관련 영역은 절대 건드리지 않음
-        if (el.closest('#googleLoginBtn') || el.closest('#profileBtn') || el.closest('#profileMenu') || el.id === 'profileName') {
-            return;
-        }
-
-        if (el.children.length === 0 && el.textContent) {
-            const text = el.textContent.trim();
-            
-            // 조건 1: '👤'가 포함된 닉네임 영역
-            // 조건 2: 포토샵 시안처럼 '1명' 또는 숫자로 끝나는 인원수/참여자 영역 (필요시 단어 추가 가능)
-            const hasUserEmoji = text.includes('👤');
-            const isMemberCount = text.endsWith('명') && !text.includes('아이콘'); // 예: "1명"
-
-            if (hasUserEmoji || isMemberCount) {
-                if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === targetIconSrc) return;
-
-                // 기존 텍스트에서 '👤' 기호 제거 (없으면 그대로 사용)
-                const cleanText = text.replace('👤', '').trim();
-
-                el.innerHTML = '';
+    // 💡 핵심: 전체를 다 뒤지지 않고, 세계관이 표시되는 #grid와 #recent 내부의 요소들만 타겟으로 지정합니다!
+    const worldContainers = document.querySelectorAll('#grid, #recent, #world');
+    
+    worldContainers.forEach(container => {
+        const targetElements = container.querySelectorAll('*');
+        targetElements.forEach(el => {
+            if (el.children.length === 0 && el.textContent) {
+                const text = el.textContent.trim();
                 
-                const iconImg = document.createElement('img');
-                iconImg.src = targetIconSrc;
-                iconImg.className = 'dynamic-user-icon';
-                iconImg.style.width = '13px';
-                iconImg.style.height = '13px';
-                iconImg.style.marginRight = '4px';
-                iconImg.style.verticalAlign = 'middle';
-                iconImg.style.objectFit = 'contain';
-                
-                // 🌈 무지개 아이콘 권한이 있는 사용자만 클릭하여 500x500 아이콘 변경 창 띄우기 가능
-                if (isRainbowUser) {
-                    iconImg.style.cursor = 'pointer';
-                    iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
-                    iconImg.onclick = (e) => {
-                        e.stopPropagation();
-                        openIconChangeModal();
-                    };
-                } else {
-                    iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`;
+                // 세계관 카드 안에서 👤 기호가 있거나 인원수/메타 정보가 포함된 텍스트 노드 탐색
+                const hasUserEmoji = text.includes('👤');
+                const isMemberCount = text.endsWith('명') && !text.includes('아이콘');
+
+                if (hasUserEmoji || isMemberCount) {
+                    if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === targetIconSrc) return;
+
+                    const cleanText = text.replace('👤', '').trim();
+
+                    el.innerHTML = '';
+                    
+                    const iconImg = document.createElement('img');
+                    iconImg.src = targetIconSrc;
+                    iconImg.className = 'dynamic-user-icon';
+                    iconImg.style.width = '13px';
+                    iconImg.style.height = '13px';
+                    iconImg.style.marginRight = '4px';
+                    iconImg.style.verticalAlign = 'middle';
+                    iconImg.style.objectFit = 'contain';
+                    
+                    // 🌈 무지개 아이콘 권한이 있는 사용자만 클릭하여 500x500 아이콘 변경 창 띄우기 가능
+                    if (isRainbowUser) {
+                        iconImg.style.cursor = 'pointer';
+                        iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
+                        iconImg.onclick = (e) => {
+                            e.stopPropagation();
+                            openIconChangeModal();
+                        };
+                    } else {
+                        iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`;
+                    }
+
+                    el.appendChild(iconImg);
+                    el.append(` ${cleanText}`);
+                    el.dataset.iconApplied = "true";
+                    el.dataset.currentSrc = targetIconSrc;
                 }
-
-                el.appendChild(iconImg);
-                el.append(` ${cleanText}`);
-                el.dataset.iconApplied = "true";
-                el.dataset.currentSrc = targetIconSrc;
             }
-        }
+        });
     });
 }
 
@@ -3599,7 +3597,6 @@ function openIconChangeModal() {
         alert('아이콘이 성공적으로 변경되었습니다!');
         document.getElementById('iconChangeModal').remove();
 
-        document.querySelectorAll('[data-icon-applied="true"]').forEach(el => el.dataset.iconApplied = "false");
         applyPersonalMonthlyIcons();
     };
 
@@ -3623,11 +3620,6 @@ window.testMonthsLater = function(months) {
     fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
     localStorage.setItem('my_platform_join_date', fakeJoinDate.toISOString());
     
-    document.querySelectorAll('[data-icon-applied="true"]').forEach(el => {
-        if (!el.closest('#googleLoginBtn') && !el.closest('#profileBtn') && !el.closest('#profileMenu')) {
-            el.dataset.iconApplied = "false";
-        }
-    });
     applyPersonalMonthlyIcons();
     console.log(`[테스트 완료] 가입 후 ${months}개월 차로 설정되었습니다. (무지개 권한 여부: ${months % 12 >= 9 ? '있음' : '없음'})`);
 };
