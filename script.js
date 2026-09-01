@@ -599,21 +599,44 @@ async function load(){
             myWorldMemberships = membershipData || [];
         }
     }
-    
-    // 실제 승인된 가입자 수 + 소유자 1명으로 세계관 인원을 계산합니다.
-    try{
-        const { data: allMembershipRows, error: countError } = await supabaseClient
-            .from('world_members').select('world_id, status');
-        if(countError){ console.warn('세계관 가입 인원 계산 실패:', countError); }
-        else{
-            const approvedCounts={};
-            (allMembershipRows||[]).forEach(m=>{
-                if(m.status==='approved') approvedCounts[m.world_id]=(approvedCounts[m.world_id]||0)+1;
-            });
-            worlds.forEach(w=>{ w.members=1+(approvedCounts[w.id]||0); });
-        }
-    }catch(err){ console.warn('세계관 가입 인원 계산 중 오류:',err); }
 
+    // 세계관 인원 수를 실제 승인된 가입자 수로 다시 계산합니다.
+    // worlds.members에 남아 있는 예전 숫자(기본값 1)를 그대로 사용하지 않습니다.
+    if(currentUserId && data?.length){
+        const ownedWorldIds = (data || [])
+            .filter(w => w.owner_id === currentUserId)
+            .map(w => w.id);
+
+        if(ownedWorldIds.length){
+            const { data: approvedMemberData, error: approvedMemberError } =
+                await supabaseClient
+                    .from('world_members')
+                    .select('world_id, user_id')
+                    .in('world_id', ownedWorldIds)
+                    .eq('status', 'approved');
+
+            if(approvedMemberError){
+                console.error('세계관 승인 사용자 수 불러오기 실패:', approvedMemberError);
+            }else{
+                const memberCountMap = {};
+
+                (approvedMemberData || []).forEach(member => {
+                    if(!memberCountMap[member.world_id]){
+                        memberCountMap[member.world_id] = new Set();
+                    }
+                    memberCountMap[member.world_id].add(member.user_id);
+                });
+
+                (data || []).forEach(world => {
+                    if(world.owner_id === currentUserId){
+                        // 소유자 1명 + 승인된 가입자 수
+                        world.members = 1 + (memberCountMap[world.id]?.size || 0);
+                    }
+                });
+            }
+        }
+    }
+    
     // 내가 소유한 세계관의 가입 대기 요청
 
     pendingWorldMembers = [];
@@ -1007,6 +1030,27 @@ function getMembershipStatus(worldId){
     return m?.status || null;
 }
 
+async function refreshWorldMemberCount(worldId){
+    const w=get(worldId);
+    if(!w) return;
+
+    const { data, error } = await supabaseClient
+        .from('world_members')
+        .select('user_id')
+        .eq('world_id', worldId)
+        .eq('status', 'approved');
+
+    if(error){
+        console.error('세계관 사용자 수 갱신 실패:', error);
+        return;
+    }
+
+    // 소유자는 world_members에 없어도 항상 1명으로 포함합니다.
+    const uniqueUsers = new Set((data || []).map(m => m.user_id));
+    if(w.owner_id) uniqueUsers.add(w.owner_id);
+    w.members = uniqueUsers.size || 1;
+}
+
 async function updateMembershipStatus(worldId,userId,status){
     const w=get(worldId);
     if(!w || w.owner_id!==currentUserId){
@@ -1029,13 +1073,11 @@ async function updateMembershipStatus(worldId,userId,status){
         m=>!(m.world_id===worldId && m.user_id===userId)
     );
 
+    await refreshWorldMemberCount(worldId);
     renderWorld();
-    if(document.getElementById('membershipRequestModal')?.classList.contains('show')){
-        openMembershipRequests(worldId);
-    }
 }
 
-async function openMembershipRequests(worldId){
+function openMembershipRequests(worldId){
     const w=get(worldId);
     if(!w || w.owner_id!==currentUserId){
         alert('세계관 소유자만 관리할 수 있습니다.');
@@ -1043,20 +1085,6 @@ async function openMembershipRequests(worldId){
     }
 
     const requests=pendingWorldMembers.filter(m=>m.world_id===worldId);
-
-    const { data: approvedMembersData, error: approvedMembersError } = await supabaseClient
-        .from('world_members').select('world_id, user_id, role, status')
-        .eq('world_id',worldId).eq('status','approved');
-    const approvedMembers=approvedMembersError ? [] : (approvedMembersData||[]);
-    if(approvedMembersError) console.warn('승인된 가입자 불러오기 실패:',approvedMembersError);
-
-    const approvedIds=approvedMembers.map(m=>m.user_id);
-    if(approvedIds.length){
-        const {data: approvedProfiles}=await supabaseClient.from('profiles')
-            .select('user_id,nickname').in('user_id',approvedIds);
-        (approvedProfiles||[]).forEach(p=>profilesCache[p.user_id]=p.nickname||'사용자');
-    }
-
     let modal=document.getElementById('membershipRequestModal');
 
     if(!modal){
@@ -1064,20 +1092,6 @@ async function openMembershipRequests(worldId){
         modal.id='membershipRequestModal';
         modal.className='modal';
         document.body.appendChild(modal);
-    }
-
-    if(!document.getElementById('membershipRequestModalStyle')){
-        const style=document.createElement('style');
-        style.id='membershipRequestModalStyle';
-        style.textContent=`
-#membershipRequestModal .modal-box{background:#fff!important;color:#222;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow-y:auto;padding:30px!important;border-radius:18px;box-sizing:border-box;box-shadow:0 20px 60px rgba(0,0,0,.18)}
-#membershipRequestModal h2{margin:4px 48px 12px 0;line-height:1.35}
-#membershipRequestModal p{margin:10px 0 20px}
-#membershipRequestModal .membership-request-row{padding:18px 4px!important;border-bottom:1px solid #e5e7eb}
-#membershipRequestModal .membership-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
-#membershipRequestModal .membership-members-title{margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb}
-@media(max-width:600px){#membershipRequestModal .modal-box{width:calc(100vw - 24px);padding:22px 20px!important}}`;
-        document.head.appendChild(style);
     }
 
     modal.innerHTML=`
@@ -1088,9 +1102,9 @@ async function openMembershipRequests(worldId){
         ${
           requests.length
           ? requests.map(r=>`
-            <div class="membership-request-row">
+            <div style="padding:14px 0;border-bottom:1px solid #ddd">
               <b>👤 ${esc(profilesCache[r.user_id] || '사용자')}</b>
-              <div class="membership-actions">
+              <div style="display:flex;gap:8px;margin-top:10px">
                 <button data-approve="${r.user_id}">승인</button>
                 <button data-pending="${r.user_id}">대기</button>
                 <button data-reject="${r.user_id}">거절</button>
@@ -1098,10 +1112,6 @@ async function openMembershipRequests(worldId){
             </div>`).join('')
           : '<p>가입 승인 대기 중인 사용자가 없습니다.</p>'
         }
-        <div class="membership-members-title">
-          <h3>👥 가입한 사용자 (${approvedMembers.length}명)</h3>
-          ${approvedMembers.length ? approvedMembers.map(m=>`<div class="membership-request-row"><b>👤 ${esc(profilesCache[m.user_id]||'사용자')}</b></div>`).join('') : '<p>아직 가입 승인된 사용자가 없습니다.</p>'}
-        </div>
       </div>`;
 
     modal.classList.add('show');
@@ -2367,6 +2377,8 @@ async function leaveWorld(id){
 myWorldMemberships = myWorldMemberships.filter(
     m => !(m.world_id === id && m.user_id === user.id)
 );
+
+await refreshWorldMemberCount(id);
 
 const world = get(id);
 
