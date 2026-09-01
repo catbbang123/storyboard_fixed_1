@@ -56,6 +56,11 @@ async function updateAuthUI(session = null){
             profileMenu.style.display = 'none';
         }
 
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+        if(deleteAccountBtn){
+            deleteAccountBtn.style.display = 'none';
+        }
+
         // 세계관 만들기 버튼 비활성화
         createButtons.forEach(btn => {
             if(btn){
@@ -111,6 +116,9 @@ if(myProfileError){
     if(googleLoginBtn){
         googleLoginBtn.style.display = 'none';
     }
+
+    // 회원 탈퇴 버튼 준비
+    ensureDeleteAccountButton();
 
     // 프로필 버튼 표시
     if(profileBtn){
@@ -175,6 +183,127 @@ async function requireLogin(){
     }
 
     return true;
+}
+
+// ==========================================
+// 회원 탈퇴
+// - Supabase Auth 계정을 완전히 삭제합니다.
+// - 같은 Google 계정으로 나중에 다시 로그인/가입할 수 있습니다.
+// - 탈퇴 전에 사용자가 직접 "탈퇴"를 입력하도록 2단계 확인합니다.
+// ==========================================
+async function deleteMyAccount(){
+
+    const { data, error: userError } =
+        await supabaseClient.auth.getUser();
+
+    const user = data?.user;
+
+    if(userError || !user){
+        alert('로그인 상태를 확인하지 못했습니다.');
+        return;
+    }
+
+    const firstConfirm = confirm(
+        '정말 회원 탈퇴를 진행하시겠습니까?\n\n' +
+        '회원 탈퇴를 하면 현재 계정과 이 계정으로 만든 데이터가 삭제될 수 있습니다.\n' +
+        '탈퇴 후에는 같은 Google 계정으로 다시 가입할 수 있지만, 기존 계정과 동일한 계정으로 복구되지는 않습니다.\n\n' +
+        '계속하시려면 확인을 눌러주세요.'
+    );
+
+    if(!firstConfirm) return;
+
+    const typed = prompt(
+        '회원 탈퇴를 최종 확인합니다.\n\n' +
+        '정말 탈퇴하시려면 아래 입력창에 정확히 "탈퇴"라고 입력해주세요.'
+    );
+
+    if(typed !== '탈퇴'){
+        alert('회원 탈퇴가 취소되었습니다.');
+        return;
+    }
+
+    const secondConfirm = confirm(
+        '마지막 확인입니다.\n\n회원 탈퇴를 진행하시겠습니까?'
+    );
+
+    if(!secondConfirm) return;
+
+    const { error } = await supabaseClient.rpc('delete_my_account');
+
+    if(error){
+        console.error('회원 탈퇴 실패:', error);
+        alert(
+            '회원 탈퇴에 실패했습니다.\n\n' +
+            error.message +
+            '\n\nSupabase SQL Editor에서 회원 탈퇴용 SQL을 먼저 실행했는지 확인해주세요.'
+        );
+        return;
+    }
+
+    // 브라우저에 남아 있는 로그인/임시 상태 정리
+    currentUserId = null;
+    myWorldMemberships = [];
+    current = null;
+    tab = 'overview';
+
+    try{
+        sessionStorage.removeItem('storyboard_current_world');
+        sessionStorage.removeItem('storyboard_current_tab');
+        sessionStorage.removeItem('storyboard_current_reader');
+        sessionStorage.removeItem('storyboard_current_story');
+        sessionStorage.removeItem('storyboard_current_chapter');
+    }catch(e){
+        console.warn('세션 저장정보 정리 실패:', e);
+    }
+
+    // 현재 세션도 정리합니다. 이미 Auth 계정이 삭제된 경우에는
+    // signOut에서 오류가 나더라도 로컬 상태 정리는 계속 진행합니다.
+    try{
+        await supabaseClient.auth.signOut({ scope: 'local' });
+    }catch(e){
+        console.warn('탈퇴 후 로컬 세션 정리:', e);
+    }
+
+    alert(
+        '회원 탈퇴가 완료되었습니다.\n\n' +
+        '나중에 마음이 바뀌면 같은 Google 계정으로 다시 가입할 수 있습니다.'
+    );
+
+    window.location.reload();
+}
+
+function ensureDeleteAccountButton(){
+
+    const profileMenu = document.getElementById('profileMenu');
+    if(!profileMenu) return;
+
+    let btn = document.getElementById('deleteAccountBtn');
+
+    if(!btn){
+        btn = document.createElement('button');
+        btn.id = 'deleteAccountBtn';
+        btn.type = 'button';
+        btn.textContent = '🗑️ 회원 탈퇴';
+        btn.style.width = '100%';
+        btn.style.marginTop = '8px';
+        btn.style.cursor = 'pointer';
+        btn.style.color = '#b00020';
+        btn.style.background = 'transparent';
+        btn.style.border = '0';
+        btn.style.padding = '8px 10px';
+        btn.style.textAlign = 'left';
+        btn.style.borderTop = '1px solid rgba(0,0,0,.08)';
+
+        profileMenu.appendChild(btn);
+    }
+
+    btn.onclick = async function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        await deleteMyAccount();
+    };
+
+    btn.style.display = 'block';
 }
 
 async function logout(){
