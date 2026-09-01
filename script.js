@@ -3455,7 +3455,7 @@ if(saveError){
 });
 
 // ==========================================
-// [설정] 1개월마다 순환하는 무지개 아이콘 색상 매핑 (순서: 흰, 빨, 주, 노, 초, 하, 파, 보, 검)
+// [설정] 무지개 색상 순환 맵 (9단계 이상 확장)
 // ==========================================
 const rainbowColorSteps = {
     0: { name: "흰색 (얇은 테두리)", filter: "brightness(0) invert(1) drop-shadow(0.5px 0.5px 0px #000)" },
@@ -3466,13 +3466,19 @@ const rainbowColorSteps = {
     5: { name: "하늘색", filter: "invert(70%) sepia(55%) saturate(544%) hue-rotate(165deg) brightness(98%) contrast(91%)" },
     6: { name: "파란색", filter: "invert(14%) sepia(98%) saturate(7413%) hue-rotate(247deg) brightness(96%) contrast(115%)" },
     7: { name: "보라색", filter: "invert(23%) sepia(85%) saturate(3419%) hue-rotate(274deg) brightness(91%) contrast(102%)" },
-    8: { name: "검은색", filter: "brightness(0)" }
+    8: { name: "검은색", filter: "brightness(0)" },
+    9: { name: "무지개 특수 1", filter: "hue-rotate(90deg) saturate(200%)" },   // 9개월 차 테스트 시 무지개빛 효과
+    10: { name: "무지개 특수 2", filter: "hue-rotate(180deg) saturate(200%)" }, // 10개월 차
+    11: { name: "무지개 특수 3", filter: "hue-rotate(270deg) saturate(200%)" }  // 11개월 차
 };
 
 /**
- * 캐릭터 카드 및 본문 영역의 닉네임 앞에만 기간별 무지개 아이콘을 적용하는 함수
+ * 1. 본문 닉네임 앞 아이콘 기간별 자동 변경 함수
  */
-function applyPersonalMonthlyIcons(customImageSrc = 'icons/icon-192.png') {
+function applyPersonalMonthlyIcons() {
+    // 사용자가 직접 지정한 커스텀 이미지가 있다면 그 이미지를 쓰고, 없으면 기본 아이콘 사용
+    let customImageSrc = localStorage.getItem('my_custom_icon_path') || 'icons/icon-192.png';
+
     let joinDateStr = localStorage.getItem('my_platform_join_date');
     if (!joinDateStr) {
         joinDateStr = new Date().toISOString();
@@ -3484,12 +3490,13 @@ function applyPersonalMonthlyIcons(customImageSrc = 'icons/icon-192.png') {
     let monthsPassed = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth());
     if (monthsPassed < 0) monthsPassed = 0;
 
-    const colorIndex = monthsPassed % 9;
-    const colorConfig = rainbowColorSteps[colorIndex];
+    // 단계별 인덱스 (12단계로 순환)
+    const colorIndex = monthsPassed % 12;
+    const colorConfig = rainbowColorSteps[colorIndex] || rainbowColorSteps[0];
 
     const allElements = document.querySelectorAll('*');
     allElements.forEach(el => {
-        // 🚨 우측 상단 로그인 버튼 및 프로필 관련 영역은 절대 건드리지 않음 (검은색 고정)
+        // 우측 상단 로그인 버튼 및 프로필 관련 영역은 건드리지 않음
         if (el.closest('#googleLoginBtn') || el.closest('#profileBtn') || el.closest('#profileMenu') || el.id === 'profileName') {
             return;
         }
@@ -3521,17 +3528,18 @@ function applyPersonalMonthlyIcons(customImageSrc = 'icons/icon-192.png') {
     });
 }
 
-// 1. 페이지 로드 시 실행
+// 2. 페이지 로드 시 및 동적 렌더링 대응
 document.addEventListener('DOMContentLoaded', () => {
-    applyPersonalMonthlyIcons('icons/icon-192.png');
+    applyPersonalMonthlyIcons();
 });
 
-// 2. 동적 렌더링 대응 (0.5초 간격 체크)
 setInterval(() => {
-    applyPersonalMonthlyIcons('icons/icon-192.png');
+    applyPersonalMonthlyIcons();
 }, 500);
 
-// 테스트용 함수
+// ==========================================
+// 💡 [사용자 편의 기능 1] 개월 수 테스트 함수 (예: window.testMonthsLater(9))
+// ==========================================
 window.testMonthsLater = function(months) {
     const fakeJoinDate = new Date();
     fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
@@ -3542,6 +3550,23 @@ window.testMonthsLater = function(months) {
             el.dataset.iconApplied = "false";
         }
     });
-    applyPersonalMonthlyIcons('icons/icon-192.png');
-    console.log(`[테스트] 가입 후 ${months}개월이 지난 시점으로 설정되었습니다!`);
+    applyPersonalMonthlyIcons();
+    console.log(`[테스트 성공] 가입 후 ${months}개월 차로 설정되었습니다! (색상: ${rainbowColorSteps[months % 12].name})`);
+};
+
+// ==========================================
+// 💡 [사용자 편의 기능 2] 사용자가 원할 때 닉네임 아이콘 사진을 직접 바꾸는 함수
+// 사용법 (F12 콘솔창에 입력): window.changeUserIcon('원하는이미지경로/사진이름.png')
+// ==========================================
+window.changeUserIcon = function(newImagePath) {
+    localStorage.setItem('my_custom_icon_path', newImagePath);
+    
+    // 이미 적용된 화면 데이터 초기화 후 재적용
+    document.querySelectorAll('[data-icon-applied="true"]').forEach(el => {
+        if (!el.closest('#googleLoginBtn') && !el.closest('#profileBtn') && !el.closest('#profileMenu')) {
+            el.dataset.iconApplied = "false";
+        }
+    });
+    applyPersonalMonthlyIcons();
+    console.log(`[아이콘 변경 완료] 새로운 이미지 경로가 적용되었습니다: ${newImagePath}`);
 };
