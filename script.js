@@ -451,7 +451,6 @@ let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=nul
 
 let profilesCache={};
 let pendingWorldMembers=[];
-let ownedWorldMembers=[];
 
 const defaults=[];
 
@@ -601,9 +600,23 @@ async function load(){
         }
     }
     
-    // 내가 소유한 세계관의 가입 요청 + 가입 완료 사용자
+    // 실제 승인된 가입자 수 + 소유자 1명으로 세계관 인원을 계산합니다.
+    try{
+        const { data: allMembershipRows, error: countError } = await supabaseClient
+            .from('world_members').select('world_id, status');
+        if(countError){ console.warn('세계관 가입 인원 계산 실패:', countError); }
+        else{
+            const approvedCounts={};
+            (allMembershipRows||[]).forEach(m=>{
+                if(m.status==='approved') approvedCounts[m.world_id]=(approvedCounts[m.world_id]||0)+1;
+            });
+            worlds.forEach(w=>{ w.members=1+(approvedCounts[w.id]||0); });
+        }
+    }catch(err){ console.warn('세계관 가입 인원 계산 중 오류:',err); }
+
+    // 내가 소유한 세계관의 가입 대기 요청
+
     pendingWorldMembers = [];
-    ownedWorldMembers = [];
 
 if(currentUserId){
     const ownedWorldIds = (data || [])
@@ -611,44 +624,41 @@ if(currentUserId){
         .map(w => w.id);
 
     if(ownedWorldIds.length){
-        const { data: memberData, error: memberError } =
+        const { data: pendingData, error: pendingError } =
             await supabaseClient
                 .from('world_members')
                 .select('world_id, user_id, role, status')
-                .in('world_id', ownedWorldIds);
+                .in('world_id', ownedWorldIds)
+                .eq('status', 'pending');
 
-        if(memberError){
-            console.error('세계관 가입자 목록 불러오기 실패:', memberError);
+        if(pendingError){
+            console.error('가입 대기 요청 불러오기 실패:', pendingError);
         }else{
-            ownedWorldMembers = memberData || [];
-            pendingWorldMembers = ownedWorldMembers.filter(m => m.status === 'pending');
+            pendingWorldMembers = pendingData || [];
 
-            // 가입 요청자와 가입 완료 사용자의 닉네임 가져오기
-            const userIds = [...new Set(ownedWorldMembers.map(m => m.user_id))];
+            // 가입 신청자의 닉네임 가져오기
+            const userIds = pendingWorldMembers.map(m => m.user_id);
 
             if(userIds.length){
-                const { data: memberProfileData, error: memberProfileError } =
+                const { data: profileData, error: profileError } =
                     await supabaseClient
                         .from('profiles')
                         .select('user_id, nickname')
                         .in('user_id', userIds);
 
-                if(memberProfileError){
-                    console.error('세계관 가입자 닉네임 불러오기 실패:', memberProfileError);
+                if(profileError){
+                    console.error('가입 신청자 닉네임 불러오기 실패:', profileError);
                 }else{
                     const nicknameMap = {};
 
-                    (memberProfileData || []).forEach(profile => {
+                    (profileData || []).forEach(profile => {
                         nicknameMap[profile.user_id] = profile.nickname;
-                        profilesCache[profile.user_id] = profile.nickname || '사용자';
                     });
 
-                    ownedWorldMembers = ownedWorldMembers.map(member => ({
+                    pendingWorldMembers = pendingWorldMembers.map(member => ({
                         ...member,
                         nickname: nicknameMap[member.user_id] || '닉네임 없음'
                     }));
-
-                    pendingWorldMembers = ownedWorldMembers.filter(m => m.status === 'pending');
                 }
             }
         }
@@ -1015,34 +1025,37 @@ async function updateMembershipStatus(worldId,userId,status){
         return;
     }
 
-    const localMember = ownedWorldMembers.find(
-        m=>m.world_id===worldId && m.user_id===userId
-    );
-
-    if(localMember){
-        localMember.status=status;
-    }
-
-    pendingWorldMembers=ownedWorldMembers.filter(
-        m=>m.status==='pending'
+    pendingWorldMembers=pendingWorldMembers.filter(
+        m=>!(m.world_id===worldId && m.user_id===userId)
     );
 
     renderWorld();
-
-    // 가입 관리 창을 닫지 않고 최신 상태로 다시 표시
-    requestAnimationFrame(()=>openMembershipRequests(worldId));
+    if(document.getElementById('membershipRequestModal')?.classList.contains('show')){
+        openMembershipRequests(worldId);
+    }
 }
 
-function openMembershipRequests(worldId){
+async function openMembershipRequests(worldId){
     const w=get(worldId);
     if(!w || w.owner_id!==currentUserId){
         alert('세계관 소유자만 관리할 수 있습니다.');
         return;
     }
 
-    const members=ownedWorldMembers.filter(m=>m.world_id===worldId);
-    const requests=members.filter(m=>m.status==='pending');
-    const approvedMembers=members.filter(m=>m.status==='approved');
+    const requests=pendingWorldMembers.filter(m=>m.world_id===worldId);
+
+    const { data: approvedMembersData, error: approvedMembersError } = await supabaseClient
+        .from('world_members').select('world_id, user_id, role, status')
+        .eq('world_id',worldId).eq('status','approved');
+    const approvedMembers=approvedMembersError ? [] : (approvedMembersData||[]);
+    if(approvedMembersError) console.warn('승인된 가입자 불러오기 실패:',approvedMembersError);
+
+    const approvedIds=approvedMembers.map(m=>m.user_id);
+    if(approvedIds.length){
+        const {data: approvedProfiles}=await supabaseClient.from('profiles')
+            .select('user_id,nickname').in('user_id',approvedIds);
+        (approvedProfiles||[]).forEach(p=>profilesCache[p.user_id]=p.nickname||'사용자');
+    }
 
     let modal=document.getElementById('membershipRequestModal');
 
@@ -1053,45 +1066,45 @@ function openMembershipRequests(worldId){
         document.body.appendChild(modal);
     }
 
-    // 사이트의 다른 모달과 관계없이 가입 관리 창은 흰색으로 표시
-    modal.style.background='rgba(0,0,0,0.45)';
-    modal.style.backgroundColor='rgba(0,0,0,0.45)';
+    if(!document.getElementById('membershipRequestModalStyle')){
+        const style=document.createElement('style');
+        style.id='membershipRequestModalStyle';
+        style.textContent=`
+#membershipRequestModal .modal-box{background:#fff!important;color:#222;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow-y:auto;padding:30px!important;border-radius:18px;box-sizing:border-box;box-shadow:0 20px 60px rgba(0,0,0,.18)}
+#membershipRequestModal h2{margin:4px 48px 12px 0;line-height:1.35}
+#membershipRequestModal p{margin:10px 0 20px}
+#membershipRequestModal .membership-request-row{padding:18px 4px!important;border-bottom:1px solid #e5e7eb}
+#membershipRequestModal .membership-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+#membershipRequestModal .membership-members-title{margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb}
+@media(max-width:600px){#membershipRequestModal .modal-box{width:calc(100vw - 24px);padding:22px 20px!important}}`;
+        document.head.appendChild(style);
+    }
 
     modal.innerHTML=`
-      <div class="modal-box" style="background:#fff !important;color:#222 !important;opacity:1 !important;box-shadow:0 20px 60px rgba(0,0,0,.18);border-radius:18px;">
+      <div class="modal-box">
         <button class="modal-close" id="membershipRequestClose">×</button>
-        <h2>세계관 가입 관리</h2>
+        <h2>세계관 가입 요청</h2>
         <p><b>${esc(w.name)}</b></p>
-
-        <h3 style="margin:22px 0 10px">가입 요청</h3>
         ${
           requests.length
           ? requests.map(r=>`
-            <div style="padding:14px 0;border-bottom:1px solid #e5e5e5">
-              <b>👤 ${esc(r.nickname || profilesCache[r.user_id] || '닉네임 없음')}</b>
-              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <div class="membership-request-row">
+              <b>👤 ${esc(profilesCache[r.user_id] || '사용자')}</b>
+              <div class="membership-actions">
                 <button data-approve="${r.user_id}">승인</button>
                 <button data-pending="${r.user_id}">대기</button>
                 <button data-reject="${r.user_id}">거절</button>
               </div>
             </div>`).join('')
-          : '<p style="color:#777">현재 가입 승인 대기 중인 사용자가 없습니다.</p>'
+          : '<p>가입 승인 대기 중인 사용자가 없습니다.</p>'
         }
-
-        <h3 style="margin:24px 0 10px">가입한 사용자</h3>
-        ${
-          approvedMembers.length
-          ? approvedMembers.map(m=>`
-            <div style="padding:12px 0;border-bottom:1px solid #eee">
-              👤 <b>${esc(m.nickname || profilesCache[m.user_id] || '닉네임 없음')}</b>
-              <small style="display:block;color:#888;margin-top:4px">가입 완료</small>
-            </div>`).join('')
-          : '<p style="color:#777">아직 가입이 승인된 사용자가 없습니다.</p>'
-        }
+        <div class="membership-members-title">
+          <h3>👥 가입한 사용자 (${approvedMembers.length}명)</h3>
+          ${approvedMembers.length ? approvedMembers.map(m=>`<div class="membership-request-row"><b>👤 ${esc(profilesCache[m.user_id]||'사용자')}</b></div>`).join('') : '<p>아직 가입 승인된 사용자가 없습니다.</p>'}
+        </div>
       </div>`;
 
     modal.classList.add('show');
-
     modal.querySelector('#membershipRequestClose').onclick=()=>{
         modal.classList.remove('show');
     };
@@ -1105,7 +1118,10 @@ function openMembershipRequests(worldId){
     });
 
     modal.querySelectorAll('[data-pending]').forEach(b=>{
-        b.onclick=()=>openMembershipRequests(worldId);
+        b.onclick=()=>{
+            alert('대기 상태로 유지합니다.\n요청 창은 닫히지 않으며, 요청한 사용자는 세계관 내용을 볼 수 있습니다.');
+            openMembershipRequests(worldId);
+        };
     });
 }
 
@@ -3231,11 +3247,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     if(!saveNicknameBtn) return;
 
-    saveNicknameBtn.addEventListener('click', async function(e){
-
-        // 닉네임 저장 후 프로필 메뉴가 닫히지 않도록 이벤트 전파를 막습니다.
-        e.preventDefault();
-        e.stopPropagation();
+    saveNicknameBtn.addEventListener('click', async function(){
 
         const { data: userData, error: userError } =
             await supabaseClient.auth.getUser();
@@ -3319,18 +3331,6 @@ if(saveError){
 
         // 현재 사용자의 닉네임 캐시도 즉시 변경
         profilesCache[user.id] = nickname;
-
-        // 내가 소유한 세계관의 가입자 목록에도 새 닉네임을 즉시 반영
-        ownedWorldMembers.forEach(member=>{
-            if(member.user_id===user.id){
-                member.nickname=nickname;
-            }
-        });
-        pendingWorldMembers.forEach(member=>{
-            if(member.user_id===user.id){
-                member.nickname=nickname;
-            }
-        });
 
         // 프로필 메뉴 이름 변경
         const profileName =
