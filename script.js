@@ -930,8 +930,26 @@ if(w.visibility === 'private'){
     bind();
     requestAnimationFrame(force16x9);
 }
-function card(w){return `<article class="card" data-id="${w.id}"><div class="cover ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}>${w.coverImage?'':esc(w.icon)}</div><div class="more"><button>⋮</button><div class="menu"><button class="edit">✏️ 수정</button><button class="decorate">🎨 꾸미기</button><button class="join">👥 ${w.joined?'가입됨':'가입하기'}</button><button class="del">🗑️ 세계관 삭제</button></div></div><div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta"><span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${w.visibility==='public'?'공개':'비공개'}</span></div></div></article>`}
-function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()=>openWorld(x.dataset.open));document.querySelectorAll('.card').forEach(c=>{let id=c.dataset.id,m=c.querySelector('.menu');c.onclick=e=>{if(!e.target.closest('.more'))openWorld(id)};c.querySelector('.more>button').onclick=e=>{e.stopPropagation();document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'));m.classList.add('show')};c.querySelector('.edit').onclick=()=>openModal(id);c.querySelector('.decorate').onclick=()=>openModal(id,true);c.querySelector('.join').onclick=()=>join(id);c.querySelector('.del').onclick=()=>openDelete(id)})}
+function card(w){return `<article class="card" data-id="${w.id}"><div class="cover ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}>${w.coverImage?'':esc(w.icon)}</div><div class="more"><button>⋮</button><div class="menu"><button class="edit">✏️ 수정</button><button class="decorate">🎨 꾸미기</button>
+<button class="join">${w.joined ? '🚪 탈퇴' : '👥 가입하기'}</button>
+<button class="del">🗑️ 세계관 삭제</button></div></div><div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta"><span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${w.visibility==='public'?'공개':'비공개'}</span></div></div></article>`}
+function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()=>openWorld(x.dataset.open));
+                document.querySelectorAll('.card').forEach(c=>{let id=c.dataset.id,m=c.querySelector('.menu');
+                c.onclick=e=>{if(!e.target.closest('.more'))openWorld(id)};
+                c.querySelector('.more>button').onclick=e=>{e.stopPropagation();
+                 document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'));m.classList.add('show')};
+                 c.querySelector('.edit').onclick=()=>openModal(id);
+                c.querySelector('.decorate').onclick=()=>openModal(id,true);
+                c.querySelector('.join').onclick=()=>{
+                    const world=get(id);
+                
+                    if(world?.joined){
+                        leaveWorld(id);
+                    }else{
+                        join(id);
+                    }
+                };
+                 c.querySelector('.del').onclick=()=>openDelete(id)})}
 
 async function openWorld(id){
     if(!get(id)) return;
@@ -2236,6 +2254,53 @@ async function join(id){
     sessionStorage.setItem('storyboard_current_tab','overview');
 
     alert('가입 요청을 보냈습니다.\n승인을 기다리는 동안에도 세계관의 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.');
+    renderWorld();
+}
+
+async function leaveWorld(id){
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    const user = session?.user;
+
+    if(!user){
+        alert('로그인 후 탈퇴할 수 있습니다.');
+        return;
+    }
+
+    const w = get(id);
+
+    if(!w) return;
+
+    if(w.owner_id === user.id){
+        alert('세계관 소유자는 자신의 세계관에서 탈퇴할 수 없습니다.');
+        return;
+    }
+
+    const confirmed = confirm(
+        `"${w.name}" 세계관에서 탈퇴하시겠습니까?\n탈퇴하면 다시 가입 신청해야 합니다.`
+    );
+
+    if(!confirmed) return;
+
+    const { error } = await supabaseClient
+        .from('world_members')
+        .delete()
+        .eq('world_id', id)
+        .eq('user_id', user.id);
+
+    if(error){
+        console.error('세계관 탈퇴 실패:', error);
+        alert('세계관 탈퇴에 실패했습니다.\n' + error.message);
+        return;
+    }
+
+    myWorldMemberships = myWorldMemberships.filter(
+        m => !(m.world_id === id && m.user_id === user.id)
+    );
+
+    alert('세계관에서 탈퇴했습니다.');
+
     renderWorld();
 }
 
