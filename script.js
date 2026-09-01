@@ -3541,7 +3541,11 @@ function applyPersonalMonthlyIcons() {
 
     const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
     const iconUrl = getUserIconUrl(user);
-    const isRainbowUser = (monthsPassed >= 9) || localStorage.getItem("my_custom_icon_path");
+    
+    // 오직 9개월(10개월차) 이상이거나 커스텀 아이콘을 등록한 경우에만 모달창 권한 부여
+    const hasCustomIcon = Boolean(localStorage.getItem("my_custom_icon_path"));
+    const isRainbowPeriod = monthsPassed >= 9;
+    const canChangeIcon = isRainbowPeriod || hasCustomIcon;
 
     document.querySelectorAll("*").forEach(el => {
         // 로그인 버튼이나 프로필 메뉴 등 예외 처리 영역 제외
@@ -3568,8 +3572,8 @@ function applyPersonalMonthlyIcons() {
                 iconImg.style.verticalAlign = "middle";
                 iconImg.style.objectFit = "contain";
 
-                // 9개월(10개월차) 이상인 사용자만 아이콘 클릭 시 500x500 이미지 변경 모달 실행
-                if (isRainbowUser) {
+                // 오직 무지개 기간이거나 커스텀 아이콘일 때만 클릭 시 모달창 실행
+                if (canChangeIcon) {
                     iconImg.style.cursor = "pointer";
                     iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
                     iconImg.onclick = (e) => {
@@ -3577,7 +3581,8 @@ function applyPersonalMonthlyIcons() {
                         openIconChangeModal();
                     };
                 } else {
-                    iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`;
+                    iconImg.style.cursor = "default";
+                    iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차 무지개 아이콘부터 변경 권한이 주어집니다!)`;
                 }
 
                 el.appendChild(iconImg);
@@ -3660,11 +3665,15 @@ setInterval(() => {
     applyPersonalMonthlyIcons();
 }, 500);
 
-// 테스트용 함수 (브라우저 콘솔창에 window.testMonthsLater(9) 등을 입력하여 테스트 가능)
+// 테스트용 함수 (브라우저 콘솔창에 window.testMonthsLater(0) ~ window.testMonthsLater(9) 입력 가능)
 window.testMonthsLater = function(months) {
     const fakeJoinDate = new Date();
     fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
     localStorage.setItem("my_platform_join_date", fakeJoinDate.toISOString());
+    // 테스트 시 일반 기간으로 내리면 커스텀 아이콘 경로도 임시로 초기화하여 정확히 테스트되도록 함
+    if (months < 9) {
+        localStorage.removeItem("my_custom_icon_path");
+    }
     applyPersonalMonthlyIcons();
-    console.log(`[테스트 완료] 가입 후 ${months}개월 차로 설정되었습니다.`);
+    console.log(`[테스트 완료] 가입 후 ${months}개월 차로 설정되었습니다. (모달 권한 여부: ${months >= 9})`);
 };
