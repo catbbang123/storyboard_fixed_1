@@ -3459,7 +3459,7 @@ if(saveError){
 // ==========================================
 function getIconPathByMonths(monthsPassed) {
     const defaultIcon = 'icons/icon-192.png';     // 기본 아이콘 (검은색 등)
-    const rainbowIcon = 'icons/rainbow-icon.png'; // 포토샵 시안의 무지개 평행사변형 아이콘
+    const rainbowIcon = 'icons/rainbow-icon.png'; // 무지개 평행사변형 아이콘
 
     // 사용자가 커스텀 아이콘을 등록한 적이 있다면 우선 적용
     let customImageSrc = localStorage.getItem('my_custom_icon_path');
@@ -3474,7 +3474,7 @@ function getIconPathByMonths(monthsPassed) {
 }
 
 /**
- * 본문, 캐릭터 카드, 세계관 테마 영역의 닉네임 앞 아이콘 적용 및 클릭 이벤트 연결
+ * 닉네임(`👤`) 영역 및 세계관 인원수(`1명` 등) 영역에 아이콘 적용 및 클릭 이벤트 연결
  */
 function applyPersonalMonthlyIcons() {
     let joinDateStr = localStorage.getItem('my_platform_join_date');
@@ -3498,40 +3498,48 @@ function applyPersonalMonthlyIcons() {
             return;
         }
 
-        // '👤' 기호가 포함된 영역 탐색
-        if (el.children.length === 0 && el.textContent && el.textContent.includes('👤')) {
-            if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === targetIconSrc) return;
-
-            const originalText = el.textContent;
-            const nickname = originalText.replace('👤', '').trim();
-
-            el.innerHTML = '';
+        if (el.children.length === 0 && el.textContent) {
+            const text = el.textContent.trim();
             
-            const iconImg = document.createElement('img');
-            iconImg.src = targetIconSrc;
-            iconImg.className = 'dynamic-user-icon';
-            iconImg.style.width = '13px';
-            iconImg.style.height = '13px';
-            iconImg.style.marginRight = '4px';
-            iconImg.style.verticalAlign = 'middle';
-            iconImg.style.objectFit = 'contain';
-            
-            // 🌈 무지개 아이콘(또는 커스텀 아이콘)을 가진 사용자만 클릭하여 500x500 아이콘 변경 창 띄우기 가능
-            if (isRainbowUser) {
-                iconImg.style.cursor = 'pointer';
-                iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
-                iconImg.onclick = (e) => {
-                    e.stopPropagation();
-                    openIconChangeModal();
-                };
-            } else {
-                iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`;
+            // 조건 1: '👤'가 포함된 닉네임 영역
+            // 조건 2: 포토샵 시안처럼 '1명' 또는 숫자로 끝나는 인원수/참여자 영역 (필요시 단어 추가 가능)
+            const hasUserEmoji = text.includes('👤');
+            const isMemberCount = text.endsWith('명') && !text.includes('아이콘'); // 예: "1명"
+
+            if (hasUserEmoji || isMemberCount) {
+                if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === targetIconSrc) return;
+
+                // 기존 텍스트에서 '👤' 기호 제거 (없으면 그대로 사용)
+                const cleanText = text.replace('👤', '').trim();
+
+                el.innerHTML = '';
+                
+                const iconImg = document.createElement('img');
+                iconImg.src = targetIconSrc;
+                iconImg.className = 'dynamic-user-icon';
+                iconImg.style.width = '13px';
+                iconImg.style.height = '13px';
+                iconImg.style.marginRight = '4px';
+                iconImg.style.verticalAlign = 'middle';
+                iconImg.style.objectFit = 'contain';
+                
+                // 🌈 무지개 아이콘 권한이 있는 사용자만 클릭하여 500x500 아이콘 변경 창 띄우기 가능
+                if (isRainbowUser) {
+                    iconImg.style.cursor = 'pointer';
+                    iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
+                    iconImg.onclick = (e) => {
+                        e.stopPropagation();
+                        openIconChangeModal();
+                    };
+                } else {
+                    iconImg.title = `활동 경과: ${monthsPassed}개월 차 (9개월 차부터 아이콘 변경 권한이 주어집니다!)`;
+                }
+
+                el.appendChild(iconImg);
+                el.append(` ${cleanText}`);
+                el.dataset.iconApplied = "true";
+                el.dataset.currentSrc = targetIconSrc;
             }
-
-            el.appendChild(iconImg);
-            el.append(` ${nickname}`);
-            el.dataset.iconApplied = "true";
-            el.dataset.currentSrc = targetIconSrc;
         }
     });
 }
@@ -3609,7 +3617,7 @@ setInterval(() => {
     applyPersonalMonthlyIcons();
 }, 500);
 
-// 테스트용 함수 (콘솔창에 window.testMonthsLater(9)를 치면 무지개 아이콘이 나옵니다!)
+// 테스트용 함수
 window.testMonthsLater = function(months) {
     const fakeJoinDate = new Date();
     fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
