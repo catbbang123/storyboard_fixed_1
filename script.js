@@ -3471,7 +3471,6 @@ const rainbowColorSteps = {
 
 /**
  * 캐릭터 카드 및 본문 영역의 닉네임 앞에만 기간별 무지개 아이콘을 적용하는 함수
- * (상단 로그인/프로필 메뉴 영역은 제외)
  */
 function applyPersonalMonthlyIcons(customImageSrc = 'icons/icon-192.png') {
     let joinDateStr = localStorage.getItem('my_platform_join_date');
@@ -3490,12 +3489,12 @@ function applyPersonalMonthlyIcons(customImageSrc = 'icons/icon-192.png') {
 
     const allElements = document.querySelectorAll('*');
     allElements.forEach(el => {
-        // 1. 상단 프로필 메뉴나 로그인 버튼 내부(#profileMenu, #profileName 등)는 절대 건드리지 않음 (검은색 유지)
-        if (el.closest('#profileMenu') || el.closest('#profileBtn') || el.id === 'profileName') {
+        // 🚨 우측 상단 로그인 버튼 및 프로필 관련 영역은 절대 건드리지 않음 (검은색 고정)
+        if (el.closest('#googleLoginBtn') || el.closest('#profileBtn') || el.closest('#profileMenu') || el.id === 'profileName') {
             return;
         }
 
-        // 2. 자식 요소가 없고 텍스트에 '👤'가 포함된 본문 영역만 대상 지정
+        // 자식 요소가 없고 텍스트에 '👤'가 포함된 본문 영역만 대상 지정
         if (el.children.length === 0 && el.textContent && el.textContent.includes('👤')) {
             if (el.dataset.iconApplied === "true") return;
 
@@ -3539,8 +3538,7 @@ window.testMonthsLater = function(months) {
     localStorage.setItem('my_platform_join_date', fakeJoinDate.toISOString());
     
     document.querySelectorAll('[data-icon-applied="true"]').forEach(el => {
-        // 프로필 관련 요소가 아닐 때만 초기화
-        if (!el.closest('#profileMenu') && !el.closest('#profileBtn')) {
+        if (!el.closest('#googleLoginBtn') && !el.closest('#profileBtn') && !el.closest('#profileMenu')) {
             el.dataset.iconApplied = "false";
         }
     });
