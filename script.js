@@ -1384,7 +1384,7 @@ function section(w){
         class="dynamic-author-icon"
         alt="사용자 아이콘"
     >
-    ${esc(profilesCache[s.created_by]?.nickname || '사용자')}
+    ${esc(profilesCache[s.created_by] || '사용자')}
 </small>
                     <p>${esc(s.description||'')}</p>
 
