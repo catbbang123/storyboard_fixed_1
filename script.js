@@ -1234,7 +1234,16 @@ async function openMembershipRequests(worldId){
           ${requests.length
             ? requests.map(r=>`
               <div style="padding:16px;margin-bottom:10px;border:1px solid #e5e5e5;border-radius:12px;background:#fafafa;">
-                <b>👤 ${esc(r.nickname)}</b>
+                <b>
+                    <img
+                        src="${getUserIconUrl({
+                            createdAt: profileJoinDates[r.user_id]
+                        })}"
+                        class="dynamic-author-icon"
+                        alt="사용자 아이콘"
+                    >
+                    ${esc(r.nickname)}
+                </b>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
                   <button data-approve="${r.user_id}">승인</button>
                   <button data-pending="${r.user_id}">대기</button>
