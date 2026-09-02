@@ -1582,7 +1582,16 @@ function section(w){
 
                             <div class="generic-card-info">
                                 <h3>${esc(x.name)}</h3>
-                                <small class="author-name">👤 ${esc(profilesCache[x.created_by] || '사용자')}</small>
+                                <small class="author-name">
+                                    <img
+                                        src="${getUserIconUrl({
+                                            createdAt: profileJoinDates[x.created_by]
+                                        })}"
+                                        class="dynamic-author-icon"
+                                        alt="사용자 아이콘"
+                                    >
+                                    ${esc(profilesCache[x.created_by] || '사용자')}
+                                </small>
                                 <p>${esc(x.description||'')}</p>
 
                                 <div class="generic-card-actions">
