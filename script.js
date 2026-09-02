@@ -593,7 +593,7 @@ async function load(){
         const { data: membershipData, error: membershipError } =
             await supabaseClient
                 .from('world_members')
-                .select('world_id, role, status')
+                .select('world_id, user_id, role, status')
                 .eq('user_id', currentUserId);
 
         if(membershipError){
