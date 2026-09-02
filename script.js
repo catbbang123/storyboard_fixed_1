@@ -972,18 +972,18 @@ if(w.visibility === 'private'){
 
 // 세계관 테마/색상에 맞는 평행사변형 아이콘 경로 반환 함수
 function getWorldLogoPath(theme) {
-  const iconMap = {
-    white: 'white.png',
-    red: 'logo-red.png',
-    orange: 'orange.png',
-    yellow: 'yellow.png',
-    green: 'green.png',
-    sky: 'skyblue.png',
-    blue: 'blue.png',
-    purple: 'purple.png',
-    black: 'black.png',
-    rainbow: 'rainbow.png'
-  };
+const iconMap = {
+  white: GITHUB_ICON_BASE_URL + 'white.png',
+  red: GITHUB_ICON_BASE_URL + 'red.png',
+  orange: GITHUB_ICON_BASE_URL + 'orange.png',
+  yellow: GITHUB_ICON_BASE_URL + 'yellow.png',
+  green: GITHUB_ICON_BASE_URL + 'green.png',
+  sky: GITHUB_ICON_BASE_URL + 'skyblue.png',
+  blue: GITHUB_ICON_BASE_URL + 'blue.png',
+  purple: GITHUB_ICON_BASE_URL + 'purple.png',
+  black: GITHUB_ICON_BASE_URL + 'black.png',
+  rainbow: GITHUB_ICON_BASE_URL + 'rainbow.png'
+};
 
   // 기본값은 흰색(white) 아이콘 사용
   return iconMap[theme] || iconMap['white'];
