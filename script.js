@@ -1302,6 +1302,7 @@ async function openMembershipRequests(worldId){
         modal.classList.remove('show');
     };
 
+    console.log('가입 관리에서 받은 members:', members);
     console.log('최종 가입 요청:', requests);
     console.log('최종 가입 요청 수:', requests.length);
 
