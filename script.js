@@ -1222,6 +1222,8 @@ async function removeWorldMember(worldId,userId){
 
 async function openMembershipRequests(worldId){
     const w=get(worldId);
+    console.log('가입관리 worldId:', worldId, 'current:', current);
+    
     if(!w || w.owner_id!==currentUserId){
         alert('세계관 소유자만 관리할 수 있습니다.');
         return;
