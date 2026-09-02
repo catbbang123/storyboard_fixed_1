@@ -3590,6 +3590,34 @@ async function applyPersonalMonthlyIcons() {
     const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
     const iconUrl = getUserIconUrl(user);
 
+    const profileAvatar = document.querySelector("#profileAvatar");
+
+if (profileAvatar) {
+    profileAvatar.innerHTML = "";
+
+    const avatarImg = document.createElement("img");
+    avatarImg.src = iconUrl;
+    avatarImg.alt = "프로필 아이콘";
+    avatarImg.className = "dynamic-profile-user-icon";
+
+    avatarImg.style.width = "32px";
+    avatarImg.style.height = "32px";
+    avatarImg.style.objectFit = "contain";
+    avatarImg.style.display = "block";
+
+    if (canChangeIcon) {
+        avatarImg.style.cursor = "pointer";
+        avatarImg.title = "아이콘 변경";
+
+        avatarImg.onclick = (e) => {
+            e.stopPropagation();
+            openIconChangeModal();
+        };
+    }
+
+    profileAvatar.appendChild(avatarImg);
+}
+
     // 오직 9개월 이상이거나 커스텀 아이콘을 등록한 경우에만 변경 권한
     const hasCustomIcon = Boolean(localStorage.getItem("my_custom_icon_path"));
     const isRainbowPeriod = monthsPassed >= 9;
