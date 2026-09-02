@@ -1116,27 +1116,56 @@ async function loadWorldMembersForManagement(worldId){
 
     const members = data || [];
     console.log('관리용 DB members:', members);
-    
-    const userIds = [...new Set(members.map(m => m.user_id).filter(Boolean))];
+
+    const userIds = [...new Set(
+        members
+            .map(m => m.user_id)
+            .filter(Boolean)
+    )];
+
+    // 가입 요청/가입자 목록을 열 때마다 profiles에서 닉네임을 새로 조회합니다.
+    // profilesCache에 예전에 저장된 값에만 의존하지 않습니다.
+    const nicknameMap = {};
 
     if(userIds.length){
-        const { data: profileData, error: profileError } = await supabaseClient
+        const {
+            data: profileData,
+            error: profileError
+        } = await supabaseClient
             .from('profiles')
-            .select('user_id, nickname')
+            .select('user_id, nickname, created_at')
             .in('user_id', userIds);
 
         if(profileError){
-            console.error('가입자 닉네임 불러오기 실패:', profileError);
+            console.error(
+                '가입자 닉네임 불러오기 실패:',
+                profileError
+            );
         }else{
             (profileData || []).forEach(profile => {
-                profilesCache[profile.user_id] = profile.nickname || '사용자';
+                nicknameMap[profile.user_id] =
+                    profile.nickname || '사용자';
+
+                // 기존 캐시도 최신 값으로 갱신합니다.
+                profilesCache[profile.user_id] =
+                    profile.nickname || '사용자';
+
+                // 아이콘/가입일 관련 기존 기능도 유지합니다.
+                if(profile.created_at){
+                    profileJoinDates[profile.user_id] =
+                        profile.created_at;
+                }
             });
         }
     }
 
+    // world_members.user_id와 profiles.user_id를 연결합니다.
     return members.map(member => ({
         ...member,
-        nickname: profilesCache[member.user_id] || '닉네임 없음'
+        nickname:
+            nicknameMap[member.user_id] ||
+            profilesCache[member.user_id] ||
+            '닉네임 없음'
     }));
 }
 
