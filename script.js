@@ -2513,6 +2513,9 @@ async function join(id){
 
     let error;
 
+console.log('재가입 기존 상태:', existingMember?.status);
+console.log('재가입 기존 데이터:', existingMember);
+    
     if(existingMember?.status==='rejected'){
         ({error}=await supabaseClient
             .from('world_members')
