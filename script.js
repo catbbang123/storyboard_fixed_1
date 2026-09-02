@@ -991,7 +991,10 @@ const iconMap = {
 
 // 수정된 card 함수
 function card(w) {
-  const logoSrc = getWorldLogoPath(w.theme);
+  const logoSrc = getUserIconUrl({
+  createdAt: localStorage.getItem("my_platform_join_date"),
+  customIconUrl: localStorage.getItem("my_custom_icon_path")
+});
 
   return `<article class="card" data-id="${w.id}">
 <div class="cover ${w.theme} ${w.coverImage ? 'has-photo' : ''}" ${
