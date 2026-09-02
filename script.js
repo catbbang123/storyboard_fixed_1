@@ -3590,6 +3590,11 @@ async function applyPersonalMonthlyIcons() {
     const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
     const iconUrl = getUserIconUrl(user);
 
+    // 오직 9개월 이상이거나 커스텀 아이콘을 등록한 경우에만 변경 권한
+    const hasCustomIcon = Boolean(localStorage.getItem("my_custom_icon_path"));
+    const isRainbowPeriod = monthsPassed >= 9;
+    const canChangeIcon = isRainbowPeriod || hasCustomIcon;
+
     const profileAvatar = document.querySelector("#profileAvatar");
 
 if (profileAvatar) {
@@ -3617,11 +3622,6 @@ if (profileAvatar) {
 
     profileAvatar.appendChild(avatarImg);
 }
-
-    // 오직 9개월 이상이거나 커스텀 아이콘을 등록한 경우에만 변경 권한
-    const hasCustomIcon = Boolean(localStorage.getItem("my_custom_icon_path"));
-    const isRainbowPeriod = monthsPassed >= 9;
-    const canChangeIcon = isRainbowPeriod || hasCustomIcon;
 
     document.querySelectorAll("*").forEach(el => {
         // 로그인 버튼이나 프로필 메뉴 등 예외 처리 영역 제외
