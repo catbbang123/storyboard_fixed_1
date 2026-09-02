@@ -3566,12 +3566,17 @@ function getUserIconUrl(user) {
 /**
  * DOM 전체를 탐색하며 👤 이모지나 인원수 영역을 평행사변형 아이콘으로 대체하는 함수
  */
-function applyPersonalMonthlyIcons() {
-    let joinDate = localStorage.getItem("my_platform_join_date");
-    if (!joinDate) {
-        joinDate = new Date().toISOString();
-        localStorage.setItem("my_platform_join_date", joinDate);
-    }
+
+async function applyPersonalMonthlyIcons() {
+    const { data: { user: supabaseUser } } = await supabaseClient.auth.getUser();
+
+    if (!supabaseUser) return;
+
+    // Supabase 실제 가입일 사용
+    const joinDate = supabaseUser.created_at;
+
+    // 기존 localStorage에도 실제 가입일을 저장
+    localStorage.setItem("my_platform_join_date", joinDate);
 
     const user = {
         nickname: localStorage.getItem("my_platform_nickname") || "창작자",
@@ -3581,15 +3586,20 @@ function applyPersonalMonthlyIcons() {
 
     const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
     const iconUrl = getUserIconUrl(user);
-    
-    // 오직 9개월(10개월차) 이상이거나 커스텀 아이콘을 등록한 경우에만 모달창 권한 부여
+
+    // 오직 9개월 이상이거나 커스텀 아이콘을 등록한 경우에만 변경 권한
     const hasCustomIcon = Boolean(localStorage.getItem("my_custom_icon_path"));
     const isRainbowPeriod = monthsPassed >= 9;
     const canChangeIcon = isRainbowPeriod || hasCustomIcon;
 
     document.querySelectorAll("*").forEach(el => {
         // 로그인 버튼이나 프로필 메뉴 등 예외 처리 영역 제외
-        if (el.closest("#googleLoginBtn") || el.closest("#profileBtn") || el.closest("#profileMenu") || el.id === "profileName") {
+        if (
+            el.closest("#googleLoginBtn") ||
+            el.closest("#profileBtn") ||
+            el.closest("#profileMenu") ||
+            el.id === "profileName"
+        ) {
             return;
         }
 
@@ -3599,7 +3609,12 @@ function applyPersonalMonthlyIcons() {
             const isMemberCount = text.endsWith("명") && !text.includes("아이콘");
 
             if (hasUserEmoji || isMemberCount) {
-                if (el.dataset.iconApplied === "true" && el.dataset.currentSrc === iconUrl) return;
+                if (
+                    el.dataset.iconApplied === "true" &&
+                    el.dataset.currentSrc === iconUrl
+                ) {
+                    return;
+                }
 
                 el.innerHTML = "";
 
@@ -3612,10 +3627,11 @@ function applyPersonalMonthlyIcons() {
                 iconImg.style.verticalAlign = "middle";
                 iconImg.style.objectFit = "contain";
 
-                // 오직 무지개 기간이거나 커스텀 아이콘일 때만 클릭 시 모달창 실행
+                // 9개월 이상 또는 커스텀 아이콘 등록 시 변경 가능
                 if (canChangeIcon) {
                     iconImg.style.cursor = "pointer";
                     iconImg.title = `클릭하여 500x500 아이콘 변경하기 (활동 경과: ${monthsPassed}개월)`;
+
                     iconImg.onclick = (e) => {
                         e.stopPropagation();
                         openIconChangeModal();
@@ -3627,6 +3643,7 @@ function applyPersonalMonthlyIcons() {
 
                 el.appendChild(iconImg);
                 el.append(` ${text.replace("👤", "").trim()}`);
+
                 el.dataset.iconApplied = "true";
                 el.dataset.currentSrc = iconUrl;
             }
