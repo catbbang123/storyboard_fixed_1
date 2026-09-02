@@ -1160,6 +1160,21 @@ async function updateMembershipStatus(worldId,userId,status){
         m=>!(m.world_id===worldId && m.user_id===userId)
     );
 
+const existingMembership = myWorldMemberships.find(
+    m => m.world_id === worldId && m.user_id === userId
+);
+
+if(existingMembership){
+    existingMembership.status = status;
+}else{
+    myWorldMemberships.push({
+        world_id: worldId,
+        user_id: userId,
+        status: status,
+        role: 'member'
+    });
+}
+    
     await refreshWorldMemberCount(worldId);
     renderWorld();
 
