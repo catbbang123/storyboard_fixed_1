@@ -546,3 +546,24 @@
         opacity: 1 !important;
     }
 }
+
+/* 커버 영역 기준 정렬 설정 */
+.card .cover,
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 왼쪽 상단 평행사변형 로고 스타일 */
+.card .cover .world-logo-icon,
+.hero .world-logo-icon {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  z-index: 5;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+}
