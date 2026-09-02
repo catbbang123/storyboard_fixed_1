@@ -1251,7 +1251,20 @@ async function openMembershipRequests(worldId){
           ${approvedMembers.length
             ? approvedMembers.map(m=>`
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;margin-bottom:10px;border:1px solid #e5e5e5;border-radius:12px;background:#fff;">
-                <div><b>👤 ${esc(m.nickname)}</b><div style="font-size:12px;color:#888;margin-top:4px;">가입 승인된 사용자</div></div>
+                <div>
+                    <b>
+                        <img
+                            src="${getUserIconUrl({
+                                createdAt: profileJoinDates[m.user_id]
+                            })}"
+                            class="dynamic-author-icon"
+                            alt="사용자 아이콘"
+                        >
+                        ${esc(m.nickname)}
+                    </b>
+                    <div style="font-size:12px;color:#888;margin-top:4px;">가입 승인된 사용자</div>
+                </div>
+                
                 <button data-remove-member="${m.user_id}" style="flex-shrink:0;">🚪 내보내기</button>
               </div>`).join('')
             : '<p style="padding:12px 0;color:#777;">아직 가입 승인된 사용자가 없습니다.</p>'}
