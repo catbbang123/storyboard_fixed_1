@@ -970,8 +970,6 @@ if(w.visibility === 'private'){
     requestAnimationFrame(force16x9);
 }
 
-const GITHUB_ICON_BASE_URL = "https://raw.githubusercontent.com/catbbang123/storyboard_fixed_1/main/icons/";
-
 // 세계관 테마/색상에 맞는 평행사변형 아이콘 경로 반환 함수
 function getWorldLogoPath(theme) {
   const iconMap = {
