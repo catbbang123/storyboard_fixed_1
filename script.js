@@ -969,17 +969,57 @@ if(w.visibility === 'private'){
     bind();
     requestAnimationFrame(force16x9);
 }
-function card(w){return `<article class="card" data-id="${w.id}"><div class="cover ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}>${w.coverImage?'':esc(w.icon)}</div><div class="more"><button>⋮</button><div class="menu"><button class="edit">✏️ 수정</button><button class="decorate">🎨 꾸미기</button>
+
+// 세계관 테마/색상에 맞는 평행사변형 아이콘 경로 반환 함수
+function getWorldLogoPath(theme) {
+  const iconMap = {
+    white: 'assets/icons/logo-white.svg',
+    red: 'assets/icons/logo-red.svg',
+    orange: 'assets/icons/logo-orange.svg',
+    yellow: 'assets/icons/logo-yellow.svg',
+    green: 'assets/icons/logo-green.svg',
+    sky: 'assets/icons/logo-sky.svg',
+    blue: 'assets/icons/logo-blue.svg',
+    purple: 'assets/icons/logo-purple.svg',
+    black: 'assets/icons/logo-black.svg',
+    rainbow: 'assets/icons/logo-rainbow.svg'
+  };
+
+  // 기본값은 흰색(white) 아이콘 사용
+  return iconMap[theme] || iconMap['white'];
+}
+
+// 수정된 card 함수
+function card(w) {
+  const logoSrc = getWorldLogoPath(w.theme);
+
+  return `<article class="card" data-id="${w.id}">
+<div class="cover ${w.theme} ${w.coverImage ? 'has-photo' : ''}" ${
+    w.coverImage ? `style="background-image:url('${w.coverImage}')"` : ''
+  }>
+  <!-- 왼쪽 상단 평행사변형 로고 추가 -->
+  <img src="${logoSrc}" class="world-logo-icon" alt="세계관 로고" />
+  ${w.coverImage ? '' : esc(w.icon)}
+</div>
+<div class="more"><button>⋮</button>
+<div class="menu"><button class="edit">✏️ 수정</button><button class="decorate">🎨 꾸미기</button>
+
 <button class="join">${
     w.owner_id === currentUserId
-        ? '👑 소유자'
-        : w.joined
-            ? '🚪 탈퇴'
-            : getMembershipStatus(w.id) === 'pending'
-                ? '⏳ 승인 대기'
-                : '👥 가입하기'
-}</button>
-<button class="del">🗑️ 세계관 삭제</button></div></div><div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta"><span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${w.visibility==='public'?'공개':'비공개'}</span></div></div></article>`}
+      ? '👑 소유자'
+      : w.joined
+      ? '🚪 탈퇴'
+      : getMembershipStatus(w.id) === 'pending'
+      ? '⏳ 승인 대기'
+      : '👥 가입하기'
+  }</button>
+<button class="del">🗑️ 세계관 삭제</button></div></div>
+<div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta">
+<span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${
+    w.visibility === 'public' ? '공개' : '비공개'
+  }</span></div></div></article>`;
+}
+
 function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()=>openWorld(x.dataset.open));
                 document.querySelectorAll('.card').forEach(c=>{let id=c.dataset.id,m=c.querySelector('.menu');
                 c.onclick=e=>{if(!e.target.closest('.more'))openWorld(id)};
