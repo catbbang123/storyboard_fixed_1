@@ -1229,6 +1229,8 @@ async function openMembershipRequests(worldId){
         return;
     }
 
+   console.log('가입관리 호출 worldId:', worldId);
+    
     const members = await loadWorldMembersForManagement(worldId);
     const requests = members.filter(m=>m.status==='pending');
     const approvedMembers = members.filter(m=>m.status==='approved');
@@ -2647,8 +2649,6 @@ function getCharacterGroupValue(){
 
  return $("characterGroup").value==="기타" ? ($("customCharacterGroup").value.trim() || "기타") : $("characterGroup").value;
 }
-
-
 
 function openCharacterEdit(id){
  const w=get(current); const c=w?.characters.find(x=>x.id===id);
