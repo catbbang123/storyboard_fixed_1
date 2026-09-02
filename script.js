@@ -973,16 +973,16 @@ if(w.visibility === 'private'){
 // 세계관 테마/색상에 맞는 평행사변형 아이콘 경로 반환 함수
 function getWorldLogoPath(theme) {
   const iconMap = {
-    white: 'icons/white.png',
-    red: 'icons/logo-red.png',
-    orange: 'icons/orange.png',
-    yellow: 'icons/yellow.png',
-    green: 'icons/green.png',
-    sky: 'icons/sky.png',
-    blue: 'icons/blue.png',
-    purple: 'icons/purple.png',
-    black: 'icons/black.png',
-    rainbow: 'icons/rainbow.png'
+    white: 'white.png',
+    red: 'logo-red.png',
+    orange: 'orange.png',
+    yellow: 'yellow.png',
+    green: 'green.png',
+    sky: 'skyblue.png',
+    blue: 'blue.png',
+    purple: 'purple.png',
+    black: 'black.png',
+    rainbow: 'rainbow.png'
   };
 
   // 기본값은 흰색(white) 아이콘 사용
