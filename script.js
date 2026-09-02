@@ -2888,13 +2888,16 @@ if(itemType==='settings'){
              x.group=group;
              x.photo=genericPhoto||'';
          }
-     }else{
+     }
+     
+     else{
          arr.push({
              id:settingId,
              name:n,
              description:d,
              group:group,
-             photo:genericPhoto||''
+             photo:genericPhoto||'',
+             created_by:user.id
          });
      }
 
