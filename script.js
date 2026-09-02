@@ -1115,6 +1115,8 @@ async function loadWorldMembersForManagement(worldId){
     }
 
     const members = data || [];
+    console.log('관리용 DB members:', members);
+    
     const userIds = [...new Set(members.map(m => m.user_id).filter(Boolean))];
 
     if(userIds.length){
