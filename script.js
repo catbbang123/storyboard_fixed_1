@@ -998,8 +998,10 @@ const iconMap = {
 // 수정된 card 함수
 function card(w) {
   const logoSrc = getUserIconUrl({
-    createdAt: profileJoinDates[currentUserId],
-    customIconUrl: localStorage.getItem("my_custom_icon_path")
+    createdAt: profileJoinDates[w.owner_id],
+    customIconUrl: w.owner_id === currentUserId
+      ? localStorage.getItem("my_custom_icon_path")
+      : null
   });
 
   return `<article class="card" data-id="${w.id}">
