@@ -3623,6 +3623,40 @@ if (profileAvatar) {
     profileAvatar.appendChild(avatarImg);
 }
 
+document.querySelectorAll(".author-name").forEach(el => {
+    const text = el.textContent.trim();
+
+    if (!text.includes("👤")) return;
+
+    el.innerHTML = "";
+
+    const iconImg = document.createElement("img");
+    iconImg.src = iconUrl;
+    iconImg.alt = "사용자 아이콘";
+    iconImg.className = "dynamic-author-icon";
+
+    iconImg.style.width = "13px";
+    iconImg.style.height = "13px";
+    iconImg.style.marginRight = "4px";
+    iconImg.style.verticalAlign = "middle";
+    iconImg.style.objectFit = "contain";
+
+    if (canChangeIcon) {
+        iconImg.style.cursor = "pointer";
+        iconImg.title = "아이콘 변경";
+
+        iconImg.onclick = (e) => {
+            e.stopPropagation();
+            openIconChangeModal();
+        };
+    }
+
+    el.appendChild(iconImg);
+
+    const name = text.replace("👤", "").trim();
+    el.append(` ${name}`);
+});
+
     document.querySelectorAll("*").forEach(el => {
         // 로그인 버튼이나 프로필 메뉴 등 예외 처리 영역 제외
         if (
