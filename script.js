@@ -3718,10 +3718,6 @@ document.addEventListener("DOMContentLoaded", () => {
     applyPersonalMonthlyIcons();
 });
 
-setInterval(() => {
-    applyPersonalMonthlyIcons();
-}, 500);
-
 // 테스트용 함수 (브라우저 콘솔창에 window.testMonthsLater(0) ~ window.testMonthsLater(9) 입력 가능)
 window.testMonthsLater = async function(months) {
     const { data: { user: supabaseUser } } = await supabaseClient.auth.getUser();
