@@ -3723,14 +3723,28 @@ setInterval(() => {
 }, 500);
 
 // 테스트용 함수 (브라우저 콘솔창에 window.testMonthsLater(0) ~ window.testMonthsLater(9) 입력 가능)
-window.testMonthsLater = function(months) {
-    const fakeJoinDate = new Date();
+window.testMonthsLater = async function(months) {
+    const { data: { user: supabaseUser } } = await supabaseClient.auth.getUser();
+
+    if (!supabaseUser) {
+        console.log("[테스트 실패] 로그인된 사용자가 없습니다.");
+        return;
+    }
+
+    const realJoinDate = new Date(supabaseUser.created_at);
+    const fakeJoinDate = new Date(realJoinDate);
     fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
+
     localStorage.setItem("my_platform_join_date", fakeJoinDate.toISOString());
-    // 테스트 시 일반 기간으로 내리면 커스텀 아이콘 경로도 임시로 초기화하여 정확히 테스트되도록 함
+
+    // 테스트 시 일반 기간으로 내리면 커스텀 아이콘 경로도 임시로 초기화
     if (months < 9) {
         localStorage.removeItem("my_custom_icon_path");
     }
-    applyPersonalMonthlyIcons();
-    console.log(`[테스트 완료] 가입 후 ${months}개월 차로 설정되었습니다. (모달 권한 여부: ${months >= 9})`);
+
+    await applyPersonalMonthlyIcons();
+
+    console.log(
+        `[테스트 완료] 실제 가입일: ${supabaseUser.created_at} / 테스트: 가입 ${months}개월 차 / 모달 권한: ${months >= 9}`
+    );
 };
