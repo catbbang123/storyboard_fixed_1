@@ -567,7 +567,7 @@ async function load(){
     const { data: profileData, error: profileError } =
         await supabaseClient
             .from('profiles')
-            .select('user_id, nickname, created_at');
+            .select('user_id, nickname');
 
     if(profileError){
         console.error(
@@ -578,10 +578,8 @@ async function load(){
         profilesCache = {};
 
 (profileData || []).forEach(profile => {
-    profilesCache[profile.user_id] = {
-        nickname: profile.nickname || '사용자',
-        createdAt: profile.created_at
-    };
+    profilesCache[profile.user_id] =
+        profile.nickname || '사용자';
 });
     }
     
