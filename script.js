@@ -2516,17 +2516,17 @@ async function join(id){
 console.log('재가입 기존 상태:', existingMember?.status);
 console.log('재가입 기존 데이터:', existingMember);
     
-    if(existingMember?.status==='rejected'){
+if(existingMember?.status==='rejected'){
 
- console.log('rejected → pending 업데이트 시작');
-        
-        ({error}=await supabaseClient
-            .from('world_members')
-            .update({status:'pending',role:'member'})
-            .eq('world_id',id)
-            .eq('user_id',user.id));
+    console.log('rejected → pending 업데이트 시작');
 
-console.log('rejected → pending 업데이트 결과:', error);
+    ({error}=await supabaseClient
+        .from('world_members')
+        .update({status:'pending',role:'member'})
+        .eq('world_id',id)
+        .eq('user_id',user.id));
+
+    console.log('rejected → pending 업데이트 결과:', error);
     }else{
         ({error}=await supabaseClient
             .from('world_members')
