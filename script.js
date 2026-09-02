@@ -1490,7 +1490,14 @@ function section(w){
     <h3>${esc(c.name)}</h3>
 
 <small class="author-name">
-    👤 ${esc(profilesCache[c.owner_id] || '사용자')}
+    <img
+        src="${getUserIconUrl({
+            createdAt: profileJoinDates[c.owner_id]
+        })}"
+        class="dynamic-author-icon"
+        alt="사용자 아이콘"
+    >
+    ${esc(profilesCache[c.owner_id] || '사용자')}
 </small>
 
     <p>${esc(c.description||'')}</p>
