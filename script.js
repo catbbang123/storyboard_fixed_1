@@ -1302,6 +1302,9 @@ async function openMembershipRequests(worldId){
         modal.classList.remove('show');
     };
 
+    console.log('최종 가입 요청:', requests);
+    console.log('최종 가입 요청 수:', requests.length);
+
     modal.querySelectorAll('[data-approve]').forEach(b=>{
         b.onclick=()=>updateMembershipStatus(worldId,b.dataset.approve,'approved');
     });
