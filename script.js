@@ -3599,7 +3599,6 @@ async function applyPersonalMonthlyIcons() {
         // 로그인 버튼이나 프로필 메뉴 등 예외 처리 영역 제외
         if (
             el.closest("#googleLoginBtn") ||
-            el.closest("#profileBtn") ||
             el.closest("#profileMenu") ||
             el.id === "profileName"
         ) {
