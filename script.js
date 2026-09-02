@@ -1376,10 +1376,10 @@ function section(w){
 
                 <div class="story-card-info">
                     <h3>${esc(s.name)}</h3>
-                    <small class="author-name">
+<small class="author-name">
     <img
         src="${getUserIconUrl({
-            createdAt: profilesCache[s.created_by]?.createdAt
+            createdAt: profileJoinDates[s.created_by]
         })}"
         class="dynamic-author-icon"
         alt="사용자 아이콘"
