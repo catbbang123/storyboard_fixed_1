@@ -1103,7 +1103,7 @@ async function refreshWorldMemberCount(worldId){
 }
 
 async function loadWorldMembersForManagement(worldId){
-    const { data, error } = await supabaseClient
+    const { data: members, error } = await supabaseClient
         .from('world_members')
         .select('world_id, user_id, role, status')
         .eq('world_id', worldId)
@@ -1114,58 +1114,35 @@ async function loadWorldMembersForManagement(worldId){
         return [];
     }
 
-    const members = data || [];
-    console.log('관리용 DB members:', members);
+    const list = members || [];
+    const userIds = [...new Set(list.map(m => m.user_id).filter(Boolean))];
 
-    const userIds = [...new Set(
-        members
-            .map(m => m.user_id)
-            .filter(Boolean)
-    )];
-
-    // 가입 요청/가입자 목록을 열 때마다 profiles에서 닉네임을 새로 조회합니다.
-    // profilesCache에 예전에 저장된 값에만 의존하지 않습니다.
-    const nicknameMap = {};
+    // 가입 관리창을 열 때마다 profiles를 직접 조회합니다.
+    // 재가입 후에도 기존 profiles.nickname을 새로 가져옵니다.
+    let profileMap = {};
 
     if(userIds.length){
-        const {
-            data: profileData,
-            error: profileError
-        } = await supabaseClient
+        const { data: profiles, error: profileError } = await supabaseClient
             .from('profiles')
             .select('user_id, nickname, created_at')
             .in('user_id', userIds);
 
         if(profileError){
-            console.error(
-                '가입자 닉네임 불러오기 실패:',
-                profileError
-            );
+            console.error('가입자 프로필 불러오기 실패:', profileError);
         }else{
-            (profileData || []).forEach(profile => {
-                nicknameMap[profile.user_id] =
-                    profile.nickname || '사용자';
-
-                // 기존 캐시도 최신 값으로 갱신합니다.
-                profilesCache[profile.user_id] =
-                    profile.nickname || '사용자';
-
-                // 아이콘/가입일 관련 기존 기능도 유지합니다.
+            (profiles || []).forEach(profile => {
+                profileMap[profile.user_id] = profile.nickname || '사용자';
+                profilesCache[profile.user_id] = profile.nickname || '사용자';
                 if(profile.created_at){
-                    profileJoinDates[profile.user_id] =
-                        profile.created_at;
+                    profileJoinDates[profile.user_id] = profile.created_at;
                 }
             });
         }
     }
 
-    // world_members.user_id와 profiles.user_id를 연결합니다.
-    return members.map(member => ({
+    return list.map(member => ({
         ...member,
-        nickname:
-            nicknameMap[member.user_id] ||
-            profilesCache[member.user_id] ||
-            '닉네임 없음'
+        nickname: profileMap[member.user_id] || profilesCache[member.user_id] || '닉네임 없음'
     }));
 }
 
@@ -1232,9 +1209,14 @@ async function removeWorldMember(worldId,userId){
 
     if(!confirmed) return;
 
+    // 내보낸 사용자의 membership 행을 삭제하지 않고 rejected 상태로 남깁니다.
+    // 이렇게 해야 같은 사용자가 재가입할 때 기존 user_id와 프로필 연결이 유지됩니다.
     const { error } = await supabaseClient
         .from('world_members')
-        .delete()
+        .update({
+            status: 'rejected',
+            role: 'member'
+        })
         .eq('world_id', worldId)
         .eq('user_id', userId);
 
@@ -1242,6 +1224,14 @@ async function removeWorldMember(worldId,userId){
         console.error('세계관 가입자 내보내기 실패:', error);
         alert('사용자를 내보내지 못했습니다.\n' + error.message);
         return;
+    }
+
+    const removedMembership = myWorldMemberships.find(
+        m => m.world_id === worldId && m.user_id === userId
+    );
+
+    if(removedMembership){
+        removedMembership.status = 'rejected';
     }
 
     await refreshWorldMemberCount(worldId);
@@ -2546,6 +2536,23 @@ console.log('재가입 기존 상태:', existingMember?.status);
 console.log('재가입 기존 데이터:', existingMember);
     
 if(existingMember?.status==='rejected'){
+
+    // 재가입 시 현재 사용자의 profiles가 존재하는지 확인하고
+    // nickname/created_at을 다시 캐시에 반영합니다.
+    const { data: myProfile, error: myProfileError } = await supabaseClient
+        .from('profiles')
+        .select('user_id, nickname, created_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if(myProfileError){
+        console.warn('재가입 사용자 프로필 확인 실패:', myProfileError);
+    }else if(myProfile){
+        profilesCache[user.id] = myProfile.nickname || '사용자';
+        if(myProfile.created_at){
+            profileJoinDates[user.id] = myProfile.created_at;
+        }
+    }
 
     console.log('rejected → pending 업데이트 시작');
 
