@@ -3181,6 +3181,45 @@ function showMyCreation(){
     
     loadMyCreationCharacters();
     loadMyCreationLocations();
+    loadMyCreationStories();
+}
+
+async function loadMyCreationStories(){
+    const box = $('my-stories');
+
+    if(!box) return;
+
+    if(!currentUserId){
+        box.innerHTML = '<div class="empty">로그인이 필요합니다.</div>';
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from('stories')
+        .select('*')
+        .eq('created_by', currentUserId)
+        .order('created_at', { ascending: true });
+
+    if(error){
+        console.error('내 창작 소설 불러오기 실패:', error);
+        box.innerHTML = '<div class="empty">소설을 불러오지 못했습니다.</div>';
+        return;
+    }
+
+    if(!data || data.length === 0){
+        box.innerHTML = '<div class="empty">아직 만든 소설이 없습니다.</div>';
+        return;
+    }
+
+    box.innerHTML = data.map(st => `
+        <div class="creation-card">
+            ${st.cover_image ? `<img src="${esc(st.cover_image)}" alt="">` : ''}
+            <div>
+                <b>${esc(st.name || '제목 없음')}</b>
+                ${st.description ? `<p>${esc(st.description)}</p>` : ''}
+            </div>
+        </div>
+    `).join('');
 }
 
 async function loadMyCreationLocations(){
