@@ -3172,17 +3172,19 @@ renderWorld();
 
 $('search').oninput=e=>renderHome(e.target.value);
 
-function showMyCreation(){
+async function showMyCreation(){
     current = null;
 
     $('home').classList.add('hidden');
     $('world').classList.add('hidden');
     $('my-creation').classList.remove('hidden');
-    
-    loadMyCreationCharacters();
-    loadMyCreationLocations();
-    loadMyCreationStories();
-    loadMyCreationSettings();
+
+    await Promise.all([
+        loadMyCreationCharacters(),
+        loadMyCreationLocations(),
+        loadMyCreationStories(),
+        loadMyCreationSettings()
+    ]);
 
     bindMyCreationCards();
 }
