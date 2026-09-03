@@ -4048,3 +4048,45 @@ window.testMonthsLater = async function(months) {
         `[테스트 완료] 실제 가입일: ${supabaseUser.created_at} / 테스트: 가입 ${months}개월 차 / 모달 권한: ${months >= 9}`
     );
 };
+
+/* =========================
+   내 창작 카드 레이아웃
+   ========================= */
+
+.creation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 18px;
+    margin-top: 14px;
+}
+
+.creation-card {
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--card, #fff);
+    border: 1px solid rgba(0,0,0,.08);
+}
+
+.creation-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+}
+
+.creation-card > div {
+    padding: 12px;
+}
+
+.creation-card b {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.creation-card p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: .75;
+}
