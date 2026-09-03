@@ -3183,6 +3183,8 @@ function showMyCreation(){
     loadMyCreationLocations();
     loadMyCreationStories();
     loadMyCreationSettings();
+
+    bindMyCreationCards();
 }
 
 async function loadMyCreationStories(){
@@ -3258,6 +3260,32 @@ async function loadMyCreationSettings(){
             </div>
         </div>
     `).join('');
+}
+
+function bindMyCreationCards(){
+    document.querySelectorAll('.creation-card[data-creation-type]').forEach(card => {
+        card.onclick = async () => {
+            const type = card.dataset.creationType;
+            const worldId = card.dataset.worldId;
+
+            if(!worldId) return;
+
+            current = worldId;
+
+            $('my-creation').classList.add('hidden');
+            $('home').classList.add('hidden');
+            $('world').classList.remove('hidden');
+
+            if(type === 'character'){
+                tab = 'characters';
+            }
+
+            sessionStorage.setItem('storyboard_current_world', worldId);
+            sessionStorage.setItem('storyboard_current_tab', tab);
+
+            await openWorld(worldId);
+        };
+    });
 }
 
 async function loadMyCreationLocations(){
