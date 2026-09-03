@@ -3217,7 +3217,10 @@ async function loadMyCreationStories(){
     }
 
     box.innerHTML = data.map(st => `
-        <div class="creation-card">
+        <div class="creation-card"
+     data-creation-type="story"
+     data-world-id="${esc(st.world_id)}"
+     data-story-id="${esc(st.id)}">
             ${st.cover_image ? `<img src="${esc(st.cover_image)}" alt="">` : ''}
             <div>
                 <b>${esc(st.name || '제목 없음')}</b>
@@ -3254,7 +3257,10 @@ async function loadMyCreationSettings(){
     }
 
     box.innerHTML = data.map(s => `
-        <div class="creation-card">
+        <div class="creation-card"
+     data-creation-type="setting"
+     data-world-id="${esc(s.world_id)}"
+     data-setting-id="${esc(s.id)}">
             ${s.photo ? `<img src="${esc(s.photo)}" alt="">` : ''}
             <div>
                 <b>${esc(s.name || '이름 없음')}</b>
@@ -3280,6 +3286,18 @@ function bindMyCreationCards(){
 
             if(type === 'character'){
                 tab = 'characters';
+            }
+            
+            if(type === 'location'){
+                tab = 'locations';
+            }
+            
+            if(type === 'story'){
+                tab = 'stories';
+            }
+            
+            if(type === 'setting'){
+                tab = 'settings';
             }
 
             sessionStorage.setItem('storyboard_current_world', worldId);
@@ -3317,7 +3335,10 @@ async function loadMyCreationLocations(){
     }
 
     box.innerHTML = data.map(l => `
-        <div class="creation-card">
+        <div class="creation-card"
+     data-creation-type="location"
+     data-world-id="${esc(l.world_id)}"
+     data-location-id="${esc(l.id)}">
             ${l.photo ? `<img src="${esc(l.photo)}" alt="">` : ''}
             <div>
                 <b>${esc(l.name || '이름 없음')}</b>
