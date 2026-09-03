@@ -3178,6 +3178,45 @@ function showMyCreation(){
     $('home').classList.add('hidden');
     $('world').classList.add('hidden');
     $('my-creation').classList.remove('hidden');
+    
+    loadMyCreationCharacters();
+}
+
+async function loadMyCreationCharacters(){
+    const box = $('my-characters');
+
+    if(!box) return;
+
+    if(!currentUserId){
+        box.innerHTML = '<div class="empty">로그인이 필요합니다.</div>';
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from('characters')
+        .select('*')
+        .eq('owner_id', currentUserId);
+
+    if(error){
+        console.error('내 창작 캐릭터 불러오기 실패:', error);
+        box.innerHTML = '<div class="empty">캐릭터를 불러오지 못했습니다.</div>';
+        return;
+    }
+
+    if(!data || data.length === 0){
+        box.innerHTML = '<div class="empty">아직 만든 캐릭터가 없습니다.</div>';
+        return;
+    }
+
+    box.innerHTML = data.map(c => `
+        <div class="creation-card">
+            ${c.photo ? `<img src="${esc(c.photo)}" alt="">` : ''}
+            <div>
+                <b>${esc(c.name || '이름 없음')}</b>
+                ${c.description ? `<p>${esc(c.description)}</p>` : ''}
+            </div>
+        </div>
+    `).join('');
 }
 
 document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);
