@@ -910,8 +910,9 @@ function restoreStoryView(){
 function showJoinedWorlds(){
     current = null;
 
-    $('home').classList.remove('hidden');
-    $('world').classList.add('hidden');
+    $('home').classList.add('hidden');
+    $('world').classList.remove('hidden');
+    $('my-creation').classList.add('hidden');
 
     const joinedWorlds = worlds.filter(w =>
         myWorldMemberships.some(member =>
@@ -920,10 +921,11 @@ function showJoinedWorlds(){
         )
     );
 
-    $('home').innerHTML = `
+    $('world').innerHTML = `
         <div class="welcome">
             <small>JOINED WORLDS</small>
             <h1>가입한 세계관</h1>
+            <p>내가 가입한 세계관을 확인하세요.</p>
         </div>
 
         <div class="grid">
@@ -937,7 +939,6 @@ function showJoinedWorlds(){
 
     bind();
     requestAnimationFrame(force16x9);
-    $('my-creation').classList.add('hidden');
 }
 
 function home(){
