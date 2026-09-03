@@ -3170,6 +3170,15 @@ renderWorld();
 };
 
 $('search').oninput=e=>renderHome(e.target.value);
+
+function showMyCreation(){
+    current = null;
+
+    $('home').classList.add('hidden');
+    $('world').classList.add('hidden');
+    $('my-creation').classList.remove('hidden');
+}
+
 document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);
 document.querySelectorAll('[data-my-creation]').forEach(x=>x.onclick=showMyCreation);
 $('logo').onclick=home;
