@@ -3171,6 +3171,7 @@ renderWorld();
 
 $('search').oninput=e=>renderHome(e.target.value);
 document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);
+document.querySelectorAll('[data-my-creation]').forEach(x=>x.onclick=showMyCreation);
 $('logo').onclick=home;
 
 document.querySelectorAll('[data-joined-worlds]').forEach(btn => {
