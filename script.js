@@ -788,7 +788,9 @@ if(userIds.length){
         genre: w.genre,
         visibility: w.visibility,
         owner_id: w.owner_id,
-        members: w.members ?? 1,
+        
+        members: (memberCountMap[w.id] || 0) + 1,
+        
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
         coverImage: w.cover_image ?? '',
