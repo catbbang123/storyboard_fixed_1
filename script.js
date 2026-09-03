@@ -914,28 +914,61 @@ function showJoinedWorlds(){
     $('world').classList.remove('hidden');
     $('my-creation').classList.add('hidden');
 
-    const joinedWorlds = worlds.filter(w =>
-        myWorldMemberships.some(member =>
-            member.world_id === w.id &&
-            (member.status === 'approved' || member.status === 'pending')
-        )
-    );
+const approvedWorlds = worlds.filter(w =>
+    myWorldMemberships.some(member =>
+        member.world_id === w.id &&
+        member.status === 'approved'
+    )
+);
 
-    $('world').innerHTML = `
-        <div class="welcome">
-            <small>JOINED WORLDS</small>
-            <h1>가입한 세계관</h1>
-            <p>내가 가입한 세계관을 확인하세요.</p>
-        </div>
+const pendingWorlds = worlds.filter(w =>
+    myWorldMemberships.some(member =>
+        member.world_id === w.id &&
+        member.status === 'pending'
+    )
+);
 
-        <div class="grid">
-            ${
-                joinedWorlds.length
-                ? joinedWorlds.map(w => card(w)).join('')
-                : `<div class="empty">아직 가입한 세계관이 없습니다.</div>`
-            }
-        </div>
-    `;
+$('world').innerHTML = `
+    <div class="welcome">
+        <small>JOINED WORLDS</small>
+        <h1>가입한 세계관</h1>
+        <p>내가 가입했거나 가입 승인 대기 중인 세계관입니다.</p>
+    </div>
+
+    ${
+        approvedWorlds.length
+        ? `
+            <div class="title">
+                <h2>가입한 세계관</h2>
+            </div>
+
+            <div class="grid">
+                ${approvedWorlds.map(w => card(w)).join('')}
+            </div>
+        `
+        : ''
+    }
+
+    ${
+        pendingWorlds.length
+        ? `
+            <div class="title">
+                <h2>가입 승인 대기</h2>
+            </div>
+
+            <div class="grid">
+                ${pendingWorlds.map(w => card(w)).join('')}
+            </div>
+        `
+        : ''
+    }
+
+    ${
+        !approvedWorlds.length && !pendingWorlds.length
+        ? `<div class="empty">아직 가입한 세계관이 없습니다.</div>`
+        : ''
+    }
+`;
 
     bind();
     requestAnimationFrame(force16x9);
