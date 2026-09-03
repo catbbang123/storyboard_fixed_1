@@ -684,10 +684,39 @@ if(currentUserId){
                         nicknameMap[profile.user_id] = profile.nickname;
                     });
 
-                    pendingWorldMembers = pendingWorldMembers.map(member => ({
-                        ...member,
-                        nickname: nicknameMap[member.user_id] || '닉네임 없음'
-                    }));
+// [수정 위치: load() 함수 내 pendingWorldMembers 처리 부분]
+if(userIds.length){
+    const { data: profileData, error: profileError } =
+        await supabaseClient
+            .from('profiles')
+            .select('user_id, nickname')
+            .in('user_id', userIds);
+
+    if(profileError){
+        console.error('가입 신청자 닉네임 불러오기 실패:', profileError);
+    }else{
+        const nicknameMap = {};
+
+        (profileData || []).forEach(profile => {
+            if(profile.nickname) {
+                nicknameMap[profile.user_id] = profile.nickname;
+                profilesCache[profile.user_id] = profile.nickname; // 글로벌 캐시에도 즉시 업데이트
+            }
+        });
+
+        pendingWorldMembers = pendingWorldMembers.map(member => {
+            // DB 조회 결과 -> 프로필 캐시 -> 기본값('익명') 순서로 가져옵니다.
+            const userNickname = nicknameMap[member.user_id] 
+                || profilesCache[member.user_id] 
+                || '익명';
+
+            return {
+                ...member,
+                nickname: userNickname
+            };
+        });
+    }
+}
                 }
             }
         }
@@ -2479,124 +2508,69 @@ $('dconfirm').onclick=async ()=>{
     alert('세계관이 삭제되었습니다.');
 };
 
-async function join(id){
-    const { data: { session } } =
-        await supabaseClient.auth.getSession();
-    const user = session?.user;
-
-    if(!user){
-        alert('로그인 후 가입할 수 있습니다.');
+// [수정: 가입/재가입 신청 함수]
+async function join(worldId) {
+    if(!currentUserId){
+        alert('로그인 후 가입 신청할 수 있습니다.');
         return;
     }
 
-    const w=get(id);
-    if(!w) return;
-
-    if(w.owner_id === user.id){
-        alert('본인이 소유한 세계관입니다.');
-        return;
-    }
-
-    if(w.visibility==='private'){
-        alert('비공개 세계관에는 가입할 수 없습니다.');
-        return;
-    }
-
-    const { data: existingMember, error: memberCheckError } =
-        await supabaseClient
-            .from('world_members')
-            .select('world_id, user_id, status, role')
-            .eq('world_id',id)
-            .eq('user_id',user.id)
-            .maybeSingle();
-
-    if(memberCheckError){
-        alert('가입 상태를 확인하지 못했습니다.\n'+memberCheckError.message);
-        return;
-    }
-
-    if(existingMember?.status==='approved'){
-        alert('이미 승인된 세계관입니다.');
-        return;
-    }
-
-    if(existingMember?.status==='pending'){
-        current=id;
-        tab='overview';
-        sessionStorage.setItem('storyboard_current_world',id);
-        sessionStorage.setItem('storyboard_current_tab','overview');
-        alert('현재 승인 대기 중입니다.\n승인 전에도 세계관 내용을 볼 수 있습니다.');
-        renderWorld();
-        return;
-    }
-
-    let error;
-
-console.log('재가입 기존 상태:', existingMember?.status);
-console.log('재가입 기존 데이터:', existingMember);
-    
-if(existingMember?.status==='rejected'){
-
-    // 재가입 시 현재 사용자의 profiles가 존재하는지 확인하고
-    // nickname/created_at을 다시 캐시에 반영합니다.
-    const { data: myProfile, error: myProfileError } = await supabaseClient
+    // 1. 현재 사용자의 최신 프로필(닉네임) 조회
+    const { data: myProfile } = await supabaseClient
         .from('profiles')
-        .select('user_id, nickname, created_at')
-        .eq('user_id', user.id)
+        .select('nickname')
+        .eq('user_id', currentUserId)
         .maybeSingle();
 
-    if(myProfileError){
-        console.warn('재가입 사용자 프로필 확인 실패:', myProfileError);
-    }else if(myProfile){
-        profilesCache[user.id] = myProfile.nickname || '사용자';
-        if(myProfile.created_at){
-            profileJoinDates[user.id] = myProfile.created_at;
-        }
-    }
+    const myNickname = myProfile?.nickname || profilesCache[currentUserId] || '익명';
 
-    console.log('rejected → pending 업데이트 시작');
-
-    ({error}=await supabaseClient
+    // 2. world_members에 upsert (재가입 시 status를 'pending'으로 갱신)
+    const { error } = await supabaseClient
         .from('world_members')
-        .update({status:'pending',role:'member'})
-        .eq('world_id',id)
-        .eq('user_id',user.id));
-
-    console.log('rejected → pending 업데이트 결과:', error);
-    }else{
-        ({error}=await supabaseClient
-            .from('world_members')
-            .insert({
-                world_id:id,
-                user_id:user.id,
-                role:'member',
-                status:'pending'
-            }));
-    }
+        .upsert({
+            world_id: worldId,
+            user_id: currentUserId,
+            status: 'pending',
+            role: 'member'
+        }, { onConflict: 'world_id, user_id' });
 
     if(error){
-        console.error('세계관 가입 요청 실패:',error);
-        alert('세계관 가입 요청에 실패했습니다.\n'+error.message);
+        console.error('가입 신청 실패:', error);
+        alert('가입 신청에 실패했습니다.');
         return;
     }
 
-    myWorldMemberships=myWorldMemberships.filter(
-        m=>!(m.world_id===id && m.user_id===user.id)
+    // 3. 내 로컬 닉네임 캐시 및 멤버십 상태 업데이트
+    profilesCache[currentUserId] = myNickname;
+    alert('가입 신청이 완료되었습니다.');
+    await load(); // 목록 및 가입 상태 새로고침
+}
+
+// [수정: 소유자 거절 처리 함수]
+async function rejectMember(worldId, targetUserId) {
+    if(!confirm('가입 신청을 거절하시겠습니까?')) return;
+
+    // 거절 시 DB에서 해당 가입 요청 레코드를 완전히 DELETE 처리합니다.
+    // 이렇게 해야 재가입할 때 이전 거절 상태의 잔재로 인한 닉네임 누락을 방지할 수 있습니다.
+    const { error } = await supabaseClient
+        .from('world_members')
+        .delete()
+        .eq('world_id', worldId)
+        .eq('user_id', targetUserId);
+
+    if(error){
+        console.error('거절 처리 실패:', error);
+        alert('거절 처리에 실패했습니다.');
+        return;
+    }
+
+    alert('가입 신청을 거절했습니다.');
+    
+    // UI 갱신
+    pendingWorldMembers = pendingWorldMembers.filter(
+        m => !(m.world_id === worldId && m.user_id === targetUserId)
     );
-    myWorldMemberships.push({
-        world_id:id,
-        user_id:user.id,
-        role:'member',
-        status:'pending'
-    });
-
-    current=id;
-    tab='overview';
-    sessionStorage.setItem('storyboard_current_world',id);
-    sessionStorage.setItem('storyboard_current_tab','overview');
-
-    alert('가입 요청을 보냈습니다.\n승인을 기다리는 동안에도 세계관의 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.');
-    renderWorld();
+    await load();
 }
 
 async function leaveWorld(id){
