@@ -3323,15 +3323,15 @@ async function loadMyCreationCharacters(){
         return;
     }
 
-    box.innerHTML = data.map(c => `
-        <div class="creation-card">
-            ${c.photo ? `<img src="${esc(c.photo)}" alt="">` : ''}
-            <div>
-                <b>${esc(c.name || '이름 없음')}</b>
-                ${c.description ? `<p>${esc(c.description)}</p>` : ''}
-            </div>
+box.innerHTML = data.map(c => `
+    <div class="creation-card" data-creation-type="character" data-world-id="${esc(c.world_id)}" data-character-id="${esc(c.id)}">
+        ${c.photo ? `<img src="${esc(c.photo)}" alt="">` : ''}
+        <div>
+            <b>${esc(c.name || '이름 없음')}</b>
+            ${c.description ? `<p>${esc(c.description)}</p>` : ''}
         </div>
-    `).join('');
+    </div>
+`).join('');
 }
 
 document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);
