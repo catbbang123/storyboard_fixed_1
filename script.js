@@ -3234,7 +3234,7 @@ async function loadMyCreationSettings(){
     }
 
     const { data, error } = await supabaseClient
-        .from('settings')
+        .from('world_settings')
         .select('*')
         .eq('created_by', currentUserId);
 
