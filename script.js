@@ -316,64 +316,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
     }
 
-const mobileMyInfoBtn =
-    document.querySelector('.mobile button:last-child');
 
-if(mobileMyInfoBtn && profileMenu){
-
-    mobileMyInfoBtn.addEventListener('click', (e) => {
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        const isOpen =
-            profileMenu.style.display === 'block';
-
-        if(isOpen){
-
-            profileMenu.style.display = 'none';
-
-        }else{
-
-            profileMenu.style.display = 'block';
-
-            // 모바일에서도 프로필 메뉴 안의 닉네임 변경 영역 강제 표시
-            const nicknameBox =
-                profileMenu.querySelector('.profile-nickname');
-
-            if(nicknameBox){
-
-                nicknameBox.style.display = 'block';
-                nicknameBox.style.visibility = 'visible';
-                nicknameBox.style.opacity = '1';
-
-            }
-
-            const nicknameInput =
-                document.getElementById('nicknameInput');
-
-            if(nicknameInput){
-
-                nicknameInput.style.display = 'block';
-                nicknameInput.style.visibility = 'visible';
-
-            }
-
-            const saveNicknameBtn =
-                document.getElementById('saveNicknameBtn');
-
-            if(saveNicknameBtn){
-
-                saveNicknameBtn.style.display = 'block';
-                saveNicknameBtn.style.visibility = 'visible';
-
-            }
-
-        }
-
-    });
-
-}
 
     // ==========================================
     // 메뉴 바깥 클릭 → 닫기
