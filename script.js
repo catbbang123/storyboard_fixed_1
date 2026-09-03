@@ -950,6 +950,7 @@ function home(){
     tab='overview';
     $('home').classList.remove('hidden');
     $('world').classList.add('hidden');
+    $('my-creation').classList.add('hidden');
     renderHome($('search').value);
 }
 function renderHome(q=''){
