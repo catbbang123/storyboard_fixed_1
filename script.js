@@ -1182,11 +1182,28 @@ async function updateMembershipStatus(worldId,userId,status){
         return;
     }
 
-    const {error}=await supabaseClient
-        .from('world_members')
-        .update({status})
-        .eq('world_id',worldId)
-        .eq('user_id',userId);
+    // 거절은 기존 행을 남기지 않고 삭제합니다.
+    // 그래야 같은 사용자가 다시 가입할 때 upsert가 기존 rejected 행을 UPDATE하려고
+    // 하지 않고, 새로운 pending 행으로 INSERT할 수 있습니다.
+    let error = null;
+
+    if(status === 'rejected'){
+        const result = await supabaseClient
+            .from('world_members')
+            .delete()
+            .eq('world_id', worldId)
+            .eq('user_id', userId);
+
+        error = result.error;
+    }else{
+        const result = await supabaseClient
+            .from('world_members')
+            .update({status})
+            .eq('world_id',worldId)
+            .eq('user_id',userId);
+
+        error = result.error;
+    }
 
     if(error){
         alert('가입 상태 변경에 실패했습니다.\n'+error.message);
@@ -1238,14 +1255,12 @@ async function removeWorldMember(worldId,userId){
 
     if(!confirmed) return;
 
-    // 내보낸 사용자의 membership 행을 삭제하지 않고 rejected 상태로 남깁니다.
-    // 이렇게 해야 같은 사용자가 재가입할 때 기존 user_id와 프로필 연결이 유지됩니다.
+    // 내보내기는 membership 행을 완전히 삭제합니다.
+    // 기존 rejected 행이 남아 있으면 재가입 시 upsert가 UPDATE로 처리되어
+    // 일반 사용자의 RLS UPDATE 정책에 막힐 수 있습니다.
     const { error } = await supabaseClient
         .from('world_members')
-        .update({
-            status: 'rejected',
-            role: 'member'
-        })
+        .delete()
         .eq('world_id', worldId)
         .eq('user_id', userId);
 
@@ -2508,7 +2523,7 @@ $('dconfirm').onclick=async ()=>{
     alert('세계관이 삭제되었습니다.');
 };
 
-// [수정: 가입/재가입 신청 함수]
+// [수정: 가입/재가입 신청 함수 - 거절/내보내기 후 재가입 지원]
 async function join(worldId) {
     if(!currentUserId){
         alert('로그인 후 가입 신청할 수 있습니다.');
@@ -2524,19 +2539,59 @@ async function join(worldId) {
 
     const myNickname = myProfile?.nickname || profilesCache[currentUserId] || '익명';
 
-    // 2. world_members에 upsert (재가입 시 status를 'pending'으로 갱신)
-    const { error } = await supabaseClient
-        .from('world_members')
-        .upsert({
-            world_id: worldId,
-            user_id: currentUserId,
-            status: 'pending',
-            role: 'member'
-        }, { onConflict: 'world_id, user_id' });
+    // 2. 기존 멤버십이 남아 있는지 확인합니다.
+    const { data: existingMembership, error: existingError } =
+        await supabaseClient
+            .from('world_members')
+            .select('world_id, user_id, status')
+            .eq('world_id', worldId)
+            .eq('user_id', currentUserId)
+            .maybeSingle();
+
+    if(existingError){
+        console.error('기존 가입 상태 확인 실패:', existingError);
+        alert('가입 상태를 확인하지 못했습니다.\\n' + existingError.message);
+        return;
+    }
+
+    // 정상적인 재가입은 이전 거절/내보내기 행이 삭제되어 있으므로 INSERT입니다.
+    // 혹시 과거 데이터에 rejected 행이 남아 있다면 UPDATE를 시도합니다.
+    let error = null;
+
+    if(existingMembership){
+        if(existingMembership.status === 'pending'){
+            alert('이미 가입 승인 대기 중입니다.');
+            return;
+        }
+
+        if(existingMembership.status === 'approved'){
+            alert('이미 가입된 세계관입니다.');
+            return;
+        }
+
+        const result = await supabaseClient
+            .from('world_members')
+            .update({ status: 'pending', role: 'member' })
+            .eq('world_id', worldId)
+            .eq('user_id', currentUserId);
+
+        error = result.error;
+    }else{
+        const result = await supabaseClient
+            .from('world_members')
+            .insert({
+                world_id: worldId,
+                user_id: currentUserId,
+                status: 'pending',
+                role: 'member'
+            });
+
+        error = result.error;
+    }
 
     if(error){
         console.error('가입 신청 실패:', error);
-        alert('가입 신청에 실패했습니다.');
+        alert('가입 신청에 실패했습니다.\\n' + error.message);
         return;
     }
 
