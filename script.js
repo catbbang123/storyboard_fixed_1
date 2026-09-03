@@ -1304,6 +1304,8 @@ async function openMembershipRequests(worldId){
     const requests = members.filter(m=>m.status==='pending');
     const approvedMembers = members.filter(m=>m.status==='approved');
 
+    console.log('가입 요청 데이터:', requests);
+
     let modal=document.getElementById('membershipRequestModal');
 
     if(!modal){
