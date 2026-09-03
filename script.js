@@ -1144,6 +1144,11 @@ async function loadWorldMembersForManagement(worldId){
     }
 
     const list = members || [];
+
+    console.log('=== 가입 관리 DB 조회 결과 ===');
+    console.log('조회 worldId:', worldId);
+    console.log('조회 members:', members);
+    
     const userIds = [...new Set(list.map(m => m.user_id).filter(Boolean))];
 
     let profileMap = {};
