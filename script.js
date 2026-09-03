@@ -3180,6 +3180,44 @@ function showMyCreation(){
     $('my-creation').classList.remove('hidden');
     
     loadMyCreationCharacters();
+    loadMyCreationLocations();
+}
+
+async function loadMyCreationLocations(){
+    const box = $('my-locations');
+
+    if(!box) return;
+
+    if(!currentUserId){
+        box.innerHTML = '<div class="empty">로그인이 필요합니다.</div>';
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from('locations')
+        .select('*')
+        .eq('created_by', currentUserId);
+
+    if(error){
+        console.error('내 창작 지역 불러오기 실패:', error);
+        box.innerHTML = '<div class="empty">지역을 불러오지 못했습니다.</div>';
+        return;
+    }
+
+    if(!data || data.length === 0){
+        box.innerHTML = '<div class="empty">아직 만든 지역이 없습니다.</div>';
+        return;
+    }
+
+    box.innerHTML = data.map(l => `
+        <div class="creation-card">
+            ${l.photo ? `<img src="${esc(l.photo)}" alt="">` : ''}
+            <div>
+                <b>${esc(l.name || '이름 없음')}</b>
+                ${l.description ? `<p>${esc(l.description)}</p>` : ''}
+            </div>
+        </div>
+    `).join('');
 }
 
 async function loadMyCreationCharacters(){
