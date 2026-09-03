@@ -1146,8 +1146,6 @@ async function loadWorldMembersForManagement(worldId){
     const list = members || [];
     const userIds = [...new Set(list.map(m => m.user_id).filter(Boolean))];
 
-    // 가입 관리창을 열 때마다 profiles를 직접 조회합니다.
-    // 재가입 후에도 기존 profiles.nickname을 새로 가져옵니다.
     let profileMap = {};
 
     if(userIds.length){
@@ -1169,9 +1167,10 @@ async function loadWorldMembersForManagement(worldId){
         }
     }
 
+    // ★ [핵심 수정 부분] 각 멤버 항목에 닉네임(nickname) 데이터를 명시적으로 매핑하여 반환해야 합니다!
     return list.map(member => ({
         ...member,
-        nickname: profileMap[member.user_id] || profilesCache[member.user_id] || '닉네임 없음'
+        nickname: profileMap[member.user_id] || profilesCache[member.user_id] || '사용자'
     }));
 }
 
