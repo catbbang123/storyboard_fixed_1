@@ -2590,10 +2590,6 @@ if(existingMember){
     }
 }
 
-// [수정: 소유자 거절 처리 함수]
-async function rejectMember(worldId, targetUserId) {
-    if(!confirm('가입 신청을 거절하시겠습니까?')) return;
-
     // 거절 시 DB에서 해당 가입 요청 레코드를 완전히 DELETE 처리합니다.
     // 이렇게 해야 재가입할 때 이전 거절 상태의 잔재로 인한 닉네임 누락을 방지할 수 있습니다.
 const { error: insertError } = await supabaseClient
