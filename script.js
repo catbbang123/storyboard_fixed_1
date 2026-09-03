@@ -3417,6 +3417,13 @@ document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);
 document.querySelectorAll('[data-world-menu]').forEach(x=>{
     x.onclick = showMyWorlds;
 });
+
+const worldMenuButton = document.querySelector('[data-world-menu]');
+
+if(worldMenuButton){
+    worldMenuButton.onclick = showMyWorlds;
+}
+
 document.querySelectorAll('[data-my-creation]').forEach(x=>x.onclick=showMyCreation);
 $('logo').onclick=home;
 
