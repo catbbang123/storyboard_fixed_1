@@ -958,24 +958,29 @@ function home(){
 function showMyWorlds(){
     current = null;
 
-    $('home').classList.remove('hidden');
-    $('world').classList.add('hidden');
+    $('home').classList.add('hidden');
+    $('world').classList.remove('hidden');
     $('my-creation').classList.add('hidden');
 
     const myWorlds = worlds.filter(w =>
         w.owner_id === currentUserId
     );
 
-    const grid = $('grid');
+    $('world').innerHTML = `
+        <div class="welcome">
+            <small>MY WORLDS</small>
+            <h1>내 세계관</h1>
+            <p>내가 만든 세계관을 확인하세요.</p>
+        </div>
 
-    if(grid){
-        grid.innerHTML = myWorlds.length
-            ? myWorlds.map(w => card(w)).join('')
-            : '<div class="empty">아직 만든 세계관이 없습니다.</div>';
-    }
-
-    const recent = $('recent');
-    if(recent) recent.innerHTML = '';
+        <div class="grid">
+            ${
+                myWorlds.length
+                ? myWorlds.map(w => card(w)).join('')
+                : `<div class="empty">아직 만든 세계관이 없습니다.</div>`
+            }
+        </div>
+    `;
 
     bind();
     requestAnimationFrame(force16x9);
