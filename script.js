@@ -3182,6 +3182,7 @@ function showMyCreation(){
     loadMyCreationCharacters();
     loadMyCreationLocations();
     loadMyCreationStories();
+    loadMyCreationSettings();
 }
 
 async function loadMyCreationStories(){
@@ -3217,6 +3218,43 @@ async function loadMyCreationStories(){
             <div>
                 <b>${esc(st.name || '제목 없음')}</b>
                 ${st.description ? `<p>${esc(st.description)}</p>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadMyCreationSettings(){
+    const box = $('my-settings');
+
+    if(!box) return;
+
+    if(!currentUserId){
+        box.innerHTML = '<div class="empty">로그인이 필요합니다.</div>';
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from('settings')
+        .select('*')
+        .eq('created_by', currentUserId);
+
+    if(error){
+        console.error('내 창작 세계관 설정 불러오기 실패:', error);
+        box.innerHTML = '<div class="empty">세계관 설정을 불러오지 못했습니다.</div>';
+        return;
+    }
+
+    if(!data || data.length === 0){
+        box.innerHTML = '<div class="empty">아직 만든 세계관 설정이 없습니다.</div>';
+        return;
+    }
+
+    box.innerHTML = data.map(s => `
+        <div class="creation-card">
+            ${s.photo ? `<img src="${esc(s.photo)}" alt="">` : ''}
+            <div>
+                <b>${esc(s.name || '이름 없음')}</b>
+                ${s.description ? `<p>${esc(s.description)}</p>` : ''}
             </div>
         </div>
     `).join('');
