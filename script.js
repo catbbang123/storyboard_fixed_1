@@ -981,11 +981,16 @@ if(w.visibility === 'private'){
             .includes(k)
     );
 
-    $('grid').innerHTML = list.length
+const grid = $('grid');
+if (grid) {
+    grid.innerHTML = list.length
         ? list.map(card).join('')
         : '<div class="empty">🔍<br>검색 결과가 없습니다.</div>';
+}
 
-    $('recent').innerHTML = [...visibleWorlds]
+const recent = $('recent');
+if (recent) {
+    recent.innerHTML = [...visibleWorlds]
         .sort((a,b) => b.createdAt - a.createdAt)
         .slice(0,5)
         .map(w => `
@@ -998,6 +1003,7 @@ if(w.visibility === 'private'){
             </div>
         `)
         .join('');
+}
 
     bind();
     requestAnimationFrame(force16x9);
