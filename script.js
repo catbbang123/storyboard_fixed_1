@@ -953,6 +953,33 @@ function home(){
     $('my-creation').classList.add('hidden');
     renderHome($('search').value);
 }
+
+function showMyWorlds(){
+    current = null;
+
+    $('home').classList.remove('hidden');
+    $('world').classList.add('hidden');
+    $('my-creation').classList.add('hidden');
+
+    const myWorlds = worlds.filter(w =>
+        w.owner_id === currentUserId
+    );
+
+    const grid = $('grid');
+
+    if(grid){
+        grid.innerHTML = myWorlds.length
+            ? myWorlds.map(w => card(w)).join('')
+            : '<div class="empty">아직 만든 세계관이 없습니다.</div>';
+    }
+
+    const recent = $('recent');
+    if(recent) recent.innerHTML = '';
+
+    bind();
+    requestAnimationFrame(force16x9);
+}
+
 function renderHome(q=''){
     let k=q.toLowerCase().trim();
 
@@ -3387,6 +3414,9 @@ box.innerHTML = data.map(c => `
 }
 
 document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);
+document.querySelectorAll('[data-world-menu]').forEach(x=>{
+    x.onclick = showMyWorlds;
+});
 document.querySelectorAll('[data-my-creation]').forEach(x=>x.onclick=showMyCreation);
 $('logo').onclick=home;
 
