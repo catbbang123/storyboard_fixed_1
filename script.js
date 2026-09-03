@@ -907,6 +907,38 @@ function restoreStoryView(){
     }
 }
 
+function showJoinedWorlds(){
+    current = null;
+
+    $('home').classList.remove('hidden');
+    $('world').classList.add('hidden');
+
+    const joinedWorlds = worlds.filter(w =>
+        myWorldMemberships.some(member =>
+            member.world_id === w.id &&
+            (member.status === 'approved' || member.status === 'pending')
+        )
+    );
+
+    $('home').innerHTML = `
+        <div class="welcome">
+            <small>JOINED WORLDS</small>
+            <h1>가입한 세계관</h1>
+        </div>
+
+        <div class="grid">
+            ${
+                joinedWorlds.length
+                ? joinedWorlds.map(w => card(w)).join('')
+                : `<div class="empty">아직 가입한 세계관이 없습니다.</div>`
+            }
+        </div>
+    `;
+
+    bind();
+    requestAnimationFrame(force16x9);
+}
+
 function home(){
     current=null;
     sessionStorage.removeItem('storyboard_current_reader');
@@ -3131,7 +3163,17 @@ selectedCharacterPhoto='';
 renderWorld();
 };
 
-$('search').oninput=e=>renderHome(e.target.value);document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);$('logo').onclick=home;document.addEventListener('click',e=>{if(!e.target.closest('.more'))document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'))});document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal.show').forEach(x=>x.classList.remove('show'));editId=null;selectedCover=''}});
+$('search').oninput=e=>renderHome(e.target.value);
+document.querySelectorAll('[data-home]').forEach(x=>x.onclick=home);
+$('logo').onclick=home;
+
+document.querySelectorAll('[data-joined-worlds]').forEach(btn => {
+    btn.onclick = () => {
+        showJoinedWorlds();
+    };
+});
+
+document.addEventListener('click',e=>{if(!e.target.closest('.more'))document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'))});document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal.show').forEach(x=>x.classList.remove('show'));editId=null;selectedCover=''}});
 document.addEventListener("click",function(e){
   const addButton=e.target.closest("#add");
   if(addButton){
