@@ -2530,92 +2530,124 @@ $('dconfirm').onclick=async ()=>{
 };
 
 // [수정: 가입/재가입 신청 함수 - 거절/내보내기 후 재가입 지원]
+
 async function join(worldId) {
     if(!currentUserId){
         alert('로그인 후 가입 신청할 수 있습니다.');
         return;
     }
 
-    // 1. 현재 사용자의 최신 프로필(닉네임) 조회
     const { data: myProfile } = await supabaseClient
         .from('profiles')
         .select('nickname')
         .eq('user_id', currentUserId)
         .maybeSingle();
 
-    const myNickname = myProfile?.nickname || profilesCache[currentUserId] || '익명';
+    const myNickname =
+        myProfile?.nickname ||
+        profilesCache[currentUserId] ||
+        '익명';
 
-    // 2. 기존 멤버십이 남아 있는지 확인합니다.
-
-const { data: existingMember, error: existingMemberError } = await supabaseClient
-    .from('world_members')
-    .select('world_id, user_id, status, role')
-    .eq('world_id', worldId)
-    .eq('user_id', currentUserId)
-    .maybeSingle();
-
-if(existingMemberError){
-    console.error('기존 가입 기록 확인 실패:', existingMemberError);
-    alert('가입 요청을 확인하는 중 오류가 발생했습니다.');
-    return;
-}
-
-if(existingMember){
-    if(existingMember.status === 'approved'){
-        alert('이미 가입한 세계관입니다.');
-        return;
-    }
-
-    if(existingMember.status === 'pending'){
-        alert('이미 가입 요청을 보낸 상태입니다.');
-        return;
-    }
-
-    if(existingMember.status === 'rejected'){
-        const { error: updateError } = await supabaseClient
+    // 현재 가입 상태 확인
+    const { data: existingMembership, error: existingError } =
+        await supabaseClient
             .from('world_members')
-            .update({
-                status: 'pending',
-                role: 'member'
-            })
+            .select('world_id, user_id, status, role')
             .eq('world_id', worldId)
-            .eq('user_id', currentUserId);
+            .eq('user_id', currentUserId)
+            .maybeSingle();
 
-        if(updateError){
-            console.error('가입 재요청 실패:', updateError);
-            alert('가입 재요청에 실패했습니다.');
+    if(existingError){
+        console.error('기존 가입 상태 확인 실패:', existingError);
+        alert(
+            '가입 상태를 확인하지 못했습니다.\n' +
+            existingError.message
+        );
+        return;
+    }
+
+    let result;
+
+    // 이미 가입 기록이 있는 경우
+    if(existingMembership){
+
+        // 이미 승인됨
+        if(existingMembership.status === 'approved'){
+            alert('이미 가입된 세계관입니다.');
             return;
         }
 
-        alert('가입 요청을 다시 보냈습니다.');
+        // 이미 대기 중
+        if(existingMembership.status === 'pending'){
+            alert('이미 가입 승인 대기 중입니다.');
+
+            await load();
+            renderWorld();
+            return;
+        }
+
+        // 거절된 가입을 다시 신청
+        if(existingMembership.status === 'rejected'){
+            result = await supabaseClient
+                .from('world_members')
+                .update({
+                    status: 'pending',
+                    role: 'member'
+                })
+                .eq('world_id', worldId)
+                .eq('user_id', currentUserId)
+                .eq('status', 'rejected')
+                .select()
+                .single();
+        }
+
+    }else{
+
+        // 처음 가입 신청
+        result = await supabaseClient
+            .from('world_members')
+            .insert({
+                world_id: worldId,
+                user_id: currentUserId,
+                status: 'pending',
+                role: 'member'
+            })
+            .select()
+            .single();
+    }
+
+    if(result?.error){
+        console.error('가입 신청 실패:', result.error);
+
+        alert(
+            '가입 신청에 실패했습니다.\n' +
+            result.error.message
+        );
+
         return;
     }
-}
 
-    // 거절 시 DB에서 해당 가입 요청 레코드를 완전히 DELETE 처리합니다.
-    // 이렇게 해야 재가입할 때 이전 거절 상태의 잔재로 인한 닉네임 누락을 방지할 수 있습니다.
-const { error: insertError } = await supabaseClient
-    .from('world_members')
-    .insert({
-        world_id: worldId,
-        user_id: currentUserId,
-        status: 'pending',
-        role: 'member'
-    });
+    console.log('가입 신청 완료:', result?.data);
 
-if(insertError){
-    console.error('가입 요청 실패:', insertError);
-    alert('가입 요청에 실패했습니다.');
-    return;
-}
+    profilesCache[currentUserId] = myNickname;
 
-alert('가입 요청을 보냈습니다.');
-    
-    // UI 갱신
-    pendingWorldMembers = pendingWorldMembers.filter(
-        m => !(m.world_id === worldId && m.user_id === targetUserId)
-    );
+    alert('가입 신청이 완료되었습니다.');
+
+    // 서버의 실제 상태를 다시 불러오기
     await load();
+
+    // 현재 세계관 화면 다시 표시
+    renderWorld();
+
+    // 실제로 pending 상태가 되었는지 확인
+    const newStatus = getMembershipStatus(worldId);
+
+    console.log(
+        '재가입 후 상태:',
+        worldId,
+        currentUserId,
+        newStatus
+    );
 }
 
 async function leaveWorld(id){
