@@ -958,7 +958,23 @@ function renderHome(q=''){
 
     // 로그아웃 상태에서는 비공개 세계관을 목록에서 숨김
 let visibleWorlds = worlds.filter(w => {
-    return w.owner_id === currentUserId;
+    if(w.visibility === 'private'){
+        const isOwner = w.owner_id === currentUserId;
+
+        const isApprovedMember = myWorldMemberships.some(
+            member =>
+                member.world_id === w.id &&
+                member.status === 'approved'
+        );
+
+        const canAddContent = isOwner || isApprovedMember;
+
+        if(!isOwner && !isApprovedMember){
+            return false;
+        }
+    }
+
+    return true;
 });
 
     let list = visibleWorlds.filter(w =>
