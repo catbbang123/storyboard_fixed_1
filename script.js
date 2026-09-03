@@ -937,6 +937,7 @@ function showJoinedWorlds(){
 
     bind();
     requestAnimationFrame(force16x9);
+    $('my-creation').classList.add('hidden');
 }
 
 function home(){
