@@ -4109,7 +4109,7 @@ const PERIOD_ICONS = [
 // 아이콘 9개월 제한 우회 옵션
 // false = 기존 9개월 제한 유지
 // true  = 9개월 전에도 아이콘 변경 가능
-const ALLOW_FREE_ICON_CHANGE = false;
+const ALLOW_FREE_ICON_CHANGE = true;
 
 /**
  * 가입 날짜를 기준으로 현재까지 경과한 개월 수를 계산합니다.
