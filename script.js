@@ -4161,9 +4161,9 @@ function getUserIconUrl(user) {
     const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
     
     // 가입 10개월차 이상(경과 개월 수 9 이상)이고 사용자가 원하는 사진을 설정한 경우 우선 적용
-    if (monthsPassed >= 9 && user.customIconUrl) {
-        return user.customIconUrl;
-    }
+if ((ALLOW_FREE_ICON_CHANGE || monthsPassed >= 9) && user.customIconUrl) {
+    return user.customIconUrl;
+}
     
     const iconFileName = getIconFileNameByPeriod(monthsPassed);
     return GITHUB_ICON_BASE_URL + iconFileName;
