@@ -4226,28 +4226,45 @@ if (profileAvatar) {
 
     // 프로필 메뉴 안에 아이콘 변경 버튼을 별도로 제공합니다.
     const profileMenu = document.getElementById("profileMenu");
-    if (profileMenu) {
-        let iconChangeBtn = document.getElementById("profileIconChangeBtn");
+if (profileMenu) {
+    let iconChangeBtn = document.getElementById("profileIconChangeBtn");
 
-        if (canChangeIcon) {
-            if (!iconChangeBtn) {
-                iconChangeBtn = document.createElement("button");
-                iconChangeBtn.id = "profileIconChangeBtn";
-                iconChangeBtn.type = "button";
-                iconChangeBtn.textContent = "✨ 아이콘 변경";
-                iconChangeBtn.style.cssText =
-                    "width:100%; margin-top:8px; padding:9px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:13px;";
-                profileMenu.appendChild(iconChangeBtn);
-            }
-
-            iconChangeBtn.onclick = (e) => {
-                e.stopPropagation();
-                openIconChangeModal();
-            };
-        } else if (iconChangeBtn) {
-            iconChangeBtn.remove();
-        }
+    if (!iconChangeBtn) {
+        iconChangeBtn = document.createElement("button");
+        iconChangeBtn.id = "profileIconChangeBtn";
+        iconChangeBtn.type = "button";
+        profileMenu.appendChild(iconChangeBtn);
     }
+
+    iconChangeBtn.textContent = canChangeIcon
+        ? "✨ 내 아이콘 변경"
+        : "✨ 내 아이콘 변경 🔒";
+
+    iconChangeBtn.style.cssText =
+        "width:100%; margin-top:8px; padding:9px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:13px;";
+
+    if (canChangeIcon) {
+        // 9개월 이상 → 정상적으로 클릭 가능
+        iconChangeBtn.disabled = false;
+        iconChangeBtn.style.opacity = "1";
+        iconChangeBtn.style.cursor = "pointer";
+        iconChangeBtn.title = "내 아이콘을 변경합니다.";
+
+        iconChangeBtn.onclick = (e) => {
+            e.stopPropagation();
+            openIconChangeModal();
+        };
+
+    } else {
+        // 9개월 미만 → 버튼은 보이지만 클릭할 수 없음
+        iconChangeBtn.disabled = true;
+        iconChangeBtn.style.opacity = "0.55";
+        iconChangeBtn.style.cursor = "not-allowed";
+        iconChangeBtn.title = "아이콘 변경은 가입 9개월차부터 가능합니다.";
+
+        iconChangeBtn.onclick = null;
+    }
+}
 }
 
     // 현재 사용자가 직접 만든 세계관/캐릭터/지역/소설/세계관 설정에만
