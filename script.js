@@ -4134,11 +4134,13 @@ async function applyPersonalMonthlyIcons() {
 
     if (!supabaseUser) return;
 
-    // Supabase 실제 가입일 사용
-    const joinDate = supabaseUser.created_at;
+    // 실제 가입일을 기본값으로 사용합니다.
+    // 테스트 함수가 넣어둔 가상 가입일이 있으면 그 날짜를 우선 사용합니다.
+    const testJoinDate = localStorage.getItem("my_platform_test_join_date");
+    const joinDate = testJoinDate || supabaseUser.created_at;
 
-    // 기존 localStorage에도 실제 가입일을 저장
-    localStorage.setItem("my_platform_join_date", joinDate);
+    // 실제 가입일은 별도로 보관합니다. 테스트 날짜와 섞이지 않게 합니다.
+    localStorage.setItem("my_platform_join_date", supabaseUser.created_at);
 
     const user = {
         nickname: localStorage.getItem("my_platform_nickname") || "창작자",
@@ -4359,8 +4361,19 @@ document.addEventListener("DOMContentLoaded", () => {
     applyPersonalMonthlyIcons();
 });
 
-// 테스트용 함수 (브라우저 콘솔창에 window.testMonthsLater(0) ~ window.testMonthsLater(9) 입력 가능)
+// 테스트용 함수
+// 브라우저 콘솔에서:
+//   testMonthsLater(9)  -> 9개월차(아이콘 변경 권한 있음) 테스트
+//   testMonthsLater(0)  -> 가입 직후 상태 테스트
+//   clearMonthsTest()   -> 실제 가입일로 복귀
 window.testMonthsLater = async function(months) {
+    months = Number(months);
+
+    if (!Number.isFinite(months) || months < 0) {
+        console.log("[테스트 실패] 0 이상의 숫자를 입력해주세요. 예: testMonthsLater(9)");
+        return;
+    }
+
     const { data: { user: supabaseUser } } = await supabaseClient.auth.getUser();
 
     if (!supabaseUser) {
@@ -4372,16 +4385,29 @@ window.testMonthsLater = async function(months) {
     const fakeJoinDate = new Date(realJoinDate);
     fakeJoinDate.setMonth(fakeJoinDate.getMonth() - months);
 
-    localStorage.setItem("my_platform_join_date", fakeJoinDate.toISOString());
+    // 중요: applyPersonalMonthlyIcons가 테스트 날짜를 실제 가입일로 덮어쓰지 않도록 별도 저장
+    localStorage.setItem("my_platform_test_join_date", fakeJoinDate.toISOString());
 
-    // 테스트 시 일반 기간으로 내리면 커스텀 아이콘 경로도 임시로 초기화
+    // 9개월 미만 테스트에서는 기존 커스텀 아이콘을 제거하여 권한 상태를 정확히 확인
     if (months < 9) {
         localStorage.removeItem("my_custom_icon_path");
     }
 
     await applyPersonalMonthlyIcons();
+    await updateAuthUI();
+
+    const menu = document.getElementById("profileMenu");
+    if (menu) menu.style.display = "block";
 
     console.log(
-        `[테스트 완료] 실제 가입일: ${supabaseUser.created_at} / 테스트: 가입 ${months}개월 차 / 모달 권한: ${months >= 9}`
+        `[테스트 완료] ${months}개월차로 설정했습니다. 아이콘 변경 권한: ${months >= 9 ? "있음" : "없음"}`
     );
+};
+
+window.clearMonthsTest = async function() {
+    localStorage.removeItem("my_platform_test_join_date");
+    localStorage.removeItem("my_custom_icon_path");
+    await applyPersonalMonthlyIcons();
+    await updateAuthUI();
+    console.log("[테스트 종료] 실제 가입일 기준으로 복구했습니다.");
 };
