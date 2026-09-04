@@ -469,6 +469,7 @@ function getGenreValue(){
 let worlds=[],current=null,tab='overview',editId=null,deleteId=null,itemType=null,editingCharacterId=null,editingStoryId=null,editingChapterId=null,storyCover='',chapterStoryId=null,editingGenericId=null,genericPhoto='',myWorldMemberships=[],currentUserId=null;
 
 let profilesCache={};
+let profileIconCache={};
 let pendingWorldMembers=[];
 
 const defaults=[];
@@ -586,7 +587,7 @@ async function load(){
     const { data: profileData, error: profileError } =
         await supabaseClient
             .from('profiles')
-            .select('user_id, nickname, created_at');
+            .select('user_id, nickname, created_at, icon_url');
 
     if(profileError){
         console.error(
@@ -602,9 +603,11 @@ async function load(){
 });
 
         profileJoinDates = {};
+profileIconCache = {};
 
 (profileData || []).forEach(profile => {
     profileJoinDates[profile.user_id] = profile.created_at;
+    if(profile.icon_url) profileIconCache[profile.user_id] = profile.icon_url;
 });
     }
     
@@ -1174,19 +1177,14 @@ const iconMap = {
 
 // 수정된 card 함수
 function card(w) {
-  const logoSrc = getUserIconUrl({
-    createdAt: profileJoinDates[w.owner_id],
-    customIconUrl: w.owner_id === currentUserId
-      ? localStorage.getItem("my_custom_icon_path")
-      : null
-  });
+  const logoSrc = getAuthorIconUrl(w.owner_id);
 
   return `<article class="card" data-id="${w.id}">
 <div class="cover ${w.theme} ${w.coverImage ? 'has-photo' : ''}" ${
     w.coverImage ? `style="background-image:url('${w.coverImage}')"` : ''
   }>
   <!-- 왼쪽 상단 평행사변형 로고 추가 -->
-  <img src="${logoSrc}" class="world-logo-icon" alt="세계관 로고" />
+  <img src="${logoSrc}" class="world-logo-icon" data-author-id="${esc(w.owner_id)}" alt="세계관 로고" />
   ${w.coverImage ? '' : esc(w.icon)}
 </div>
 <div class="more"><button>⋮</button>
@@ -1304,7 +1302,7 @@ async function loadWorldMembersForManagement(worldId){
     if(userIds.length){
         const { data: profiles, error: profileError } = await supabaseClient
             .from('profiles')
-            .select('user_id, nickname, created_at')
+            .select('user_id, nickname, created_at, icon_url')
             .in('user_id', userIds);
 
         if(profileError){
@@ -1315,6 +1313,9 @@ async function loadWorldMembersForManagement(worldId){
                 profilesCache[profile.user_id] = profile.nickname || '사용자';
                 if(profile.created_at){
                     profileJoinDates[profile.user_id] = profile.created_at;
+                }
+                if(profile.icon_url){
+                    profileIconCache[profile.user_id] = profile.icon_url;
                 }
             });
         }
@@ -1644,10 +1645,8 @@ function section(w){
                     <h3>${esc(s.name)}</h3>
 <small class="author-name">
     <img
-        src="${getUserIconUrl({
-            createdAt: profileJoinDates[s.created_by]
-        })}"
-        class="dynamic-author-icon"
+        src="${getAuthorIconUrl(s.created_by)}"
+        class="dynamic-author-icon" data-author-id="${esc(s.created_by)}"
         alt="사용자 아이콘"
     >
     ${esc(profilesCache[s.created_by] || '사용자')}
@@ -1757,10 +1756,8 @@ function section(w){
 
 <small class="author-name">
     <img
-        src="${getUserIconUrl({
-            createdAt: profileJoinDates[c.owner_id]
-        })}"
-        class="dynamic-author-icon"
+        src="${getAuthorIconUrl(c.owner_id)}"
+        class="dynamic-author-icon" data-author-id="${esc(c.owner_id)}"
         alt="사용자 아이콘"
     >
     ${esc(profilesCache[c.owner_id] || '사용자')}
@@ -1850,10 +1847,8 @@ function section(w){
                                 <h3>${esc(x.name)}</h3>
                                 <small class="author-name">
                                     <img
-                                        src="${getUserIconUrl({
-                                            createdAt: profileJoinDates[x.created_by]
-                                        })}"
-                                        class="dynamic-author-icon"
+                                        src="${getAuthorIconUrl(x.created_by)}"
+                                        class="dynamic-author-icon" data-author-id="${esc(x.created_by)}"
                                         alt="사용자 아이콘"
                                     >
                                     ${esc(profilesCache[x.created_by] || '사용자')}
@@ -4109,6 +4104,18 @@ function getIconFileNameByPeriod(months) {
 /**
  * 사용자 닉네임 또는 정보 영역에 표시될 아이콘 URL을 가져옵니다.
  */
+function getAuthorIconUrl(authorId) {
+    const createdAt = profileJoinDates?.[authorId];
+    const customIconUrl = profileIconCache[authorId] || (authorId === currentUserId
+        ? localStorage.getItem("my_custom_icon_path")
+        : null);
+
+    return getUserIconUrl({
+        createdAt,
+        customIconUrl
+    });
+}
+
 function getUserIconUrl(user) {
     if (!user || !user.createdAt) {
         return GITHUB_ICON_BASE_URL + PERIOD_ICONS[0]; // 기본 0개월차 아이콘
@@ -4145,7 +4152,7 @@ async function applyPersonalMonthlyIcons() {
     const user = {
         nickname: localStorage.getItem("my_platform_nickname") || "창작자",
         createdAt: joinDate,
-        customIconUrl: localStorage.getItem("my_custom_icon_path")
+        customIconUrl: profileIconCache[supabaseUser.id] || localStorage.getItem("my_custom_icon_path")
     };
 
     const monthsPassed = calculateMonthsSinceSignup(user.createdAt);
@@ -4201,6 +4208,17 @@ if (profileAvatar) {
         }
     }
 }
+
+    // 현재 사용자가 직접 만든 세계관/캐릭터/지역/소설/세계관 설정에만
+    // 사용자 지정 아이콘을 적용합니다. 다른 사용자의 콘텐츠 아이콘은 건드리지 않습니다.
+    document.querySelectorAll("[data-author-id]").forEach(el => {
+        const authorId = el.dataset.authorId;
+        if (authorId !== currentUserId) return;
+
+        if (el.classList.contains("world-logo-icon") || el.classList.contains("dynamic-author-icon")) {
+            el.src = iconUrl;
+        }
+    });
 
 document.querySelectorAll(".author-name").forEach(el => {
     const text = el.textContent.trim();
@@ -4340,15 +4358,66 @@ function openIconChangeModal() {
         }
     };
 
-    document.getElementById("saveIconButton").onclick = () => {
+    document.getElementById("saveIconButton").onclick = async () => {
         if (!base64Image) {
             alert("변경할 이미지를 선택해 주세요!");
             return;
         }
+
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) {
+            alert("로그인 상태를 확인할 수 없습니다.");
+            return;
+        }
+
+        const saveButton = document.getElementById("saveIconButton");
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.textContent = "저장 중...";
+        }
+
+        // 브라우저에만 저장하지 않고 Supabase profiles.icon_url에도 저장합니다.
+        // 이렇게 저장하면 다른 사용자의 브라우저에서도 같은 아이콘을 읽을 수 있습니다.
+        let { data: existingProfile, error: profileError } = await supabaseClient
+            .from("profiles")
+            .select("user_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            console.error("프로필 확인 실패:", profileError);
+            alert("프로필을 확인하지 못했습니다.\n" + profileError.message);
+            if (saveButton) { saveButton.disabled = false; saveButton.textContent = "저장하기"; }
+            return;
+        }
+
+        if (existingProfile) {
+            const { error } = await supabaseClient
+                .from("profiles")
+                .update({ icon_url: base64Image })
+                .eq("user_id", user.id);
+            profileError = error;
+        } else {
+            const nickname = localStorage.getItem("my_platform_nickname") || "사용자";
+            const { error } = await supabaseClient
+                .from("profiles")
+                .insert({ user_id: user.id, nickname, icon_url: base64Image });
+            profileError = error;
+        }
+
+        if (profileError) {
+            console.error("커스텀 아이콘 저장 실패:", profileError);
+            alert("아이콘 저장에 실패했습니다.\n" + profileError.message + "\n\nSupabase profiles 테이블에 icon_url 컬럼과 UPDATE 정책이 있는지 확인해주세요.");
+            if (saveButton) { saveButton.disabled = false; saveButton.textContent = "저장하기"; }
+            return;
+        }
+
         localStorage.setItem("my_custom_icon_path", base64Image);
+        profileIconCache[user.id] = base64Image;
+
         alert("아이콘이 성공적으로 변경되었습니다!");
         document.getElementById("iconChangeModal").remove();
-        applyPersonalMonthlyIcons();
+        await applyPersonalMonthlyIcons();
     };
 
     document.getElementById("closeIconButton").onclick = () => {
