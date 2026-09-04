@@ -235,15 +235,47 @@ function ensureAccountDeleteButton(){
     const profileMenu = document.getElementById("profileMenu");
     if(!profileMenu) return;
 
-    let deleteBtn = document.getElementById("deleteAccountBtn");
+    // ==========================================
+    // 내 아이콘 변경 버튼
+    // ==========================================
+    let iconChangeBtn =
+        document.getElementById("profileIconChangeBtn");
+
+    if(!iconChangeBtn){
+        iconChangeBtn = document.createElement("button");
+
+        iconChangeBtn.id = "profileIconChangeBtn";
+        iconChangeBtn.type = "button";
+        iconChangeBtn.textContent = "✨ 내 아이콘 변경";
+
+        iconChangeBtn.style.cssText =
+            "width:100%; margin-top:10px; padding:9px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; cursor:pointer; font-size:13px;";
+
+        profileMenu.appendChild(iconChangeBtn);
+    }
+
+    iconChangeBtn.onclick = (e) => {
+        e.stopPropagation();
+        openIconChangeModal();
+    };
+
+
+    // ==========================================
+    // 회원 탈퇴 버튼
+    // ==========================================
+    let deleteBtn =
+        document.getElementById("deleteAccountBtn");
 
     if(!deleteBtn){
         deleteBtn = document.createElement("button");
+
         deleteBtn.id = "deleteAccountBtn";
         deleteBtn.type = "button";
-        deleteBtn.textContent = "🗑️ 회원 탈퇴";
+        deleteBtn.textContent = "🚪 탈퇴하기";
+
         deleteBtn.style.cssText =
-            "width:100%; margin-top:10px; padding:9px 12px; border:1px solid #e57373; border-radius:8px; background:#fff; color:#d32f2f; cursor:pointer; font-size:13px;";
+            "width:100%; margin-top:8px; padding:9px 12px; border:1px solid #e57373; border-radius:8px; background:#fff; color:#d32f2f; cursor:pointer; font-size:13px;";
+
         profileMenu.appendChild(deleteBtn);
     }
 
