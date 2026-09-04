@@ -4324,10 +4324,9 @@ document.querySelectorAll(".author-name").forEach(el => {
 
         if (el.children.length === 0 && el.textContent) {
             const text = el.textContent.trim();
-            const hasUserEmoji = text.includes("👤");
-            const isMemberCount = text.endsWith("명") && !text.includes("아이콘");
+const hasUserEmoji = text.includes("👤");
 
-            if (hasUserEmoji || isMemberCount) {
+if (hasUserEmoji) {
                 if (
                     el.dataset.iconApplied === "true" &&
                     el.dataset.currentSrc === iconUrl
