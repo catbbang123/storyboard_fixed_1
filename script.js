@@ -4425,9 +4425,40 @@ function openIconChangeModal() {
     };
 }
 
-// 페이지 로드 시 실행 및 주기적 렌더링
+// 페이지 로드 시 실행 및 동적 화면 갱신 대응
+// 세계관을 열거나 탭을 바꾸면 render 함수가 기존 DOM을 다시 만들기 때문에
+// 최초 1회만 아이콘을 적용하면 새로 만들어진 캐릭터/지역/소설/설정 아이콘이 사라집니다.
+// DOM 변경을 감지하여 현재 사용자가 작성한 콘텐츠에만 다시 아이콘을 적용합니다.
+let personalIconApplyTimer = null;
+let personalIconApplying = false;
+
+async function applyPersonalIconsAfterRender() {
+    if (personalIconApplying) return;
+    personalIconApplying = true;
+    try {
+        await applyPersonalMonthlyIcons();
+    } finally {
+        personalIconApplying = false;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    applyPersonalMonthlyIcons();
+    applyPersonalIconsAfterRender();
+
+    const observerTarget = document.body;
+    if (observerTarget && !window.__personalIconObserver) {
+        window.__personalIconObserver = new MutationObserver(() => {
+            clearTimeout(personalIconApplyTimer);
+            personalIconApplyTimer = setTimeout(() => {
+                applyPersonalIconsAfterRender();
+            }, 80);
+        });
+
+        window.__personalIconObserver.observe(observerTarget, {
+            childList: true,
+            subtree: true
+        });
+    }
 });
 
 // 테스트용 함수
