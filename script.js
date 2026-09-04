@@ -147,6 +147,9 @@ if(nicknameInput){
 
     }
 
+    // 프로필 메뉴에 아이콘 변경/회원 탈퇴 버튼 보장
+    ensureAccountDeleteButton();
+
     // 세계관 만들기 버튼 활성화
     createButtons.forEach(btn => {
         if(btn){
@@ -175,6 +178,79 @@ async function requireLogin(){
     }
 
     return true;
+}
+
+// ==========================================
+// 회원 탈퇴
+// ==========================================
+// 보안상 브라우저의 supabase-js만으로 auth.users를 직접 삭제할 수 없으므로
+// Supabase에 SECURITY DEFINER RPC 함수(delete_my_account)를 만들어 두고 호출합니다.
+async function deleteMyAccount(){
+    const { data: userData, error: userError } =
+        await supabaseClient.auth.getUser();
+
+    const user = userData?.user;
+
+    if(userError || !user){
+        alert("로그인 상태를 확인하지 못했습니다.");
+        return;
+    }
+
+    const confirmed = confirm(
+        "정말 회원 탈퇴하시겠습니까?\\n\\n" +
+        "회원 탈퇴하면 계정과 프로필 정보가 삭제되며, 다시 로그인하려면 새 계정을 만들어야 합니다."
+    );
+
+    if(!confirmed) return;
+
+    const secondConfirmed = confirm(
+        "마지막 확인입니다.\\n정말로 회원 탈퇴를 진행하시겠습니까?"
+    );
+
+    if(!secondConfirmed) return;
+
+    const { error: deleteError } =
+        await supabaseClient.rpc("delete_my_account");
+
+    if(deleteError){
+        console.error("회원 탈퇴 실패:", deleteError);
+        alert(
+            "회원 탈퇴에 실패했습니다.\\n\\n" +
+            "Supabase에 delete_my_account 함수가 설정되어 있는지 확인해주세요.\\n" +
+            deleteError.message
+        );
+        return;
+    }
+
+    localStorage.removeItem("my_platform_nickname");
+    localStorage.removeItem("my_custom_icon_path");
+    localStorage.removeItem("my_platform_join_date");
+
+    await supabaseClient.auth.signOut();
+    alert("회원 탈퇴가 완료되었습니다.");
+    window.location.href = window.location.origin + window.location.pathname;
+}
+
+function ensureAccountDeleteButton(){
+    const profileMenu = document.getElementById("profileMenu");
+    if(!profileMenu) return;
+
+    let deleteBtn = document.getElementById("deleteAccountBtn");
+
+    if(!deleteBtn){
+        deleteBtn = document.createElement("button");
+        deleteBtn.id = "deleteAccountBtn";
+        deleteBtn.type = "button";
+        deleteBtn.textContent = "🗑️ 회원 탈퇴";
+        deleteBtn.style.cssText =
+            "width:100%; margin-top:10px; padding:9px 12px; border:1px solid #e57373; border-radius:8px; background:#fff; color:#d32f2f; cursor:pointer; font-size:13px;";
+        profileMenu.appendChild(deleteBtn);
+    }
+
+    deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteMyAccount();
+    };
 }
 
 async function logout(){
@@ -4093,17 +4169,35 @@ if (profileAvatar) {
     avatarImg.style.objectFit = "contain";
     avatarImg.style.display = "block";
 
-    if (canChangeIcon) {
-        avatarImg.style.cursor = "pointer";
-        avatarImg.title = "아이콘 변경";
-
-        avatarImg.onclick = (e) => {
-            e.stopPropagation();
-            openIconChangeModal();
-        };
-    }
-
+    // 프로필 버튼(로그인 버튼)을 눌렀을 때는 반드시 프로필 메뉴가 열리도록 합니다.
+    // 아이콘 자체에서 아이콘 변경 모달을 열면 프로필 메뉴 클릭 이벤트와 충돌할 수 있으므로
+    // 프로필 상단 아이콘은 더 이상 클릭으로 아이콘 변경 모달을 열지 않습니다.
     profileAvatar.appendChild(avatarImg);
+
+    // 프로필 메뉴 안에 아이콘 변경 버튼을 별도로 제공합니다.
+    const profileMenu = document.getElementById("profileMenu");
+    if (profileMenu) {
+        let iconChangeBtn = document.getElementById("profileIconChangeBtn");
+
+        if (canChangeIcon) {
+            if (!iconChangeBtn) {
+                iconChangeBtn = document.createElement("button");
+                iconChangeBtn.id = "profileIconChangeBtn";
+                iconChangeBtn.type = "button";
+                iconChangeBtn.textContent = "✨ 아이콘 변경";
+                iconChangeBtn.style.cssText =
+                    "width:100%; margin-top:8px; padding:9px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:13px;";
+                profileMenu.appendChild(iconChangeBtn);
+            }
+
+            iconChangeBtn.onclick = (e) => {
+                e.stopPropagation();
+                openIconChangeModal();
+            };
+        } else if (iconChangeBtn) {
+            iconChangeBtn.remove();
+        }
+    }
 }
 
 document.querySelectorAll(".author-name").forEach(el => {
