@@ -4106,6 +4106,11 @@ const PERIOD_ICONS = [
     "rainbow.png"   // 9개월 이상 (10개월차~)
 ];
 
+// 아이콘 9개월 제한 우회 옵션
+// false = 기존 9개월 제한 유지
+// true  = 9개월 전에도 아이콘 변경 가능
+const ALLOW_FREE_ICON_CHANGE = false;
+
 /**
  * 가입 날짜를 기준으로 현재까지 경과한 개월 수를 계산합니다.
  */
@@ -4191,9 +4196,13 @@ async function applyPersonalMonthlyIcons() {
     const iconUrl = getUserIconUrl(user);
 
     // 오직 9개월 이상이거나 커스텀 아이콘을 등록한 경우에만 변경 권한
-    const hasCustomIcon = Boolean(localStorage.getItem("my_custom_icon_path"));
-    const isRainbowPeriod = monthsPassed >= 9;
-    const canChangeIcon = isRainbowPeriod || hasCustomIcon;
+const hasCustomIcon = Boolean(localStorage.getItem("my_custom_icon_path"));
+const isRainbowPeriod = monthsPassed >= 9;
+
+const canChangeIcon =
+    ALLOW_FREE_ICON_CHANGE ||
+    isRainbowPeriod ||
+    hasCustomIcon;
 
     const profileAvatar = document.querySelector("#profileAvatar");
 
