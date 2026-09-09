@@ -1511,11 +1511,12 @@ async function openMembershipRequests(worldId){
               <div style="padding:16px;margin-bottom:10px;border:1px solid #e5e5e5;border-radius:12px;background:#fafafa;">
                 <b>
                     <img
-                        src="${getUserIconUrl({
-                            createdAt: profileJoinDates[r.user_id]
-                        })}"
-                        class="dynamic-author-icon"
+                        src="${getMemberIconUrl(r.user_id)}"
+                        onerror="this.onerror=null;this.src='${getMemberIconFallbackUrl(r.user_id)}'"
+                        class="dynamic-author-icon membership-user-icon"
                         alt="사용자 아이콘"
+                        width="24" height="24"
+                        style="width:24px;height:24px;display:inline-block;object-fit:contain;vertical-align:middle;margin-right:7px;flex:0 0 24px;"
                     >
                     ${esc(r.nickname)}
                 </b>
@@ -1538,11 +1539,12 @@ async function openMembershipRequests(worldId){
                 <div>
                     <b>
                         <img
-                            src="${getUserIconUrl({
-                                createdAt: profileJoinDates[m.user_id]
-                            })}"
-                            class="dynamic-author-icon"
+                            src="${getMemberIconUrl(m.user_id)}"
+                            onerror="this.onerror=null;this.src='${getMemberIconFallbackUrl(m.user_id)}'"
+                            class="dynamic-author-icon membership-user-icon"
                             alt="사용자 아이콘"
+                            width="24" height="24"
+                            style="width:24px;height:24px;display:inline-block;object-fit:contain;vertical-align:middle;margin-right:7px;flex:0 0 24px;"
                         >
                         ${esc(m.nickname)}
                     </b>
@@ -4225,6 +4227,40 @@ if ((ALLOW_FREE_ICON_CHANGE || monthsPassed >= 9) && user.customIconUrl) {
     
     const iconFileName = getIconFileNameByPeriod(monthsPassed);
     return GITHUB_ICON_BASE_URL + iconFileName;
+}
+
+// 가입 관리 화면에서 사용자 아이콘을 확실하게 표시합니다.
+// 프로필에 저장된 개인 아이콘이 있으면 그것을 우선 사용하고,
+// 없으면 가입일 기준 월별 아이콘을 사용합니다. 외부 이미지가 실패해도
+// 인라인 SVG로 같은 색상의 평행사변형 아이콘을 표시하여 빈 공간이 생기지 않게 합니다.
+function getMemberIconFallbackUrl(userId) {
+    const createdAt = profileJoinDates?.[userId];
+    const monthsPassed = createdAt ? calculateMonthsSinceSignup(createdAt) : 0;
+    const iconFileName = getIconFileNameByPeriod(monthsPassed);
+    const colors = {
+        'white.png': '#ffffff',
+        'red.png': '#ef4444',
+        'orange.png': '#f97316',
+        'yellow.png': '#facc15',
+        'green.png': '#22c55e',
+        'skyblue.png': '#38bdf8',
+        'blue.png': '#3b82f6',
+        'purple.png': '#8b5cf6',
+        'black.png': '#111827',
+        'rainbow.png': '#a855f7'
+    };
+    const fill = colors[iconFileName] || '#ffffff';
+    const stroke = iconFileName === 'white.png' ? '#999999' : fill;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><polygon points="12,3 36,3 28,37 4,37" fill="${fill}" stroke="${stroke}" stroke-width="2"/></svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+
+function getMemberIconUrl(userId) {
+    const customIconUrl = profileIconCache[userId];
+    if (customIconUrl) return customIconUrl;
+
+    const createdAt = profileJoinDates?.[userId];
+    return getUserIconUrl({ createdAt });
 }
 
 /**
