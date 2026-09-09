@@ -1614,6 +1614,14 @@ function renderWorld(){
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
 <h2>세계관 소개</h2><p>${esc(w.description)}</p>`;
 else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${esc(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+    const addStoryButton = $('addStoryButton');
+    if(addStoryButton){
+        addStoryButton.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openStoryModal();
+        };
+    }
     $('editPage').onclick=()=>{
     if(!isOwner && !isApprovedMember){
         alert('로그인 후 수정할 수 있습니다.');
@@ -1663,7 +1671,7 @@ function section(w){
                 <h2>소설</h2>
                 <small>스토리 표지를 만들고, 설정에서 회차를 작성할 수 있습니다.</small>
             </div>
-            ${canAddContent ? '<button id="add">＋ 스토리 추가</button>' : ''}
+            ${canAddContent ? '<button id="addStoryButton" type="button">＋ 스토리 추가</button>' : ''}
         </div>`+
 
         (w.stories.length
@@ -2078,8 +2086,7 @@ async function openChapterModal(storyId,chapterId=null){
     editingChapterId=chapterId;
 
     $('chapterTitle').textContent=chapterId?'회차 수정':'새 회차 쓰기';
-    const nextChapterNumber = s.chapters.length ? Math.max(...s.chapters.map(ch => Number(ch.chapter_number || 0) || 0), ...s.chapters.map((ch, i) => i + 1)) + 1 : 1;
-    $('chapterName').value=c?.name||`${nextChapterNumber}화`;
+    $('chapterName').value=c?.name||`${(s.chapters.length||0)+1}화`;
     $('chapterBody').value=c?.body||'';
 
     $('chapterModal').classList.add('show');
@@ -2129,8 +2136,8 @@ async function saveChapter(){
         id: chapterId,
         story_id: chapterStoryId,
         chapter_number: editingChapterId
-            ? (s.chapters.find(x => x.id === editingChapterId)?.chapter_number || (s.chapters.findIndex(x => x.id === editingChapterId) + 1))
-            : (s.chapters.length ? Math.max(...s.chapters.map(ch => Number(ch.chapter_number || 0) || 0), ...s.chapters.map((ch, i) => i + 1)) + 1 : 1),
+            ? (s.chapters.findIndex(x => x.id === editingChapterId) + 1)
+            : (s.chapters.length + 1),
         name: name,
         body: body,
         author_id: editingChapterId ? (s.chapters.find(x=>x.id===editingChapterId)?.author_id || user.id) : user.id,
@@ -2156,8 +2163,6 @@ async function saveChapter(){
      id: chapterId,
      name,
      body,
-     author_id: user.id,
-     chapter_number: chapterRow.chapter_number,
      createdAt: Date.now()
    });
  }
@@ -2262,7 +2267,7 @@ function renderStorySettings(storyId){
                                 </strong>
 
                                 <small>
-                                    · ${c.author_id ? '작성자: '+esc(profilesCache[c.author_id] || '사용자')+' · ' : ''}${
+                                    · ${c.author_id ? '작성자: '+esc(profilesCache[c.author_id]?.nickname || '사용자')+' · ' : ''}${
                                         c.body
                                         ? c.body.length + '자'
                                         : '내용 없음'
