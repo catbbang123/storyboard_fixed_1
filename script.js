@@ -2078,7 +2078,8 @@ async function openChapterModal(storyId,chapterId=null){
     editingChapterId=chapterId;
 
     $('chapterTitle').textContent=chapterId?'회차 수정':'새 회차 쓰기';
-    $('chapterName').value=c?.name||`${(s.chapters.length||0)+1}화`;
+    const nextChapterNumber = s.chapters.length ? Math.max(...s.chapters.map(ch => Number(ch.chapter_number || 0) || 0), ...s.chapters.map((ch, i) => i + 1)) + 1 : 1;
+    $('chapterName').value=c?.name||`${nextChapterNumber}화`;
     $('chapterBody').value=c?.body||'';
 
     $('chapterModal').classList.add('show');
@@ -2128,8 +2129,8 @@ async function saveChapter(){
         id: chapterId,
         story_id: chapterStoryId,
         chapter_number: editingChapterId
-            ? (s.chapters.findIndex(x => x.id === editingChapterId) + 1)
-            : (s.chapters.length + 1),
+            ? (s.chapters.find(x => x.id === editingChapterId)?.chapter_number || (s.chapters.findIndex(x => x.id === editingChapterId) + 1))
+            : (s.chapters.length ? Math.max(...s.chapters.map(ch => Number(ch.chapter_number || 0) || 0), ...s.chapters.map((ch, i) => i + 1)) + 1 : 1),
         name: name,
         body: body,
         author_id: editingChapterId ? (s.chapters.find(x=>x.id===editingChapterId)?.author_id || user.id) : user.id,
@@ -2155,6 +2156,8 @@ async function saveChapter(){
      id: chapterId,
      name,
      body,
+     author_id: user.id,
+     chapter_number: chapterRow.chapter_number,
      createdAt: Date.now()
    });
  }
@@ -2259,7 +2262,7 @@ function renderStorySettings(storyId){
                                 </strong>
 
                                 <small>
-                                    · ${c.author_id ? '작성자: '+esc(profilesCache[c.author_id]?.nickname || '사용자')+' · ' : ''}${
+                                    · ${c.author_id ? '작성자: '+esc(profilesCache[c.author_id] || '사용자')+' · ' : ''}${
                                         c.body
                                         ? c.body.length + '자'
                                         : '내용 없음'
