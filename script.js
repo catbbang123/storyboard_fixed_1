@@ -1,5 +1,28 @@
 const $=id=>document.getElementById(id);
 
+// 스토리 추가 버튼을 DOM 재렌더링과 관계없이 안정적으로 처리합니다.
+// (renderWorld()가 버튼을 새로 만들어도 문서 이벤트 위임으로 동작합니다.)
+document.addEventListener('click', function(e){
+    const btn = e.target.closest('#addStoryButton');
+    if(!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    try{
+        if(typeof openStoryModal !== 'function'){
+            alert('스토리 작성 창을 불러오지 못했습니다. 페이지를 새로고침해주세요.');
+            console.error('openStoryModal 함수를 찾을 수 없습니다.');
+            return;
+        }
+
+        openStoryModal();
+    }catch(err){
+        console.error('스토리 추가 버튼 실행 오류:', err);
+        alert('스토리 작성 창을 여는 중 오류가 발생했습니다.\n' + (err?.message || err));
+    }
+}, true);
+
 const SUPABASE_URL = 'https://udskdmndzupdgsrxjfbt.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hFt0uuyB5EVIn7gCN-aQJQ_QVeAFWBB';
 
