@@ -906,6 +906,7 @@ if(userIds.length){
                 name: st.name,
                 description: st.description || '',
                 visibility: st.visibility || 'public',
+                storyType: st.story_type || 'normal',
                 coverImage: st.cover_image || '',
                 created_by: st.created_by || null,
                  // Supabase의 chapters 테이블에서 해당 story_id와 일치하는 회차들을 매핑
@@ -915,6 +916,7 @@ if(userIds.length){
                         id: ch.id,
                         name: ch.title || ch.name, // 컬럼명에 따라 맞춤
                         body: ch.body || ch.content || '',
+                        author_id: ch.author_id || ch.created_by || null,
                         createdAt: ch.created_at ? new Date(ch.created_at).getTime() : 0
                     })),
                 createdAt: st.created_at ? new Date(st.created_at).getTime() : 0,
@@ -1938,6 +1940,7 @@ async function saveStoryToSupabase(story){
         description:story.description || '',
         visibility:story.visibility || 'public',
         cover_image:story.coverImage || '',
+        story_type:story.storyType || 'normal',
         created_by:story.created_by || currentUserId || null,
         updated_at:new Date().toISOString()
     };
@@ -1981,6 +1984,7 @@ function openStoryModal(id=null){
  $('storyFields').style.display='block';
  genericPhoto='';
  $('storyVisibility').value=s?.visibility||'public';
+ $('storyType').value=s?.storyType||'normal';
  $('storyCoverFile').value='';
  setStoryCoverPreview(s?.coverImage||'');
 
@@ -2044,12 +2048,28 @@ async function openChapterModal(storyId,chapterId=null){
         return;
     }
 
-    if(w.owner_id !== user.id){
-        alert('이 세계관의 소유자만 회차를 작성하거나 수정할 수 있습니다.');
+    const s=w.stories.find(x=>x.id===storyId);
+    if(!s)return;
+
+    const isOwner=w.owner_id===user.id;
+    let isApprovedMember=false;
+    if(!isOwner){
+        const {data: membership}=await supabaseClient.from('world_members').select('id').eq('world_id',current).eq('user_id',user.id).eq('status','approved').limit(1);
+        isApprovedMember=!!membership?.length;
+    }
+    const canRelay=s.storyType==='relay' && isApprovedMember;
+    if(!isOwner && !canRelay){
+        alert(s.storyType==='relay' ? '릴레이 소설은 승인된 세계관 멤버만 작성할 수 있습니다.' : '이 세계관의 소유자만 회차를 작성할 수 있습니다.');
         return;
     }
 
-    const s=w.stories.find(x=>x.id===storyId);
+    if(chapterId){
+        const existing=s.chapters.find(x=>x.id===chapterId);
+        if(!isOwner && existing?.author_id!==user.id){
+            alert('자신이 작성한 회차만 수정할 수 있습니다.');
+            return;
+        }
+    }
     if(!s)return;
 
     const c=chapterId?s.chapters.find(x=>x.id===chapterId):null;
@@ -2081,9 +2101,23 @@ async function saveChapter(){
         return;
     }
 
-    if(w.owner_id !== user.id){
-        alert('이 세계관의 소유자만 회차를 작성하거나 수정할 수 있습니다.');
+    const isOwner=w.owner_id===user.id;
+    let isApprovedMember=false;
+    if(!isOwner){
+        const {data: membership}=await supabaseClient.from('world_members').select('id').eq('world_id',current).eq('user_id',user.id).eq('status','approved').limit(1);
+        isApprovedMember=!!membership?.length;
+    }
+    const canRelay=s.storyType==='relay' && isApprovedMember;
+    if(!isOwner && !canRelay){
+        alert(s.storyType==='relay' ? '릴레이 소설은 승인된 세계관 멤버만 작성할 수 있습니다.' : '이 세계관의 소유자만 회차를 작성할 수 있습니다.');
         return;
+    }
+    if(editingChapterId){
+        const existingChapter=s.chapters.find(x=>x.id===editingChapterId);
+        if(!isOwner && existingChapter?.author_id!==user.id){
+            alert('자신이 작성한 회차만 수정할 수 있습니다.');
+            return;
+        }
     }
 
     const chapterId = editingChapterId
@@ -2098,6 +2132,7 @@ async function saveChapter(){
             : (s.chapters.length + 1),
         name: name,
         body: body,
+        author_id: editingChapterId ? (s.chapters.find(x=>x.id===editingChapterId)?.author_id || user.id) : user.id,
         updated_at: new Date().toISOString()
     };
 
@@ -2167,7 +2202,7 @@ function renderStorySettings(storyId){
                 <div>
                     <h2>스토리 설정</h2>
                     <small>
-                        표지와 기본 정보를 관리하고 회차를 작성합니다.
+                        ${s.storyType==='relay'?'🔄 릴레이 소설 · 승인된 세계관 멤버가 이어서 작성할 수 있습니다.':'일반 소설 · 세계관 소유자가 회차를 작성합니다.'}
                     </small>
                 </div>
 
@@ -2203,7 +2238,7 @@ function renderStorySettings(storyId){
                     <h2>회차</h2>
 
                     <button id="writeChapter">
-                        ＋ 회차 쓰기
+                        ${s.storyType==='relay'?'＋ 다음 화 쓰기':'＋ 회차 쓰기'}
                     </button>
 
                 </div>
@@ -2224,7 +2259,7 @@ function renderStorySettings(storyId){
                                 </strong>
 
                                 <small>
-                                    · ${
+                                    · ${c.author_id ? '작성자: '+esc(profilesCache[c.author_id]?.nickname || '사용자')+' · ' : ''}${
                                         c.body
                                         ? c.body.length + '자'
                                         : '내용 없음'
@@ -3058,7 +3093,7 @@ function openItem(type){if(type==='stories'){openStoryModal();return;}editingCha
  if(!n)return alert('이름을 입력해주세요.');
  const w=get(current);
  if(itemType==='stories'){
-   const storyName=n,storyDesc=d,storyVisibility=$('storyVisibility').value;
+   const storyName=n,storyDesc=d,storyVisibility=$('storyVisibility').value,storyType=$('storyType').value;
    const storyId=editingStoryId || ('story-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
    const existing=w.stories.find(x=>x.id===storyId);
    const story=existing || {
@@ -3066,6 +3101,7 @@ function openItem(type){if(type==='stories'){openStoryModal();return;}editingCha
      name:'',
      description:'',
      visibility:'public',
+     storyType:'normal',
      coverImage:'',
      created_by:currentUserId || null,
       chapters:[],
@@ -3077,6 +3113,7 @@ const updatedStory = {
     name: storyName,
     description: storyDesc,
     visibility: storyVisibility,
+    storyType: storyType,
     coverImage: storyCover || ''
 };
 
