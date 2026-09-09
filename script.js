@@ -1727,7 +1727,7 @@ function section(w){
 
                     <div class="story-card-actions">
 
-                        ${currentUserId && s.visibility === 'public' && s.chapters?.length
+                        ${currentUserId && (s.visibility === 'public' || s.created_by === currentUserId) && s.chapters?.length
                             ? `<button type="button" class="story-read-btn"
                                 data-story-read="${esc(s.id)}">
                                 📖 소설 들어가기
@@ -2513,8 +2513,8 @@ async function openChapterReader(storyId, chapterId){
  const s=w.stories.find(x=>x.id===storyId);
  if(!s||!s.chapters?.length)return;
 
- if(s.visibility !== 'public'){
-   alert('비공개 소설은 볼 수 없습니다.');
+ if(s.visibility !== 'public' && s.created_by !== session.user.id){
+   alert('비공개 소설은 작성자만 볼 수 있습니다.');
    return;
  }
 
@@ -2537,8 +2537,8 @@ async function renderChapterReader(storyId,index){
  const s=w.stories.find(x=>x.id===storyId);
  if(!s||!s.chapters?.length)return;
 
- if(s.visibility !== 'public'){
-   alert('비공개 소설은 볼 수 없습니다.');
+ if(s.visibility !== 'public' && s.created_by !== session.user.id){
+   alert('비공개 소설은 작성자만 볼 수 있습니다.');
    return;
  }
 
@@ -3714,8 +3714,8 @@ document.addEventListener("click",function(e){
    const story=world?.stories.find(x=>x.id===storyRead.dataset.storyRead);
 
    if(!story)return;
-   if(story.visibility !== 'public'){
-     alert('비공개 소설은 볼 수 없습니다.');
+   if(story.visibility !== 'public' && story.created_by !== currentUserId){
+     alert('비공개 소설은 작성자만 볼 수 있습니다.');
      return;
    }
    if(!story.chapters?.length){
