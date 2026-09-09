@@ -2163,6 +2163,7 @@ async function saveChapter(){
      id: chapterId,
      name,
      body,
+     author_id: user.id,
      createdAt: Date.now()
    });
  }
@@ -2266,12 +2267,18 @@ function renderStorySettings(storyId){
                                     ${esc(c.name || `${i + 1}화`)}
                                 </strong>
 
-                                <small>
-                                    · ${c.author_id ? '작성자: '+esc(profilesCache[c.author_id]?.nickname || '사용자')+' · ' : ''}${
-                                        c.body
-                                        ? c.body.length + '자'
-                                        : '내용 없음'
-                                    }
+                                <small class="chapter-author-line">
+                                    ${c.author_id ? `
+                                        <img
+                                            src="${getAuthorIconUrl(c.author_id)}"
+                                            class="dynamic-author-icon chapter-author-icon"
+                                            data-author-id="${esc(c.author_id)}"
+                                            alt="작성자 아이콘"
+                                        >
+                                        <span>작성자: ${esc(profilesCache[c.author_id] || '사용자')}</span>
+                                        <span>·</span>
+                                    ` : ''}
+                                    <span>${c.body ? c.body.length + '자' : '내용 없음'}</span>
                                 </small>
 
                             </div>
@@ -2506,6 +2513,12 @@ sessionStorage.setItem('storyboard_current_chapter', String(index));
      <div>
        <small>${esc(s.name||'스토리')} · ${index+1} / ${s.chapters.length}화</small>
        <h2>${esc(c.name||`${index+1}화`)}</h2>
+       ${c.author_id ? `
+         <div class="chapter-reader-author">
+           <img src="${getAuthorIconUrl(c.author_id)}" class="dynamic-author-icon" data-author-id="${esc(c.author_id)}" alt="작성자 아이콘">
+           <span>작성자: ${esc(profilesCache[c.author_id] || '사용자')}</span>
+         </div>
+       ` : ''}
      </div>
    </div>
 
