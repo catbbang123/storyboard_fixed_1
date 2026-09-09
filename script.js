@@ -1704,6 +1704,13 @@ function section(w){
 
                     <div class="story-card-actions">
 
+                        ${currentUserId && s.visibility === 'public' && s.chapters?.length
+                            ? `<button type="button" class="story-read-btn"
+                                data-story-read="${esc(s.id)}">
+                                📖 소설 들어가기
+                               </button>`
+                            : ''}
+
                         ${canAddContent
                             ? `<button class="story-chapter-btn"
                                 data-story-chapters="${s.id}">
@@ -2470,12 +2477,23 @@ function renderStorySettings(storyId){
 
 }
 
-function openChapterReader(storyId, chapterId){
+async function openChapterReader(storyId, chapterId){
+ const { data: { session } } = await supabaseClient.auth.getSession();
+ if(!session?.user){
+   alert('소설을 읽으려면 먼저 로그인해주세요.');
+   return;
+ }
+
  const w=get(current);
  if(!w)return;
 
  const s=w.stories.find(x=>x.id===storyId);
  if(!s||!s.chapters?.length)return;
+
+ if(s.visibility !== 'public'){
+   alert('비공개 소설은 볼 수 없습니다.');
+   return;
+ }
 
  const index=s.chapters.findIndex(x=>x.id===chapterId);
  if(index<0)return;
@@ -2483,12 +2501,23 @@ function openChapterReader(storyId, chapterId){
  renderChapterReader(storyId,index);
 }
 
-function renderChapterReader(storyId,index){
+async function renderChapterReader(storyId,index){
+ const { data: { session } } = await supabaseClient.auth.getSession();
+ if(!session?.user){
+   alert('소설을 읽으려면 먼저 로그인해주세요.');
+   return;
+ }
+
  const w=get(current);
  if(!w)return;
 
  const s=w.stories.find(x=>x.id===storyId);
  if(!s||!s.chapters?.length)return;
+
+ if(s.visibility !== 'public'){
+   alert('비공개 소설은 볼 수 없습니다.');
+   return;
+ }
 
  if(index<0)index=0;
  if(index>=s.chapters.length)index=s.chapters.length-1;
@@ -3648,6 +3677,33 @@ document.addEventListener("click",function(e){
   }
 });
 document.addEventListener("click",function(e){
+ const storyRead=e.target.closest("[data-story-read]");
+ if(storyRead){
+   e.preventDefault();
+   e.stopPropagation();
+
+   if(!currentUserId){
+     alert('소설을 읽으려면 먼저 로그인해주세요.');
+     return;
+   }
+
+   const world=get(current);
+   const story=world?.stories.find(x=>x.id===storyRead.dataset.storyRead);
+
+   if(!story)return;
+   if(story.visibility !== 'public'){
+     alert('비공개 소설은 볼 수 없습니다.');
+     return;
+   }
+   if(!story.chapters?.length){
+     alert('아직 작성된 회차가 없습니다.');
+     return;
+   }
+
+   openChapterReader(story.id, story.chapters[0].id);
+   return;
+ }
+
  const storyChapter=e.target.closest("[data-story-chapters]");
  if(storyChapter){e.stopPropagation();renderStorySettings(storyChapter.dataset.storyChapters);return;}
  const storyEdit=e.target.closest("[data-story-edit]");
