@@ -1202,7 +1202,7 @@ if (recent) {
                 <i>${esc(w.icon)}</i>
                 <section>
                     <b>${esc(w.name)}</b>
-                    <p>${esc(w.description)}</p>
+                    <p>${escWithBreaks(w.description)}</p>
                 </section>
             </div>
         `)
@@ -1257,7 +1257,7 @@ function card(w) {
       : '👥 가입하기'
   }</button>
 <button class="del">🗑️ 세계관 삭제</button></div></div>
-<div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta">
+<div class="info"><h3>${esc(w.name)}</h3><p>${escWithBreaks(w.description)}</p><div class="meta">
 <span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${
     w.visibility === 'public' ? '공개' : '비공개'
   }</span></div></div></article>`;
@@ -1637,8 +1637,8 @@ function renderWorld(){
   }
 </div>
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
-<h2>세계관 소개</h2><p>${esc(w.description)}</p>`;
-else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${esc(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+<h2>세계관 소개</h2><p class="world-intro-description">${escWithBreaks(w.description)}</p>`;
+else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
         addStoryButton.onclick = (e) => {
@@ -1718,7 +1718,7 @@ function section(w){
     >
     ${esc(profilesCache[s.created_by] || '사용자')}
 </small>
-                    <p>${esc(s.description||'')}</p>
+                    <p>${escWithBreaks(s.description||'')}</p>
 
                     <div class="meta">
                         <span>📚 ${s.chapters?.length||0}화</span>
@@ -1837,7 +1837,7 @@ function section(w){
     ${esc(profilesCache[c.owner_id] || '사용자')}
 </small>
 
-    <p>${esc(c.description||'')}</p>
+    <p>${escWithBreaks(c.description||'')}</p>
 
                                 <div class="character-card-actions">
 
@@ -1927,7 +1927,7 @@ function section(w){
                                     >
                                     ${esc(profilesCache[x.created_by] || '사용자')}
                                 </small>
-                                <p>${esc(x.description||'')}</p>
+                                <p>${escWithBreaks(x.description||'')}</p>
 
                                 <div class="generic-card-actions">
 
@@ -2558,7 +2558,7 @@ sessionStorage.setItem('storyboard_current_chapter', String(index));
    <button class="back" id="readerBack">← 회차 목록</button>
    <div>
      <h1>${esc(s.name||'스토리')}</h1>
-     <p>${esc(s.description||'')}</p>
+     <p>${escWithBreaks(s.description||'')}</p>
    </div>
  </div>
 
@@ -3506,7 +3506,7 @@ async function loadMyCreationStories(){
             ${st.cover_image ? `<img src="${esc(st.cover_image)}" alt="">` : ''}
             <div>
                 <b>${esc(st.name || '제목 없음')}</b>
-                ${st.description ? `<p>${esc(st.description)}</p>` : ''}
+                ${st.description ? `<p>${escWithBreaks(st.description)}</p>` : ''}
             </div>
         </div>
     `).join('');
