@@ -20,6 +20,12 @@
         word-break: keep-all;
         overflow-wrap: anywhere;
       }
+
+      /* 모바일에서는 세계관 테마 사진 위의 소개글을 표시하지 않습니다.
+         PC에서는 기존처럼 그대로 표시합니다. */
+      .hero > div:last-child > p {
+        display: none !important;
+      }
     }
   </style>
   <link rel="shortcut icon" type="image/x-icon" href="images/logo_1.png">
