@@ -608,6 +608,7 @@ async function deleteWorldFromSupabase(id){
 }
 
 function get(id){return worlds.find(x=>x.id===id)}function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
+function escWithBreaks(s){return esc(s).replace(/\r?\n/g,'<br>')}
 function force16x9(){
  document.querySelectorAll('.cover,.hero').forEach(el=>{
    const width=el.getBoundingClientRect().width;
