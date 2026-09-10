@@ -608,7 +608,7 @@ async function deleteWorldFromSupabase(id){
 }
 
 function get(id){return worlds.find(x=>x.id===id)}function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
-function escWithBreaks(s){return esc(s).replace(/\r?\n/g,'<br>')}
+function escWithBreaks(s){return esc(s).replace(/\r?\n/g,'<br>');}
 function force16x9(){
  document.querySelectorAll('.cover,.hero').forEach(el=>{
    const width=el.getBoundingClientRect().width;
@@ -1638,7 +1638,7 @@ function renderWorld(){
   }
 </div>
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
-<h2>세계관 소개</h2><p class="world-intro-description">${escWithBreaks(w.description)}</p>`;
+<h2>세계관 소개</h2><p>${escWithBreaks(w.description)}</p>`;
 else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
@@ -2233,7 +2233,7 @@ function renderStorySettings(storyId){
 
             <div>
                 <h1>${esc(s.name)}</h1>
-                <p>${esc(s.description || '')}</p>
+                <p>${escWithBreaks(s.description || '')}</p>
             </div>
         </div>
 
@@ -3547,7 +3547,7 @@ async function loadMyCreationSettings(){
             ${s.photo ? `<img src="${esc(s.photo)}" alt="">` : ''}
             <div>
                 <b>${esc(s.name || '이름 없음')}</b>
-                ${s.description ? `<p>${esc(s.description)}</p>` : ''}
+                ${s.description ? `<p>${escWithBreaks(s.description)}</p>` : ''}
             </div>
         </div>
     `).join('');
@@ -3625,7 +3625,7 @@ async function loadMyCreationLocations(){
             ${l.photo ? `<img src="${esc(l.photo)}" alt="">` : ''}
             <div>
                 <b>${esc(l.name || '이름 없음')}</b>
-                ${l.description ? `<p>${esc(l.description)}</p>` : ''}
+                ${l.description ? `<p>${escWithBreaks(l.description)}</p>` : ''}
             </div>
         </div>
     `).join('');
@@ -3662,7 +3662,7 @@ box.innerHTML = data.map(c => `
         ${c.photo ? `<img src="${esc(c.photo)}" alt="">` : ''}
         <div>
             <b>${esc(c.name || '이름 없음')}</b>
-            ${c.description ? `<p>${esc(c.description)}</p>` : ''}
+            ${c.description ? `<p>${escWithBreaks(c.description)}</p>` : ''}
         </div>
     </div>
 `).join('');
