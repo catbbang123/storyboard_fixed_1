@@ -11,6 +11,17 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta name="world-platform-version" content="pwa-mobile-pc-20260823-createfix">
   <title>World Platform</title><link rel="stylesheet" href="style.css?v=20260829-photo-hq2">
+  <style id="mobile-world-intro-fix">
+    /* 모바일에서만 세계관 소개 본문의 크기를 조정합니다. PC 레이아웃은 기존 CSS를 그대로 유지합니다. */
+    @media (max-width: 768px) {
+      .world-intro-description {
+        font-size: 15px;
+        line-height: 1.75;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+      }
+    }
+  </style>
   <link rel="shortcut icon" type="image/x-icon" href="images/logo_1.png">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
