@@ -1,58 +1,5 @@
 const $=id=>document.getElementById(id);
 
-/* storyboard-responsive-fix-20260910
-   - Keep user-entered line breaks in world/detail descriptions.
-   - Make the world theme-image text readable on mobile without changing desktop layout.
-*/
-(function injectResponsiveDescriptionStyle(){
-    if(document.getElementById('storyboard-responsive-fix-20260910')) return;
-    const style=document.createElement('style');
-    style.id='storyboard-responsive-fix-20260910';
-    style.textContent=`
-        .hero p, .content p, .story-card-info > p, .character-card-info > p,
-        .generic-card-info > p, .creation-card p {
-            white-space: normal;
-        }
-        @media (max-width: 700px){
-            .hero.has-photo > div:last-child,
-            .hero > div:last-child{
-                max-width: 100%;
-                min-width: 0;
-            }
-            .hero.has-photo p,
-            .hero p{
-                font-size: clamp(15px, 4.2vw, 20px) !important;
-                line-height: 1.55 !important;
-                word-break: keep-all;
-                overflow-wrap: anywhere;
-                max-width: 100%;
-                max-height: 190px;
-                overflow-y: auto;
-                margin-top: 8px;
-                text-shadow: 0 1px 3px rgba(0,0,0,.75);
-            }
-            .hero.has-photo h1,
-            .hero h1{
-                font-size: clamp(24px, 7vw, 34px) !important;
-                line-height: 1.2 !important;
-                word-break: keep-all;
-            }
-            .hero.has-photo{
-                min-height: 360px;
-            }
-        }
-        @media (max-width: 430px){
-            .hero.has-photo p,
-            .hero p{
-                font-size: 16px !important;
-                max-height: 180px;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-})();
-
-
 // 스토리 추가 버튼을 DOM 재렌더링과 관계없이 안정적으로 처리합니다.
 // (renderWorld()가 버튼을 새로 만들어도 문서 이벤트 위임으로 동작합니다.)
 document.addEventListener('click', function(e){
@@ -661,11 +608,6 @@ async function deleteWorldFromSupabase(id){
 }
 
 function get(id){return worlds.find(x=>x.id===id)}function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
-
-function escWithBreaks(value){
-    return esc(String(value ?? '')).replace(/\r?\n/g, '<br>');
-}
-
 function force16x9(){
  document.querySelectorAll('.cover,.hero').forEach(el=>{
    const width=el.getBoundingClientRect().width;
@@ -1260,7 +1202,7 @@ if (recent) {
                 <i>${esc(w.icon)}</i>
                 <section>
                     <b>${esc(w.name)}</b>
-                    <p>${esc(w.description)}</p>
+                    <p>${escWithBreaks(w.description)}</p>
                 </section>
             </div>
         `)
@@ -1315,7 +1257,7 @@ function card(w) {
       : '👥 가입하기'
   }</button>
 <button class="del">🗑️ 세계관 삭제</button></div></div>
-<div class="info"><h3>${esc(w.name)}</h3><p>${esc(w.description)}</p><div class="meta">
+<div class="info"><h3>${esc(w.name)}</h3><p>${escWithBreaks(w.description)}</p><div class="meta">
 <span>👥 ${w.members}명</span><span>${esc(w.genre)}</span><span>${
     w.visibility === 'public' ? '공개' : '비공개'
   }</span></div></div></article>`;
@@ -1695,7 +1637,7 @@ function renderWorld(){
   }
 </div>
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
-<h2>세계관 소개</h2><p>${escWithBreaks(w.description)}</p>`;
+<h2>세계관 소개</h2><p class="world-intro-description">${escWithBreaks(w.description)}</p>`;
 else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
@@ -2290,7 +2232,7 @@ function renderStorySettings(storyId){
 
             <div>
                 <h1>${esc(s.name)}</h1>
-                <p>${escWithBreaks(s.description || '')}</p>
+                <p>${esc(s.description || '')}</p>
             </div>
         </div>
 
@@ -3604,7 +3546,7 @@ async function loadMyCreationSettings(){
             ${s.photo ? `<img src="${esc(s.photo)}" alt="">` : ''}
             <div>
                 <b>${esc(s.name || '이름 없음')}</b>
-                ${s.description ? `<p>${escWithBreaks(s.description)}</p>` : ''}
+                ${s.description ? `<p>${esc(s.description)}</p>` : ''}
             </div>
         </div>
     `).join('');
@@ -3682,7 +3624,7 @@ async function loadMyCreationLocations(){
             ${l.photo ? `<img src="${esc(l.photo)}" alt="">` : ''}
             <div>
                 <b>${esc(l.name || '이름 없음')}</b>
-                ${l.description ? `<p>${escWithBreaks(l.description)}</p>` : ''}
+                ${l.description ? `<p>${esc(l.description)}</p>` : ''}
             </div>
         </div>
     `).join('');
@@ -3719,7 +3661,7 @@ box.innerHTML = data.map(c => `
         ${c.photo ? `<img src="${esc(c.photo)}" alt="">` : ''}
         <div>
             <b>${esc(c.name || '이름 없음')}</b>
-            ${c.description ? `<p>${escWithBreaks(c.description)}</p>` : ''}
+            ${c.description ? `<p>${esc(c.description)}</p>` : ''}
         </div>
     </div>
 `).join('');
