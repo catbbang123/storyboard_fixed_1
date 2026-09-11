@@ -1,4 +1,4 @@
-const CACHE_NAME = 'world-platform-v2-20260828';
+const CACHE_NAME = 'world-platform-v3-20260911';
 
 const APP_SHELL = [
   './',
@@ -8,7 +8,6 @@ const APP_SHELL = [
   './manifest.webmanifest',
   './images/logo_1.png',
   './images/logo_2.png',
-  './images/sample.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable.png'
