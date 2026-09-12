@@ -1064,3 +1064,54 @@
   }
   #world.world-design[data-design-style="fantasy"] .fantasy-frame-art{opacity:.72}
 }
+
+
+/* =========================================================
+   세계관 꾸미기 5차 — 바깥 레이아웃 색상
+   포인트 색상/글씨 색상과 독립적으로 세계관의 바탕·패널·테두리를 변경
+========================================================= */
+#world.world-design{
+  --wd-layout-bg:#f5f0e4;
+  --wd-layout-panel:#fffaf0;
+  --wd-layout-soft:#eee5d4;
+  --wd-layout-border:#d8c9ad;
+  --wd-layout-text:#3f3528;
+  background:var(--wd-layout-bg)!important;
+  color:var(--wd-layout-text);
+  padding:12px!important;
+  border-radius:24px!important;
+}
+#world.world-design .tabs{
+  background:var(--wd-layout-panel)!important;
+  border-color:var(--wd-layout-border)!important;
+  box-shadow:0 8px 24px color-mix(in srgb,var(--wd-layout-border) 28%,transparent)!important;
+}
+#world.world-design .content{
+  background:var(--wd-layout-panel)!important;
+  border-color:var(--wd-layout-border)!important;
+  box-shadow:0 10px 28px color-mix(in srgb,var(--wd-layout-border) 22%,transparent)!important;
+}
+#world.world-design .tabs button:not(.active){color:var(--wd-layout-text)!important}
+#world.world-design .content .item,
+#world.world-design .content .card,
+#world.world-design .content .story-card,
+#world.world-design .content .setting-card{
+  border-color:var(--wd-layout-border)!important;
+  background:var(--wd-layout-panel)!important;
+}
+#world.world-design .join{background:var(--wd-layout-soft)!important;border:1px solid var(--wd-layout-border)!important}
+#world.world-design[data-design-layout-color="charcoal"] .tabs button:not(.active),
+#world.world-design[data-design-layout-color="charcoal"] .content p,
+#world.world-design[data-design-layout-color="charcoal"] .content span,
+#world.world-design[data-design-layout-color="charcoal"] .content label,
+#world.world-design[data-design-layout-color="charcoal"] .content li{color:var(--wd-layout-text)!important}
+
+.wd-layout-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.wd-layout-option{min-height:82px;padding:10px 8px;border:1px solid #ddd;border-radius:13px;background:#fff;cursor:pointer!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#303038!important}
+.wd-layout-option.selected{background:#f7f4ff!important;box-shadow:0 0 0 2px rgba(114,91,230,.15)!important;border-color:#725be6!important}
+.layout-preview-swatch{width:64px;height:28px;border-radius:8px;border:1px solid;display:block;box-shadow:inset 0 0 0 5px rgba(255,255,255,.18)}
+.wd-layout-option b{font-size:11px}.wd-layout-option small{font-size:9px;color:#777}
+.wd-preview-world{background:var(--preview-layout-bg)!important;border-color:var(--preview-layout-border)!important}
+.wd-preview-world article{background:var(--preview-layout-panel)!important;border-color:var(--preview-layout-border)!important}
+.world-decor-preview-tabs .preview-btn{background:var(--preview-layout-soft)}
+@media(max-width:700px){.wd-layout-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
