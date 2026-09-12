@@ -1693,6 +1693,13 @@ function section(w){
     const canAddContent = isOwner || isApprovedMember;
 
     if(tab==='stories'){
+        // 로그아웃 상태에서도 공개 소설의 표지/제목은 보여주되,
+        // 회차 수와 소설 본문으로 들어가는 기능은 보여주지 않습니다.
+        // 비공개 소설은 로그인 여부와 관계없이 표지도 공개하지 않습니다.
+        const visibleStories = w.stories.filter(s =>
+            s.visibility === 'public' || s.created_by === currentUserId
+        );
+
         return `<div class="content-head">
             <div>
                 <h2>소설</h2>
@@ -1701,8 +1708,8 @@ function section(w){
             ${canAddContent ? '<button id="addStoryButton" type="button">＋ 스토리 추가</button>' : ''}
         </div>`+
 
-        (w.stories.length
-        ? `<div class="story-grid">${w.stories.map(s=>`
+        (visibleStories.length
+        ? `<div class="story-grid">${visibleStories.map(s=>`
             <article class="story-card">
                 <div class="story-card-cover">
                     ${s.coverImage
@@ -1712,19 +1719,22 @@ function section(w){
 
                 <div class="story-card-info">
                     <h3>${esc(s.name)}</h3>
-<small class="author-name">
-    <img
-        src="${getAuthorIconUrl(s.created_by)}"
-        class="dynamic-author-icon" data-author-id="${esc(s.created_by)}"
-        alt="사용자 아이콘"
-    >
-    ${esc(profilesCache[s.created_by] || '사용자')}
-</small>
+                    <small class="author-name">
+                        <img
+                            src="${getAuthorIconUrl(s.created_by)}"
+                            class="dynamic-author-icon" data-author-id="${esc(s.created_by)}"
+                            alt="사용자 아이콘"
+                        >
+                        ${esc(profilesCache[s.created_by] || '사용자')}
+                    </small>
                     <p>${escWithBreaks(s.description||'')}</p>
 
                     <div class="meta">
-                        <span>📚 ${s.chapters?.length||0}화</span>
-                        <span>${s.visibility==='public'?'공개':'비공개'}</span>
+                        ${currentUserId
+                            ? `<span>📚 ${s.chapters?.length||0}화</span>
+                               <span>${s.visibility==='public'?'공개':'비공개'}</span>`
+                            : `<span>🔒 로그인 후 회차를 볼 수 있습니다.</span>`
+                        }
                     </div>
 
                     <div class="story-card-actions">
@@ -1762,12 +1772,13 @@ function section(w){
             </article>
         `).join('')}</div>`
         : `<div class="empty">
-            아직 스토리가 없습니다.<br><br>
+            아직 공개된 스토리가 없습니다.<br><br>
             ${canAddContent
                 ? '＋ 스토리 추가 버튼을 눌러 표지와 기본 설정부터 만들어보세요.'
-                : '이 세계관에 가입하면 스토리를 추가할 수 있습니다.'}
+                : '로그인하면 공개 소설을 확인할 수 있습니다.'}
         </div>`);
     }
+
 
     if(tab==='characters'){
         const order=[
