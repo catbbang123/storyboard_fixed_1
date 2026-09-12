@@ -2272,6 +2272,94 @@ async function openWorldDecorModal(worldId){
     });
 }
 
+
+function getFantasyDecorLayer(){
+  return `
+    <div class="fantasy-frame-art" aria-hidden="true">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+        <defs>
+          <linearGradient id="fantasyGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="currentColor" stop-opacity=".92"/>
+            <stop offset="1" stop-color="currentColor" stop-opacity=".18"/>
+          </linearGradient>
+          <filter id="fantasySoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- 고풍스러운 프레임 -->
+        <path class="ff-frame" d="M34 122 Q34 48 108 48 H390 M810 48 H1092 Q1166 48 1166 122 V260 M1166 640 V778 Q1166 852 1092 852 H810 M390 852 H108 Q34 852 34 778 V640"/>
+        <path class="ff-frame-soft" d="M56 146 Q56 70 132 70 H350 M850 70 H1068 Q1144 70 1144 146 V240 M1144 660 V756 Q1144 830 1068 830 H850 M350 830 H132 Q56 830 56 756 V660"/>
+
+        <!-- 왼쪽 위 덩굴 -->
+        <g class="ff-vine">
+          <path d="M24 270 C62 228 54 166 112 122 C164 84 226 92 286 54"/>
+          <path d="M68 224 C96 202 126 196 151 211"/>
+          <path d="M108 158 C137 135 169 134 191 149"/>
+          <path d="M176 104 C205 82 231 86 252 101"/>
+          <g class="ff-leaves">
+            <path d="M72 224 q-18 -28 -40 -8 q18 24 40 8z"/>
+            <path d="M101 178 q-3 -34 27 -35 q8 25 -27 35z"/>
+            <path d="M138 142 q-21 -27 -41 -8 q16 24 41 8z"/>
+            <path d="M180 106 q1 -32 31 -33 q5 25 -31 33z"/>
+            <path d="M221 84 q-20 -25 -40 -5 q16 23 40 5z"/>
+            <path d="M267 65 q2 -30 29 -31 q6 22 -29 31z"/>
+          </g>
+        </g>
+
+        <!-- 오른쪽 아래 덩굴 -->
+        <g class="ff-vine ff-vine-right">
+          <path d="M1176 630 C1138 672 1146 734 1088 778 C1036 816 974 808 914 846"/>
+          <path d="M1132 676 C1104 698 1074 704 1049 689"/>
+          <path d="M1092 742 C1063 765 1031 766 1009 751"/>
+          <path d="M1024 796 C995 818 969 814 948 799"/>
+          <g class="ff-leaves">
+            <path d="M1128 677 q18 28 40 8 q-18 -24 -40 -8z"/>
+            <path d="M1099 724 q3 34 -27 35 q-8 -25 27 -35z"/>
+            <path d="M1062 758 q21 27 41 8 q-16 -24 -41 -8z"/>
+            <path d="M1020 794 q-1 32 -31 33 q-5 -25 31 -33z"/>
+            <path d="M979 816 q20 25 40 5 q-16 -23 -40 -5z"/>
+          </g>
+        </g>
+
+        <!-- 꽃/보석 장식 -->
+        <g class="ff-flower" transform="translate(82 94)">
+          <circle r="9"/>
+          <path d="M0-10 C-28-28 -40-8 -21 9 C-36 31 -8 38 5 18 C25 38 44 12 22-4 C40-22 17-37 0-10Z"/>
+          <circle r="4" class="ff-core"/>
+        </g>
+        <g class="ff-flower" transform="translate(1110 800) scale(.82)">
+          <circle r="9"/>
+          <path d="M0-10 C-28-28 -40-8 -21 9 C-36 31 -8 38 5 18 C25 38 44 12 22-4 C40-22 17-37 0-10Z"/>
+          <circle r="4" class="ff-core"/>
+        </g>
+
+        <!-- 작은 별빛 -->
+        <g class="ff-sparkles" filter="url(#fantasySoftGlow)">
+          <path d="M314 94 l4 12 12 4-12 4-4 12-4-12-12-4 12-4z"/>
+          <path d="M936 94 l4 12 12 4-12 4-4 12-4-12-12-4 12-4z"/>
+          <path d="M290 790 l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/>
+          <path d="M910 790 l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/>
+          <circle cx="350" cy="126" r="3"/><circle cx="850" cy="126" r="3"/>
+          <circle cx="330" cy="760" r="2.5"/><circle cx="870" cy="760" r="2.5"/>
+        </g>
+
+        <!-- 상하 중앙의 판타지 문양 -->
+        <g class="ff-emblem" transform="translate(600 48)">
+          <path d="M-42 0 Q-22-22 0 0 Q22-22 42 0 Q22 22 0 0 Q-22 22-42 0Z"/>
+          <circle r="7"/>
+          <path d="M-70 0 H-46 M46 0 H70"/>
+        </g>
+        <g class="ff-emblem ff-emblem-bottom" transform="translate(600 852)">
+          <path d="M-42 0 Q-22-22 0 0 Q22-22 42 0 Q22 22 0 0 Q-22 22-42 0Z"/>
+          <circle r="7"/>
+          <path d="M-70 0 H-46 M46 0 H70"/>
+        </g>
+      </svg>
+    </div>`;
+}
+
 function renderWorld(){
     let w=get(current);
     const isOwner = w.owner_id === currentUserId;
@@ -2304,7 +2392,7 @@ function renderWorld(){
 </div>
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
 <h2>세계관 소개</h2><p>${escWithBreaks(w.description)}</p>`;
-else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+else body=section(w);$('world').innerHTML=`${getFantasyDecorLayer()}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
