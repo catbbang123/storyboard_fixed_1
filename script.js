@@ -1701,9 +1701,9 @@ function getGenreDesignPreset(genre){
     if(/역사|사극|시대극|historical/.test(g)) return {style:'historical',color:'gold'};
     if(/힐링|healing|일상|slice/.test(g)) return {style:'healing',color:'green'};
     if(/종교|신화|성전|religion|신성/.test(g)) return {style:'religion',color:'gold'};
-    if(/판타지|fantasy|마법|중세/.test(g)) return {style:'fantasy',color:'purple'};
+    if(/판타지|fantasy|마법|중세/.test(g)) return {style:'fantasy',color:'gold'};
     if(/현대|modern|일상/.test(g)) return {style:'school',color:'blue'};
-    return {style:'fantasy',color:'purple'};
+    return {style:'fantasy',color:'gold'};
 }
 
 function ensureWorldDesignStyles(){
@@ -1796,173 +1796,48 @@ function ensureWorldDesignStyles(){
         box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
       }
 
-
-      /* =========================================================
-         판타지 1차 테마 — 고서 / 마법서 UI
-         기존 기능은 그대로 두고, 세계관 내부의 형태와 질감만 변경
-      ========================================================= */
-      #world.world-design[data-design-style="fantasy"]{
-        --wd-bg:#f3ead8;
+      /* 판타지 기본 포인트 색상 — 보라색 대신 고서풍 금빛 */
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"]{
+        --wd-accent:#a8792f;
+        --wd-bg:#f3ead7;
         --wd-panel:#fffaf0;
-        --wd-text:#3b2a1d;
-        background:
-          radial-gradient(circle at 12% 8%,rgba(184,139,62,.12),transparent 22%),
-          radial-gradient(circle at 88% 92%,rgba(91,66,128,.08),transparent 25%),
-          linear-gradient(90deg,rgba(120,82,35,.025) 1px,transparent 1px),
-          linear-gradient(rgba(120,82,35,.018) 1px,transparent 1px),
-          #f3ead8;
-        background-size:auto,auto,42px 42px,42px 42px,auto;
+        --wd-text:#3b2a1a;
       }
-
-      #world.world-design[data-design-style="fantasy"] .hero{
-        border-radius:0;
-        border-bottom:3px double rgba(197,155,69,.72);
-        box-shadow:inset 0 -18px 40px rgba(45,27,12,.16);
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .tabs{
+        background:#e8dbc0;
+        border-color:rgba(126,88,35,.30);
       }
-      #world.world-design[data-design-style="fantasy"] .hero::before,
-      #world.world-design[data-design-style="fantasy"] .hero::after{
-        content:"✦";
-        position:absolute;
-        z-index:2;
-        color:#e0bd6a;
-        font-family:Georgia,"Noto Serif KR",serif;
-        font-size:24px;
-        text-shadow:0 1px 4px rgba(0,0,0,.35);
-        pointer-events:none;
-      }
-      #world.world-design[data-design-style="fantasy"] .hero::before{left:24px;bottom:20px;}
-      #world.world-design[data-design-style="fantasy"] .hero::after{right:24px;bottom:20px;}
-
-      #world.world-design[data-design-style="fantasy"] .hero h1{
-        font-family:Georgia,"Noto Serif KR",serif;
-        letter-spacing:.02em;
-        text-shadow:0 2px 12px rgba(0,0,0,.35);
-      }
-
-      #world.world-design[data-design-style="fantasy"] .tabs{
-        padding:15px 18px;
-        gap:9px;
-        background:
-          linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.08)),
-          #e9dcc3;
-        box-shadow:0 3px 12px rgba(80,50,20,.08);
-      }
-      #world.world-design[data-design-style="fantasy"] .tabs button{
-        position:relative;
-        min-height:42px;
-        padding:9px 18px;
-        border:1px solid rgba(125,86,37,.42);
-        border-radius:4px;
-        background:linear-gradient(#fffaf0,#eadfc9);
-        color:#4a3420;
-        font-family:Georgia,"Noto Serif KR",serif;
-        font-weight:700;
-        box-shadow:0 2px 5px rgba(70,45,20,.10);
-      }
-      #world.world-design[data-design-style="fantasy"] .tabs button::before,
-      #world.world-design[data-design-style="fantasy"] .tabs button::after{
-        content:"";
-        position:absolute;
-        width:5px;height:5px;
-        border:1px solid rgba(166,123,53,.7);
-        transform:rotate(45deg);
-      }
-      #world.world-design[data-design-style="fantasy"] .tabs button::before{left:5px;top:5px;}
-      #world.world-design[data-design-style="fantasy"] .tabs button::after{right:5px;bottom:5px;}
-      #world.world-design[data-design-style="fantasy"] .tabs button.active{
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .tabs button.active{
+        background:#a8792f;
+        border-color:#a8792f;
         color:#fffaf0;
-        background:linear-gradient(135deg,#76529e,#55376f);
-        border-color:#a98545;
-        box-shadow:0 4px 12px rgba(75,45,95,.25),inset 0 0 0 1px rgba(255,220,150,.22);
       }
-
-      #world.world-design[data-design-style="fantasy"] .content{
-        padding-top:26px;
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .content-head button,
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .join button,
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-list-btn,
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .story-read-btn{
+        background:#a8792f;
+        border-color:#a8792f;
+        color:#fffaf0;
       }
-      #world.world-design[data-design-style="fantasy"] .content-head h2,
-      #world.world-design[data-design-style="fantasy"] .content > h2{
-        font-family:Georgia,"Noto Serif KR",serif;
-        color:#4b3320;
-        letter-spacing:.01em;
-        position:relative;
-        padding-bottom:10px;
-        border-bottom:1px solid rgba(142,102,48,.35);
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .story-chapter-btn,
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-view-btn,
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-nav-btn{
+        background:#efe2c8;
+        color:#79551f;
+        border-color:#d2b57b;
       }
-      #world.world-design[data-design-style="fantasy"] .content-head h2::after,
-      #world.world-design[data-design-style="fantasy"] .content > h2::after{
-        content:"✦";
-        margin-left:8px;
-        color:#b48a3d;
-        font-size:.72em;
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .meta span,
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .character-group-count{
+        background:#efe2c8;
+        color:#79551f;
       }
-
-      #world.world-design[data-design-style="fantasy"] .content .card,
-      #world.world-design[data-design-style="fantasy"] .content .story-card,
-      #world.world-design[data-design-style="fantasy"] .content .item,
-      #world.world-design[data-design-style="fantasy"] .content .setting-card{
-        border-radius:5px;
-        border:1px solid rgba(139,100,45,.42);
-        background:
-          linear-gradient(rgba(255,255,255,.30),rgba(255,255,255,.30)),
-          #fffaf0;
-        box-shadow:
-          0 8px 22px rgba(75,48,20,.10),
-          inset 0 0 0 3px rgba(197,155,69,.07),
-          inset 0 0 24px rgba(150,105,45,.035);
-        position:relative;
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .content{
+        border-color:rgba(126,88,35,.28);
       }
-      #world.world-design[data-design-style="fantasy"] .content .card::before,
-      #world.world-design[data-design-style="fantasy"] .content .story-card::before,
-      #world.world-design[data-design-style="fantasy"] .content .item::before,
-      #world.world-design[data-design-style="fantasy"] .content .setting-card::before{
-        content:"";
-        position:absolute;
-        inset:6px;
-        border:1px solid rgba(197,155,69,.16);
-        pointer-events:none;
-        border-radius:2px;
-      }
-
-      #world.world-design[data-design-style="fantasy"] .content button:not(.story-read-btn):not(.story-chapter-btn),
-      #world.world-design[data-design-style="fantasy"] .story-read-btn,
-      #world.world-design[data-design-style="fantasy"] .story-chapter-btn{
-        border-radius:4px;
-        font-family:Georgia,"Noto Serif KR",serif;
-        border:1px solid rgba(139,100,45,.48);
-        background:linear-gradient(#fffaf0,#eadfc9);
-        color:#4a3420;
-        box-shadow:0 2px 6px rgba(75,48,20,.10);
-      }
-      #world.world-design[data-design-style="fantasy"] .content button:hover,
-      #world.world-design[data-design-style="fantasy"] .story-read-btn:hover,
-      #world.world-design[data-design-style="fantasy"] .story-chapter-btn:hover{
-        transform:translateY(-1px);
-        box-shadow:0 5px 12px rgba(75,48,20,.14);
-      }
-
-      #world.world-design[data-design-style="fantasy"] .join{
-        border:1px solid rgba(139,100,45,.35);
-        background:linear-gradient(135deg,rgba(255,250,240,.94),rgba(239,226,200,.9));
-        box-shadow:0 6px 18px rgba(80,50,20,.08);
-      }
-
-      #world.world-design[data-design-style="fantasy"] .content small,
-      #world.world-design[data-design-style="fantasy"] .content .meta{
-        color:#745b40;
-      }
-
-      @media(max-width:560px){
-        #world.world-design[data-design-style="fantasy"] .tabs{
-          padding:10px;
-          gap:6px;
-        }
-        #world.world-design[data-design-style="fantasy"] .tabs button{
-          min-height:38px;
-          padding:8px 11px;
-          font-size:13px;
-        }
-        #world.world-design[data-design-style="fantasy"] .hero::before{left:12px;}
-        #world.world-design[data-design-style="fantasy"] .hero::after{right:12px;}
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .content-head h2,
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] h2{
+        color:#5b3d1b;
       }
 
       /* 다크 판타지 — 고딕 / 붉은 포인트 */
