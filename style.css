@@ -670,3 +670,51 @@
  .wd-head h2{font-size:21px}.wd-head p{font-size:12px}.world-decor-option{min-height:72px!important}
 }
 @media(max-width:420px){.world-decor-grid{grid-template-columns:1fr!important}.wd-color-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wd-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wd-actions button{flex:1}}
+
+/* =========================================================
+   세계관 꾸미기 4차 — 독립 선택 UI / 가독성 / 즉시 미리보기
+========================================================= */
+.world-decor-modal{background:rgba(10,14,22,.62)!important;backdrop-filter:blur(4px);display:flex!important;align-items:center!important;justify-content:center!important;padding:16px!important;box-sizing:border-box}
+.world-decor-box{width:min(920px,calc(100vw - 24px))!important;max-height:min(92vh,900px)!important;overflow:auto!important;background:#fff!important;color:#202124!important;box-shadow:0 24px 80px rgba(0,0,0,.28)!important}
+.world-decor-box *{box-sizing:border-box}
+.wd-head{position:sticky;top:0;background:#fff;z-index:10;padding-top:2px}
+.wd-current{position:sticky;top:91px;z-index:9;margin:14px 0 4px;padding:10px 13px;border:1px solid #e4e1eb;border-radius:12px;background:#faf9ff;display:flex;align-items:center;gap:10px;font-size:11px}
+.wd-current span{color:#777}.wd-current strong{color:#513bb0;font-size:12px}
+.wd-section{padding:4px 0 2px}
+.wd-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.wd-section-head h3{margin:0!important;font-size:15px!important}
+.wd-reset{border:0!important;background:#f1eff7!important;color:#675b80!important;border-radius:8px!important;padding:6px 9px!important;font-size:10px!important;cursor:pointer!important}
+.world-decor-option,.wd-color-option,.wd-choice,.wd-shape-option{appearance:none!important;-webkit-appearance:none!important;user-select:none!important;-webkit-tap-highlight-color:transparent!important;transition:transform .12s,box-shadow .12s,border-color .12s!important}
+.world-decor-option:active,.wd-color-option:active,.wd-choice:active,.wd-shape-option:active{transform:scale(.98)!important}
+.world-decor-option{position:relative!important;text-align:left!important;padding:14px 14px 13px 18px!important;background:#fff!important;color:#303038!important;border:1px solid #ddd!important;box-shadow:none!important}
+.world-decor-option .wd-check{position:absolute;right:9px;top:9px;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;background:#eee;color:#aaa;font-size:12px;font-weight:800;opacity:0;transform:scale(.7);transition:.15s}
+.world-decor-option.selected{border-color:#725be6!important;background:#f7f4ff!important;box-shadow:0 0 0 2px rgba(114,91,230,.15)!important}
+.world-decor-option.selected .wd-check{opacity:1;transform:scale(1);background:#725be6;color:#fff}
+.wd-color-option{min-height:54px!important;padding:8px!important;background:#fff!important;border:1px solid #ddd!important;color:#303038!important}
+.wd-color-option.selected{background:#faf8ff!important;box-shadow:0 0 0 2px rgba(114,91,230,.15)!important}
+.wd-choice{min-height:82px!important;background:#fff!important;border:1px solid #ddd!important;color:#303038!important}
+.wd-choice span{font-size:20px!important;line-height:1.2}
+.wd-choice.selected{background:#f7f4ff!important;box-shadow:0 0 0 2px rgba(114,91,230,.15)!important}
+.wd-button-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.wd-shape-option{min-height:88px!important;background:#fff!important;border:1px solid #ddd!important;color:#303038!important}
+.wd-shape-option.selected{background:#f7f4ff!important;box-shadow:0 0 0 2px rgba(114,91,230,.15)!important}
+.shape-demo{display:flex;align-items:center;justify-content:center;width:96px;height:36px;border:1.5px solid #6d5bd0;background:#f7f5ff;font-size:12px;font-weight:700;transform-origin:center}
+.shape-rounded{border-radius:14px}.shape-pill{border-radius:999px}.shape-square{border-radius:2px}.shape-soft{border-radius:9px}.shape-cut{border-radius:2px;transform:skewX(-5deg)}.shape-ticket{border-radius:7px;border-style:dashed}.shape-outline{border-radius:4px;background:transparent}.shape-stamp{border-radius:3px;transform:rotate(-2deg);border-width:2px}.shape-tab{border-radius:6px 6px 0 0}.shape-diamond{border-radius:4px;transform:skewX(-8deg)}
+.wd-actions{position:sticky;bottom:-1px;background:#fff;z-index:10}
+.wd-actions #wdSave:disabled{opacity:.55;cursor:wait}
+.world-decor-preview-frame{background:#fbf8f0!important}
+.wd-preview-world{position:relative;min-height:150px;padding:18px;border-radius:16px;border:1px solid rgba(0,0,0,.1);overflow:hidden}
+.wd-preview-badge{display:inline-block;border:1px solid currentColor;border-radius:999px;padding:4px 8px;font-size:9px;margin-bottom:10px}
+.wd-preview-world>strong{font-size:22px!important}.wd-preview-world>small{font-size:10px}
+.world-decor-preview-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.world-decor-preview-tabs .preview-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 13px;border:1px solid currentColor;font-size:11px;min-width:58px}
+.wd-preview-world article{background:rgba(255,255,255,.28);border-color:currentColor!important}
+@media(max-width:700px){
+ .world-decor-modal{padding:8px!important;align-items:flex-start!important}
+ .world-decor-box{width:100%!important;max-height:96vh!important;padding:18px!important;border-radius:18px!important}
+ .wd-head{position:relative}.wd-current{position:relative;top:auto}
+ .world-decor-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .wd-button-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .wd-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:420px){.world-decor-grid{grid-template-columns:1fr!important}.wd-color-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
