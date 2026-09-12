@@ -1667,7 +1667,21 @@ const WORLD_LAYOUT_COLORS = {
   mint:{label:'민트',bg:'#eaf4ee',panel:'#f9fdfb',soft:'#dcece2',border:'#bfd6c7',text:'#2e4135'},
   parchment:{label:'양피지',bg:'#e9dfc9',panel:'#fbf4e4',soft:'#ded0b4',border:'#c5b28f',text:'#473a2a'},
   charcoal:{label:'차콜',bg:'#252934',panel:'#303542',soft:'#3a4050',border:'#555d70',text:'#f2f3f6'},
-  white:{label:'화이트',bg:'#f7f8fa',panel:'#ffffff',soft:'#edf0f4',border:'#d9dde5',text:'#252831'}
+  white:{label:'화이트',bg:'#f7f8fa',panel:'#ffffff',soft:'#edf0f4',border:'#d9dde5',text:'#252831'},
+  skyblue:{label:'맑은 하늘',bg:'#e5f2fb',panel:'#f8fcff',soft:'#d2e8f5',border:'#a9cde3',text:'#263b4a'},
+  ocean:{label:'오션',bg:'#e3f0f2',panel:'#f7fcfc',soft:'#cfe5e7',border:'#9fc6ca',text:'#244348'},
+  sage:{label:'세이지',bg:'#e8eee6',panel:'#f9fbf7',soft:'#d9e3d5',border:'#b9cbb4',text:'#334332'},
+  lemon:{label:'레몬크림',bg:'#faf5d9',panel:'#fffdf1',soft:'#eee6b8',border:'#d9cd84',text:'#4a4324'},
+  peach:{label:'피치',bg:'#faeee5',panel:'#fffaf6',soft:'#f1ddd0',border:'#dfbda9',text:'#4b3930'},
+  coral:{label:'코랄',bg:'#fae9e5',panel:'#fff9f7',soft:'#efd2cc',border:'#d9aaa1',text:'#4b302c'},
+  plum:{label:'플럼',bg:'#eee7f2',panel:'#fbf8fd',soft:'#dfd2e8',border:'#c4add0',text:'#403247'},
+  wine:{label:'버건디',bg:'#f1e4e7',panel:'#fcf7f8',soft:'#e4cbd0',border:'#cda3ad',text:'#4a2b33'},
+  midnight:{label:'미드나이트',bg:'#20283a',panel:'#2b354a',soft:'#36425a',border:'#596981',text:'#f1f4fa'},
+  forest:{label:'딥 포레스트',bg:'#26372f',panel:'#31463b',soft:'#3b5548',border:'#617a6a',text:'#f0f5f1'},
+  navy:{label:'딥 네이비',bg:'#26344d',panel:'#33435e',soft:'#3d4f6c',border:'#657894',text:'#f2f5fa'},
+  sand:{label:'샌드',bg:'#efe7d8',panel:'#fcf8ef',soft:'#e4dac7',border:'#cdbfa7',text:'#493f32'},
+  smoke:{label:'스모크',bg:'#e5e6e8',panel:'#fafafa',soft:'#d4d6da',border:'#b9bdc5',text:'#34383f'},
+  black:{label:'블랙',bg:'#181a1f',panel:'#24272e',soft:'#30343c',border:'#4a505b',text:'#f3f4f6'}
 };
 
 function getDefaultLayoutColor(w){
@@ -2221,7 +2235,7 @@ async function openWorldDecorModal(worldId){
 
       <div class="wd-section">
         <div class="wd-section-head"><h3>③ 바깥 레이아웃 색상</h3><button type="button" class="wd-reset" data-reset="layout">기본 레이아웃</button></div>
-        <div class="wd-layout-grid">${Object.entries(WORLD_LAYOUT_COLORS).map(([k,v])=>`<button type="button" class="wd-layout-option" data-wd-layout="${k}" aria-pressed="false"><span class="layout-preview-swatch" style="background:linear-gradient(135deg,${v.bg},${v.panel});border-color:${v.border}"></span><b>${v.label}</b><small>${k==='parchment'?'고전적인 양피지':k==='charcoal'?'어두운 외곽':k==='mint'?'자연스러운 민트':k==='mist'?'차분한 안개빛':'부드러운 바탕'}</small></button>`).join('')}</div>
+        <div class="wd-layout-grid">${Object.entries(WORLD_LAYOUT_COLORS).map(([k,v])=>`<button type="button" class="wd-layout-option" data-wd-layout="${k}" aria-pressed="false"><span class="layout-preview-swatch" style="background:linear-gradient(135deg,${v.bg},${v.panel});border-color:${v.border}"></span><b>${v.label}</b><small>${({parchment:'고전적인 양피지',charcoal:'어두운 외곽',mint:'자연스러운 민트',mist:'차분한 안개빛',skyblue:'맑고 시원한 하늘',ocean:'차분한 바다빛',sage:'자연스러운 세이지',lemon:'밝은 레몬크림',peach:'따뜻한 피치',coral:'선명한 코랄',plum:'고급스러운 보랏빛',wine:'짙은 와인빛',midnight:'밤하늘처럼 깊은 색',forest:'깊은 숲의 색',navy:'차분한 네이비',sand:'따뜻한 모래빛',smoke:'중성적인 스모크',black:'깊고 어두운 외곽'}[k]||'부드러운 바탕')}</small></button>`).join('')}</div>
       </div>
 
       <div class="wd-section">
