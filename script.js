@@ -563,6 +563,10 @@ async function save(){
         theme: w.theme ?? 'purple',
         design_style: w.designStyle ?? 'fantasy',
         design_color: w.designColor ?? 'purple',
+        design_font: w.designFont ?? 'system',
+        design_text_color: w.designTextColor ?? 'default',
+        design_button_shape: w.designButtonShape ?? 'rounded',
+        design_layout_color: w.designLayoutColor ?? getDefaultLayoutColor(w),
         cover_image: w.coverImage ?? ''
     }));
 
@@ -901,6 +905,7 @@ if(userIds.length){
         designFont: w.design_font ?? '',
         designTextColor: w.design_text_color ?? '',
         designButtonShape: w.design_button_shape ?? '',
+        designLayoutColor: w.design_layout_color ?? '',
         coverImage: w.cover_image ?? '',
         joined: myWorldMemberships.some(
             m => m.world_id === w.id && m.status === 'approved'
@@ -2308,12 +2313,12 @@ async function openWorldDecorModal(worldId){
 
     modal.querySelector('#wdSave').addEventListener('click',async()=>{
       const saveBtn=modal.querySelector('#wdSave'); saveBtn.disabled=true; saveBtn.textContent='저장 중…';
-      const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor}).eq('id',w.id).eq('owner_id',currentUserId);
+      const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor,design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape,design_layout_color:chosenLayoutColor}).eq('id',w.id).eq('owner_id',currentUserId);
       if(error){saveBtn.disabled=false;saveBtn.textContent='저장하기';alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
       w.designStyle=chosenStyle; w.designColor=chosenColor; w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape; w.designLayoutColor=chosenLayoutColor;
       try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
-      // 선택값은 우선 브라우저에 즉시 보존하고, DB에 컬럼이 있는 경우도 저장합니다.
-      try{await supabaseClient.from('worlds').update({design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape}).eq('id',w.id).eq('owner_id',currentUserId);}catch(e){}
+      // PC에서 저장한 꾸미기 설정이 다른 기기에서도 동일하게 보이도록 DB에 저장합니다.
+      try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
       modal.remove(); applyWorldDesign(w); renderWorld();
     });
 }
