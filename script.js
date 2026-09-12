@@ -1618,42 +1618,254 @@ async function openMembershipRequests(worldId){
 // 세계관 내부 디자인
 // =========================
 const WORLD_DESIGN_STYLES = {
-    sf: { label:'SF', font:'system-ui, sans-serif', radius:'10px', shadow:'0 8px 24px rgba(0,0,0,.12)', border:'1px solid rgba(90,120,160,.25)' },
-    fantasy: { label:'판타지', font:'Georgia, "Noto Serif KR", serif', radius:'16px', shadow:'0 12px 30px rgba(80,50,20,.16)', border:'1px solid rgba(120,80,30,.25)' },
-    martial: { label:'무협', font:'"Noto Serif KR", Georgia, serif', radius:'4px', shadow:'0 8px 24px rgba(30,30,30,.16)', border:'1px solid rgba(60,60,60,.3)' },
-    mystery: { label:'추리물', font:'Georgia, "Noto Serif KR", serif', radius:'2px', shadow:'0 6px 18px rgba(0,0,0,.14)', border:'1px solid rgba(40,40,40,.35)' },
-    healing: { label:'힐링', font:'system-ui, "Noto Sans KR", sans-serif', radius:'22px', shadow:'0 8px 24px rgba(80,120,90,.12)', border:'1px solid rgba(100,150,110,.2)' },
-    religion: { label:'종교', font:'Georgia, "Noto Serif KR", serif', radius:'12px', shadow:'0 10px 28px rgba(100,80,50,.14)', border:'1px solid rgba(130,110,70,.25)' }
+    sf: { label:'SF', font:'system-ui, sans-serif', radius:'10px', shadow:'0 8px 24px rgba(40,120,180,.18)', border:'1px solid rgba(70,170,220,.35)' },
+    cyberpunk: { label:'사이버펑크', font:'system-ui, sans-serif', radius:'3px', shadow:'0 0 24px rgba(0,220,255,.16)', border:'1px solid rgba(0,220,255,.38)' },
+    fantasy: { label:'판타지', font:'Georgia, "Noto Serif KR", serif', radius:'16px', shadow:'0 12px 30px rgba(80,50,20,.16)', border:'1px solid rgba(150,105,45,.30)' },
+    darkfantasy: { label:'다크 판타지', font:'Georgia, "Noto Serif KR", serif', radius:'6px', shadow:'0 14px 34px rgba(0,0,0,.34)', border:'1px solid rgba(150,45,55,.38)' },
+    horror: { label:'공포', font:'"Noto Serif KR", Georgia, serif', radius:'2px', shadow:'0 10px 28px rgba(0,0,0,.30)', border:'1px solid rgba(120,30,35,.38)' },
+    romance: { label:'로맨스', font:'"Noto Sans KR", sans-serif', radius:'22px', shadow:'0 10px 28px rgba(190,90,135,.15)', border:'1px solid rgba(220,130,170,.32)' },
+    school: { label:'학원물', font:'"Noto Sans KR", sans-serif', radius:'8px', shadow:'0 5px 16px rgba(60,90,120,.12)', border:'1px solid rgba(80,110,145,.24)' },
+    martial: { label:'무협', font:'"Noto Serif KR", Georgia, serif', radius:'4px', shadow:'0 8px 24px rgba(30,30,30,.16)', border:'1px solid rgba(60,60,60,.30)' },
+    mystery: { label:'추리물', font:'Georgia, "Noto Serif KR", serif', radius:'2px', shadow:'0 6px 18px rgba(40,40,40,.18)', border:'1px solid rgba(40,40,40,.35)' },
+    historical: { label:'역사극', font:'"Noto Serif KR", Georgia, serif', radius:'5px', shadow:'0 8px 22px rgba(100,75,40,.16)', border:'1px solid rgba(115,85,45,.28)' },
+    healing: { label:'힐링', font:'system-ui, "Noto Sans KR", sans-serif', radius:'22px', shadow:'0 8px 24px rgba(80,120,90,.12)', border:'1px solid rgba(100,150,110,.22)' },
+    religion: { label:'종교', font:'Georgia, "Noto Serif KR", serif', radius:'12px', shadow:'0 10px 28px rgba(100,80,50,.14)', border:'1px solid rgba(130,110,70,.28)' }
 };
+
 const WORLD_DESIGN_COLORS = {
-    purple:'#7c5cff', blue:'#4d7cff', sky:'#57b7e6', green:'#62a86b', teal:'#45a89a', gold:'#c59b45', red:'#c85b5b', orange:'#d88945', pink:'#d47aa5', black:'#222222', white:'#f5f5f5'
+    purple:'#7c5cff', blue:'#4d7cff', sky:'#57b7e6', green:'#62a86b', teal:'#45a89a',
+    gold:'#c59b45', red:'#c85b5b', orange:'#d88945', pink:'#d47aa5', black:'#222222', white:'#f5f5f5'
 };
+
+// 장르가 정해져 있으면 그 장르의 UI를 기본값으로 사용합니다.
+// 단, 사용자가 꾸미기에서 다른 스타일을 직접 고르면 그 선택을 우선합니다.
+function getGenreDesignPreset(genre){
+    const g=String(genre||'').toLowerCase().replace(/\s+/g,'');
+    if(/사이버펑크|cyberpunk|디젤펑크|dieselpunk|스팀펑크|steampunk/.test(g)) return {style:'cyberpunk',color:'teal'};
+    if(/sf|공상과학|우주|미래/.test(g)) return {style:'sf',color:'sky'};
+    if(/다크판타지|darkfantasy|고딕판타지|고딕/.test(g)) return {style:'darkfantasy',color:'red'};
+    if(/공포|호러|horror|괴담|좀비/.test(g)) return {style:'horror',color:'red'};
+    if(/로맨스|romance|연애|순정/.test(g)) return {style:'romance',color:'pink'};
+    if(/학원|school|청춘/.test(g)) return {style:'school',color:'blue'};
+    if(/무협|martial|선협|동양/.test(g)) return {style:'martial',color:'gold'};
+    if(/추리|미스터리|mystery|탐정|스릴러/.test(g)) return {style:'mystery',color:'black'};
+    if(/역사|사극|시대극|historical/.test(g)) return {style:'historical',color:'gold'};
+    if(/힐링|healing|일상|slice/.test(g)) return {style:'healing',color:'green'};
+    if(/종교|신화|성전|religion|신성/.test(g)) return {style:'religion',color:'gold'};
+    if(/판타지|fantasy|마법|중세/.test(g)) return {style:'fantasy',color:'purple'};
+    if(/현대|modern|일상/.test(g)) return {style:'school',color:'blue'};
+    return {style:'fantasy',color:'purple'};
+}
 
 function ensureWorldDesignStyles(){
     if(document.getElementById('worldDesignRuntimeStyle')) return;
     const style=document.createElement('style');
     style.id='worldDesignRuntimeStyle';
     style.textContent=`
-      #world.world-design{--wd-accent:#7c5cff;--wd-bg:#faf9ff;--wd-radius:16px;--wd-shadow:0 12px 30px rgba(0,0,0,.12);--wd-border:1px solid rgba(0,0,0,.12);font-family:system-ui,sans-serif;background:var(--wd-bg);min-height:100%;}
-      #world.world-design .hero{font-family:inherit;border-radius:0 0 var(--wd-radius) var(--wd-radius);}
-      #world.world-design .tabs{gap:8px;padding:10px 12px;flex-wrap:wrap;background:var(--wd-bg);}
-      #world.world-design .tabs button{border:var(--wd-border);border-radius:var(--wd-radius);box-shadow:none;transition:.18s;}
-      #world.world-design .tabs button.active{background:var(--wd-accent);color:#fff;border-color:var(--wd-accent);}
-      #world.world-design .content .card,#world.world-design .content .story-card,#world.world-design .content .item,#world.world-design .content .setting-card{border-radius:var(--wd-radius);box-shadow:var(--wd-shadow);border:var(--wd-border);}
+      #world.world-design{
+        --wd-accent:#7c5cff;--wd-bg:#faf9ff;--wd-panel:#fff;--wd-text:#222;
+        --wd-radius:16px;--wd-shadow:0 12px 30px rgba(0,0,0,.12);
+        --wd-border:1px solid rgba(0,0,0,.12);color:var(--wd-text);
+        min-height:100%;position:relative;overflow:hidden;
+        background:var(--wd-bg);
+      }
+      #world.world-design .hero{
+        font-family:inherit;border-radius:0 0 var(--wd-radius) var(--wd-radius);
+        position:relative;overflow:hidden;
+      }
+      #world.world-design .tabs{
+        gap:8px;padding:12px;flex-wrap:wrap;background:var(--wd-bg);
+        border-bottom:var(--wd-border);
+      }
+      #world.world-design .tabs button{
+        border:var(--wd-border);border-radius:var(--wd-radius);box-shadow:none;
+        background:var(--wd-panel);color:var(--wd-text);transition:.18s;
+      }
+      #world.world-design .tabs button:hover{transform:translateY(-1px);}
+      #world.world-design .tabs button.active{
+        background:var(--wd-accent);color:#fff;border-color:var(--wd-accent);
+      }
+      #world.world-design .content .card,
+      #world.world-design .content .story-card,
+      #world.world-design .content .item,
+      #world.world-design .content .setting-card{
+        border-radius:var(--wd-radius);box-shadow:var(--wd-shadow);
+        border:var(--wd-border);background:var(--wd-panel);color:var(--wd-text);
+      }
       #world.world-design button:not(.back){border-radius:var(--wd-radius);}
-      #world.world-design .wd-section-title{border-left:5px solid var(--wd-accent);padding-left:10px;}
-      #world.world-design[data-design-style="sf"] .hero{letter-spacing:.01em;}
-      #world.world-design[data-design-style="fantasy"] .hero{font-family:Georgia,"Noto Serif KR",serif;}
-      #world.world-design[data-design-style="martial"] .hero{font-family:"Noto Serif KR",Georgia,serif;}
-      #world.world-design[data-design-style="mystery"] .content{filter:saturate(.9);}
-      #world.world-design[data-design-style="healing"]{--wd-bg:#f7fbf7;}
-      #world.world-design[data-design-style="religion"] .hero{font-family:Georgia,"Noto Serif KR",serif;}
-      .world-decor-modal{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
-      .world-decor-box{width:min(680px,100%);max-height:88vh;overflow:auto;background:#fff;color:#222;border-radius:20px;padding:26px;box-sizing:border-box;box-shadow:0 24px 70px rgba(0,0,0,.28);}
+      #world.world-design .wd-section-title{
+        border-left:5px solid var(--wd-accent);padding-left:10px;
+      }
+
+      /* SF — HUD / 인터페이스 */
+      #world.world-design[data-design-style="sf"]{
+        --wd-bg:#07131f;--wd-panel:#0c1e2d;--wd-text:#e8f7ff;
+      }
+      #world.world-design[data-design-style="sf"] .hero{
+        box-shadow:inset 0 -1px 0 rgba(87,183,230,.45);
+      }
+      #world.world-design[data-design-style="sf"] .tabs button,
+      #world.world-design[data-design-style="sf"] .content .card,
+      #world.world-design[data-design-style="sf"] .content .story-card,
+      #world.world-design[data-design-style="sf"] .content .item,
+      #world.world-design[data-design-style="sf"] .content .setting-card{
+        background:#0c1e2d;color:#e8f7ff;border-color:rgba(87,183,230,.35);
+      }
+
+      /* 사이버펑크 — 네온 HUD */
+      #world.world-design[data-design-style="cyberpunk"]{
+        --wd-bg:#080611;--wd-panel:#11101d;--wd-text:#f4f4ff;
+      }
+      #world.world-design[data-design-style="cyberpunk"] .hero{
+        box-shadow:0 0 35px rgba(0,220,255,.12);
+      }
+      #world.world-design[data-design-style="cyberpunk"] .tabs{
+        background:#080611;border-bottom:1px solid rgba(255,0,170,.25);
+      }
+      #world.world-design[data-design-style="cyberpunk"] .tabs button{
+        background:#11101d;color:#f4f4ff;border-color:rgba(0,220,255,.35);
+        border-radius:3px;text-transform:uppercase;
+      }
+      #world.world-design[data-design-style="cyberpunk"] .tabs button.active{
+        box-shadow:0 0 15px rgba(0,220,255,.32);
+      }
+
+      /* 판타지 — 고서 / 마법서 */
+      #world.world-design[data-design-style="fantasy"]{
+        --wd-bg:#f5efe2;--wd-panel:#fffaf0;--wd-text:#392b1e;
+      }
+      #world.world-design[data-design-style="fantasy"] .tabs{
+        background:#eee2cc;
+      }
+      #world.world-design[data-design-style="fantasy"] .content .card,
+      #world.world-design[data-design-style="fantasy"] .content .story-card,
+      #world.world-design[data-design-style="fantasy"] .content .item,
+      #world.world-design[data-design-style="fantasy"] .content .setting-card{
+        background:#fffaf0;
+      }
+      #world.world-design[data-design-style="fantasy"] .tabs button.active{
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
+      }
+
+      /* 다크 판타지 — 고딕 / 붉은 포인트 */
+      #world.world-design[data-design-style="darkfantasy"]{
+        --wd-bg:#110e12;--wd-panel:#1a151a;--wd-text:#eee4e5;
+      }
+      #world.world-design[data-design-style="darkfantasy"] .tabs{
+        background:#0c0a0d;border-color:rgba(180,55,65,.32);
+      }
+      #world.world-design[data-design-style="darkfantasy"] .content .card,
+      #world.world-design[data-design-style="darkfantasy"] .content .story-card,
+      #world.world-design[data-design-style="darkfantasy"] .content .item,
+      #world.world-design[data-design-style="darkfantasy"] .content .setting-card{
+        background:#1a151a;color:#eee4e5;border-color:rgba(180,55,65,.30);
+      }
+
+      /* 공포 — 사건 기록 / 경고 */
+      #world.world-design[data-design-style="horror"]{
+        --wd-bg:#0b0b0b;--wd-panel:#151515;--wd-text:#e8e8e8;
+      }
+      #world.world-design[data-design-style="horror"] .tabs{
+        background:#080808;border-color:#3b1b1d;
+      }
+      #world.world-design[data-design-style="horror"] .content .card,
+      #world.world-design[data-design-style="horror"] .content .story-card,
+      #world.world-design[data-design-style="horror"] .content .item,
+      #world.world-design[data-design-style="horror"] .content .setting-card{
+        background:#151515;color:#e8e8e8;border-color:#3b2526;border-radius:2px;
+      }
+      #world.world-design[data-design-style="horror"] .tabs button.active{
+        box-shadow:0 0 0 1px rgba(200,91,91,.5);
+      }
+
+      /* 로맨스 — 부드러운 잡지 / 다이어리 */
+      #world.world-design[data-design-style="romance"]{
+        --wd-bg:#fff5f8;--wd-panel:#fffafd;--wd-text:#4b303c;
+      }
+      #world.world-design[data-design-style="romance"] .tabs{
+        background:#ffe9f0;
+      }
+      #world.world-design[data-design-style="romance"] .content .card,
+      #world.world-design[data-design-style="romance"] .content .story-card,
+      #world.world-design[data-design-style="romance"] .content .item,
+      #world.world-design[data-design-style="romance"] .content .setting-card{
+        background:#fffafd;border-color:rgba(212,122,165,.25);
+      }
+
+      /* 학원물 — 노트 / 게시판 */
+      #world.world-design[data-design-style="school"]{
+        --wd-bg:#f4f7fb;--wd-panel:#fff;--wd-text:#26364a;
+      }
+      #world.world-design[data-design-style="school"] .tabs{
+        background:#eaf0f7;
+      }
+      #world.world-design[data-design-style="school"] .content .card,
+      #world.world-design[data-design-style="school"] .content .story-card,
+      #world.world-design[data-design-style="school"] .content .item,
+      #world.world-design[data-design-style="school"] .content .setting-card{
+        border-radius:8px;
+      }
+
+      /* 무협 — 한지 / 수묵 */
+      #world.world-design[data-design-style="martial"]{
+        --wd-bg:#eeeae1;--wd-panel:#faf8f2;--wd-text:#292725;
+      }
+      #world.world-design[data-design-style="martial"] .tabs{
+        background:#e4ded1;
+      }
+      #world.world-design[data-design-style="martial"] .tabs button{
+        border-radius:4px;
+      }
+
+      /* 추리 — 사건 파일 */
+      #world.world-design[data-design-style="mystery"]{
+        --wd-bg:#e9e7e1;--wd-panel:#f7f5ee;--wd-text:#252525;
+      }
+      #world.world-design[data-design-style="mystery"] .tabs{
+        background:#dedbd2;
+      }
+      #world.world-design[data-design-style="mystery"] .content .card,
+      #world.world-design[data-design-style="mystery"] .content .story-card,
+      #world.world-design[data-design-style="mystery"] .content .item,
+      #world.world-design[data-design-style="mystery"] .content .setting-card{
+        border-radius:2px;
+      }
+
+      /* 역사극 — 기록 / 박물관 */
+      #world.world-design[data-design-style="historical"]{
+        --wd-bg:#f0eadc;--wd-panel:#fbf7ec;--wd-text:#403629;
+      }
+      #world.world-design[data-design-style="historical"] .tabs{
+        background:#e5dbc7;
+      }
+
+      /* 힐링 — 자연 / 카드형 */
+      #world.world-design[data-design-style="healing"]{
+        --wd-bg:#f4faf5;--wd-panel:#ffffff;--wd-text:#304638;
+      }
+      #world.world-design[data-design-style="healing"] .tabs{
+        background:#e7f3e9;
+      }
+
+      /* 종교 / 신화 — 성전 / 고전 */
+      #world.world-design[data-design-style="religion"]{
+        --wd-bg:#f4f0e7;--wd-panel:#fffdf6;--wd-text:#3c3326;
+      }
+      #world.world-design[data-design-style="religion"] .tabs{
+        background:#e9e0cd;
+      }
+
+      .world-decor-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
+      .world-decor-box{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;color:#222;border-radius:20px;padding:26px;box-sizing:border-box;box-shadow:0 24px 70px rgba(0,0,0,.28);}
       .world-decor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
-      .world-decor-option{padding:15px;border:1px solid #ddd;background:#fff;color:#222;border-radius:14px;text-align:left;cursor:pointer;}
+      .world-decor-option{padding:15px;border:1px solid #ddd;background:#fff;color:#222;border-radius:14px;text-align:left;cursor:pointer;transition:.18s;}
+      .world-decor-option:hover{transform:translateY(-1px);}
       .world-decor-option.selected{border:2px solid var(--wd-accent,#7c5cff);box-shadow:0 0 0 3px rgba(124,92,255,.12);}
       .world-decor-swatch{width:34px;height:34px;border-radius:50%;display:inline-block;vertical-align:middle;border:1px solid rgba(0,0,0,.12);margin-right:8px;}
+      .world-decor-preview{margin:18px 0 6px;padding:16px;border:1px solid #ddd;border-radius:14px;background:#f7f7f9;}
+      .world-decor-preview-frame{min-height:110px;border-radius:12px;padding:14px;display:flex;flex-direction:column;justify-content:center;gap:10px;}
+      .world-decor-preview-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+      .world-decor-preview-tabs span{padding:7px 10px;border:1px solid currentColor;border-radius:inherit;font-size:11px;}
       @media(max-width:560px){.world-decor-grid{grid-template-columns:1fr;}.world-decor-box{padding:20px;}}
     `;
     document.head.appendChild(style);
@@ -1663,13 +1875,23 @@ function applyWorldDesign(w){
     ensureWorldDesignStyles();
     const el=$('world');
     if(!el || !w) return;
-    const styleKey=w.designStyle||'fantasy';
-    const colorKey=w.designColor||'purple';
+
+    // 저장된 스타일이 기본값(fantasy)인 기존 세계관은 장르에 맞춰 자동 적용합니다.
+    const genrePreset=getGenreDesignPreset(w.genre);
+    const savedStyle=w.designStyle||'fantasy';
+    const savedColor=w.designColor||'purple';
+    const useGenrePreset=(!w.designStyle || savedStyle==='fantasy') && genrePreset.style!=='fantasy';
+    const styleKey=useGenrePreset ? genrePreset.style : savedStyle;
+    const colorKey=useGenrePreset ? genrePreset.color : savedColor;
+
     const style=WORLD_DESIGN_STYLES[styleKey]||WORLD_DESIGN_STYLES.fantasy;
     const accent=WORLD_DESIGN_COLORS[colorKey]||WORLD_DESIGN_COLORS.purple;
+
     el.classList.add('world-design');
+    Object.keys(WORLD_DESIGN_STYLES).forEach(k=>el.classList.remove('wd-style-'+k));
     el.dataset.designStyle=styleKey;
     el.dataset.designColor=colorKey;
+    el.dataset.genre=w.genre||'';
     el.style.setProperty('--wd-accent',accent);
     el.style.setProperty('--wd-radius',style.radius);
     el.style.setProperty('--wd-shadow',style.shadow);
@@ -1688,7 +1910,7 @@ async function openWorldDecorModal(worldId){
     document.querySelector('.world-decor-modal')?.remove();
     const modal=document.createElement('div');
     modal.className='world-decor-modal';
-    const styles=[['sf','SF','미래도시 · 네온 · 기계적인 느낌'],['fantasy','판타지','마법 · 고전 판타지 · 신비로운 느낌'],['martial','무협','동양풍 · 서예 · 무림 느낌'],['mystery','추리물','탐정 · 기록 · 어두운 긴장감'],['healing','힐링','자연 · 부드러움 · 편안한 느낌'],['religion','종교','성전 · 고전 · 경건한 느낌']];
+    const styles=[['sf','SF','HUD · 미래도시 · 데이터 인터페이스'],['cyberpunk','사이버펑크','네온 · 글리치 · 기계적인 인터페이스'],['fantasy','판타지','고서 · 마법 · 고전 장식'],['darkfantasy','다크 판타지','고딕 · 어두운 패널 · 붉은 포인트'],['horror','공포','사건 기록 · 경고 · 긴장감'],['romance','로맨스','다이어리 · 부드러운 카드 · 감성 UI'],['school','학원물','노트 · 게시판 · 깔끔한 카드'],['martial','무협','한지 · 수묵 · 동양식 장식'],['mystery','추리물','탐정 파일 · 기록 · 사건 보드'],['historical','역사극','기록물 · 박물관 · 고전 문서'],['healing','힐링','자연 · 여백 · 편안한 카드'],['religion','종교/신화','성전 · 고전 · 경건한 분위기']];
     const colors=[['purple','보라'],['blue','파랑'],['sky','하늘색'],['green','초록'],['teal','청록'],['gold','금색'],['red','빨강'],['orange','주황'],['pink','분홍'],['black','검정'],['white','흰색']];
     modal.innerHTML=`<div class="world-decor-box">
       <h2 style="margin:0 0 6px;">🎨 세계관 꾸미기</h2>
@@ -1697,15 +1919,30 @@ async function openWorldDecorModal(worldId){
       <div class="world-decor-grid">${styles.map(x=>`<button type="button" class="world-decor-option ${x[0]===(w.designStyle||'fantasy')?'selected':''}" data-wd-style="${x[0]}"><b>${x[1]}</b><br><small>${x[2]}</small></button>`).join('')}</div>
       <h3 style="margin-top:24px;">대표 색상</h3>
       <div class="world-decor-grid">${colors.map(x=>`<button type="button" class="world-decor-option ${x[0]===(w.designColor||'purple')?'selected':''}" data-wd-color="${x[0]}"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div>
+      <div class="world-decor-preview">
+        <b>미리보기</b>
+        <div id="worldDecorPreview" class="world-decor-preview-frame"></div>
+      </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:26px;"><button type="button" id="wdCancel">취소</button><button type="button" id="wdSave" style="background:${WORLD_DESIGN_COLORS[w.designColor||'purple']};color:#fff;border:0;padding:11px 18px;">저장</button></div>
     </div>`;
     document.body.appendChild(modal);
-    let chosenStyle=w.designStyle||'fantasy';
-    let chosenColor=w.designColor||'purple';
+    const initialPreset=getGenreDesignPreset(w.genre);
+    let chosenStyle=(w.designStyle && w.designStyle!=='fantasy') ? w.designStyle : initialPreset.style;
+    let chosenColor=(w.designColor && w.designColor!=='purple') ? w.designColor : initialPreset.color;
     const refresh=()=>{
         modal.querySelectorAll('[data-wd-style]').forEach(b=>b.classList.toggle('selected',b.dataset.wdStyle===chosenStyle));
         modal.querySelectorAll('[data-wd-color]').forEach(b=>b.classList.toggle('selected',b.dataset.wdColor===chosenColor));
         const saveBtn=modal.querySelector('#wdSave'); saveBtn.style.background=WORLD_DESIGN_COLORS[chosenColor];
+        const preview=modal.querySelector('#worldDecorPreview');
+        const st=WORLD_DESIGN_STYLES[chosenStyle]||WORLD_DESIGN_STYLES.fantasy;
+        const accent=WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple;
+        if(preview){
+            preview.style.background=chosenStyle==='sf'||chosenStyle==='cyberpunk'||chosenStyle==='darkfantasy'||chosenStyle==='horror' ? '#111' : '#f7f3ea';
+            preview.style.color=chosenStyle==='sf'||chosenStyle==='cyberpunk'||chosenStyle==='darkfantasy'||chosenStyle==='horror' ? '#fff' : '#3a3025';
+            preview.style.border='1px solid '+accent;
+            preview.style.borderRadius=st.radius;
+            preview.innerHTML='<div style="font-family:'+st.font+'"><strong>'+esc(w.name)+'</strong><div class="world-decor-preview-tabs" style="margin-top:10px;"><span style="border-color:'+accent+';background:'+accent+';color:#fff;">개요</span><span>캐릭터</span><span>지역</span><span>스토리</span></div><small style="display:block;margin-top:10px;opacity:.75;">'+st.label+' 스타일 UI 미리보기</small></div>';
+        }
     };
     modal.querySelectorAll('[data-wd-style]').forEach(b=>b.onclick=()=>{chosenStyle=b.dataset.wdStyle;refresh();});
     modal.querySelectorAll('[data-wd-color]').forEach(b=>b.onclick=()=>{chosenColor=b.dataset.wdColor;refresh();});
