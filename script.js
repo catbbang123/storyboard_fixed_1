@@ -898,6 +898,9 @@ if(userIds.length){
         theme: w.theme ?? 'purple',
         designStyle: w.design_style ?? 'fantasy',
         designColor: w.design_color ?? 'purple',
+        designFont: w.design_font ?? '',
+        designTextColor: w.design_text_color ?? '',
+        designButtonShape: w.design_button_shape ?? '',
         coverImage: w.cover_image ?? '',
         joined: myWorldMemberships.some(
             m => m.world_id === w.id && m.status === 'approved'
@@ -1276,7 +1279,7 @@ function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()
                 c.querySelector('.more>button').onclick=e=>{e.stopPropagation();
                  document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'));m.classList.add('show')};
                  c.querySelector('.edit').onclick=()=>openModal(id);
-                c.querySelector('.decorate').onclick=()=>openWorldDecorModal(id);
+                c.querySelector('.decorate').onclick=(e)=>{e.preventDefault();e.stopPropagation();m.classList.remove('show');openWorldDecorModal(id);};
                 c.querySelector('.join').onclick=()=>{
                     const world = get(id);
                 
@@ -1636,6 +1639,46 @@ const WORLD_DESIGN_COLORS = {
     purple:'#7c5cff', blue:'#4d7cff', sky:'#57b7e6', green:'#62a86b', teal:'#45a89a',
     gold:'#c59b45', red:'#c85b5b', orange:'#d88945', pink:'#d47aa5', black:'#222222', white:'#f5f5f5'
 };
+
+// 세계관 글꼴 / 글자색 / 버튼 모양 커스터마이징
+const WORLD_FONT_OPTIONS = {
+  system:{label:'기본 고딕', css:'system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif'},
+  sans:{label:'깔끔한 산세리프', css:'"Noto Sans KR", "Noto Sans", sans-serif'},
+  serif:{label:'고전 명조', css:'"Noto Serif KR", Georgia, serif'},
+  gothic:{label:'고딕 장식체', css:'"UnifrakturCook", "Noto Serif KR", serif'},
+  mono:{label:'터미널/기록체', css:'"Noto Sans Mono", "D2Coding", monospace'},
+  rounded:{label:'둥근 감성체', css:'"Noto Sans KR", system-ui, sans-serif'},
+  elegant:{label:'우아한 명조', css:'"Noto Serif KR", "Nanum Myeongjo", serif'},
+  handwritten:{label:'손글씨 느낌', css:'"Gaegu", "Noto Sans KR", sans-serif'},
+  retro:{label:'레트로', css:'"Noto Sans KR", sans-serif'},
+  display:{label:'전시/타이틀체', css:'"Noto Serif KR", Georgia, serif'}
+};
+const WORLD_TEXT_COLORS = {
+  default:{label:'기본',value:'#202124'}, ivory:{label:'아이보리',value:'#f7f1df'}, white:{label:'화이트',value:'#ffffff'},
+  black:{label:'검정',value:'#111111'}, navy:{label:'네이비',value:'#1d3158'}, wine:{label:'와인',value:'#7d2638'},
+  emerald:{label:'에메랄드',value:'#176b58'}, violet:{label:'보라',value:'#6345a8'}, rose:{label:'장미',value:'#b54e78'},
+  gold:{label:'금빛',value:'#b07a20'}, sky:{label:'하늘',value:'#2879a8'}, orange:{label:'주황',value:'#c46325'}
+};
+const WORLD_BUTTON_SHAPES = {
+  rounded:{label:'둥근',radius:'14px',transform:'none'}, pill:{label:'알약형',radius:'999px',transform:'none'},
+  square:{label:'각진',radius:'3px',transform:'none'}, soft:{label:'부드러운 사각',radius:'8px',transform:'none'},
+  cut:{label:'사선 컷',radius:'3px',transform:'skewX(-4deg)'}, ticket:{label:'티켓형',radius:'6px',transform:'none'},
+  outline:{label:'선형',radius:'2px',transform:'none'}, stamp:{label:'도장형',radius:'2px',transform:'rotate(-1deg)'}
+};
+
+function getWorldDecorExtras(w){
+  let extras={font:'system',textColor:'default',buttonShape:'rounded'};
+  try{
+    const local=localStorage.getItem('world_platform_design_'+w.id);
+    if(local) extras={...extras,...JSON.parse(local)};
+  }catch(e){}
+  return {
+    font:w.designFont || extras.font,
+    textColor:w.designTextColor || extras.textColor,
+    buttonShape:w.designButtonShape || extras.buttonShape
+  };
+}
+
 
 // 장르가 정해져 있으면 그 장르의 UI를 기본값으로 사용합니다.
 // 단, 사용자가 꾸미기에서 다른 스타일을 직접 고르면 그 선택을 우선합니다.
@@ -2039,6 +2082,10 @@ function applyWorldDesign(w){
 
     const style=WORLD_DESIGN_STYLES[styleKey]||WORLD_DESIGN_STYLES.fantasy;
     const accent=WORLD_DESIGN_COLORS[colorKey]||WORLD_DESIGN_COLORS.purple;
+    const extras=getWorldDecorExtras(w);
+    const font=WORLD_FONT_OPTIONS[extras.font]||WORLD_FONT_OPTIONS.system;
+    const textColor=WORLD_TEXT_COLORS[extras.textColor]||WORLD_TEXT_COLORS.default;
+    const buttonShape=WORLD_BUTTON_SHAPES[extras.buttonShape]||WORLD_BUTTON_SHAPES.rounded;
 
     el.classList.add('world-design');
     Object.keys(WORLD_DESIGN_STYLES).forEach(k=>el.classList.remove('wd-style-'+k));
@@ -2049,7 +2096,14 @@ function applyWorldDesign(w){
     el.style.setProperty('--wd-radius',style.radius);
     el.style.setProperty('--wd-shadow',style.shadow);
     el.style.setProperty('--wd-border',style.border);
-    el.style.fontFamily=style.font;
+    el.style.setProperty('--wd-font',font.css);
+    el.style.setProperty('--wd-text-color',textColor.value);
+    el.style.setProperty('--wd-button-radius',buttonShape.radius);
+    el.style.setProperty('--wd-button-transform',buttonShape.transform);
+    el.dataset.designFont=extras.font;
+    el.dataset.designTextColor=extras.textColor;
+    el.dataset.designButtonShape=extras.buttonShape;
+    el.style.fontFamily=font.css;
 }
 
 async function openWorldDecorModal(worldId){
@@ -2061,53 +2115,65 @@ async function openWorldDecorModal(worldId){
     }
     ensureWorldDesignStyles();
     document.querySelector('.world-decor-modal')?.remove();
+
     const modal=document.createElement('div');
     modal.className='world-decor-modal';
-    const styles=[['sf','SF','HUD · 미래도시 · 데이터 인터페이스'],['cyberpunk','사이버펑크','네온 · 글리치 · 기계적인 인터페이스'],['fantasy','판타지','고서 · 마법 · 고전 장식'],['darkfantasy','다크 판타지','고딕 · 어두운 패널 · 붉은 포인트'],['horror','공포','사건 기록 · 경고 · 긴장감'],['romance','로맨스','다이어리 · 부드러운 카드 · 감성 UI'],['school','학원물','노트 · 게시판 · 깔끔한 카드'],['martial','무협','한지 · 수묵 · 동양식 장식'],['mystery','추리물','탐정 파일 · 기록 · 사건 보드'],['historical','역사극','기록물 · 박물관 · 고전 문서'],['healing','힐링','자연 · 여백 · 편안한 카드'],['religion','종교/신화','성전 · 고전 · 경건한 분위기']];
+    const styles=[['sf','SF','HUD · 미래도시 · 데이터 인터페이스'],['cyberpunk','사이버펑크','네온 · 글리치 · 기계적인 인터페이스'],['fantasy','판타지','고서 · 마법 · 고전 장식'],['darkfantasy','다크 판타지','고딕 · 어두운 패널 · 붉은 포인트'],['horror','공포','사건 기록 · 경고 · 긴장감'],['romance','로맨스','다이어리 · 부드러운 카드 · 감성 UI'],['school','학원물','노트 · 게시판 · 깔끔한 카드'],['martial','무협','한지 · 수묵 · 동양식 장식'],['mystery','추리물','탐정 파일 · 기록 · 사건 보드'],['historical','역사극','기록물 · 박물관 · 고전 문서'],['healing','힐링','자연 · 여백 · 편안한 카드'],['religion','종교/신화','성전 · 고전 · 경건한 분위']];
     const colors=[['purple','보라'],['blue','파랑'],['sky','하늘색'],['green','초록'],['teal','청록'],['gold','금색'],['red','빨강'],['orange','주황'],['pink','분홍'],['black','검정'],['white','흰색']];
+    const extras=getWorldDecorExtras(w);
+    let chosenStyle=(w.designStyle && w.designStyle!=='fantasy') ? w.designStyle : getGenreDesignPreset(w.genre).style;
+    let chosenColor=(w.designColor && w.designColor!=='purple') ? w.designColor : getGenreDesignPreset(w.genre).color;
+    let chosenFont=extras.font, chosenTextColor=extras.textColor, chosenButtonShape=extras.buttonShape;
+
     modal.innerHTML=`<div class="world-decor-box">
-      <h2 style="margin:0 0 6px;">🎨 세계관 꾸미기</h2>
-      <p style="margin:0 0 20px;color:#666;">${esc(w.name)} 세계관의 내부 화면과 버튼 디자인을 설정합니다.</p>
-      <h3>분위기</h3>
-      <div class="world-decor-grid">${styles.map(x=>`<button type="button" class="world-decor-option ${x[0]===(w.designStyle||'fantasy')?'selected':''}" data-wd-style="${x[0]}"><b>${x[1]}</b><br><small>${x[2]}</small></button>`).join('')}</div>
-      <h3 style="margin-top:24px;">대표 색상</h3>
-      <div class="world-decor-grid">${colors.map(x=>`<button type="button" class="world-decor-option ${x[0]===(w.designColor||'purple')?'selected':''}" data-wd-color="${x[0]}"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div>
-      <div class="world-decor-preview">
-        <b>미리보기</b>
-        <div id="worldDecorPreview" class="world-decor-preview-frame"></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:26px;"><button type="button" id="wdCancel">취소</button><button type="button" id="wdSave" style="background:${WORLD_DESIGN_COLORS[w.designColor||'purple']};color:#fff;border:0;padding:11px 18px;">저장</button></div>
+      <div class="wd-head"><div><span class="wd-kicker">WORLD CUSTOMIZATION</span><h2>🎨 세계관 꾸미기</h2><p>${esc(w.name)}의 화면을 원하는 분위기로 바꿔보세요.</p></div><button type="button" id="wdX" class="wd-close">×</button></div>
+      <div class="wd-section"><h3>① 전체 분위기</h3><div class="world-decor-grid">${styles.map(x=>`<button type="button" class="world-decor-option" data-wd-style="${x[0]}"><b>${x[1]}</b><small>${x[2]}</small></button>`).join('')}</div></div>
+      <div class="wd-section"><h3>② 포인트 색상</h3><div class="wd-color-grid">${colors.map(x=>`<button type="button" class="wd-color-option" data-wd-color="${x[0]}"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div></div>
+      <div class="wd-section"><h3>③ 글씨체</h3><div class="wd-choice-grid">${Object.entries(WORLD_FONT_OPTIONS).map(([k,v])=>`<button type="button" class="wd-choice" data-wd-font="${k}"><span style="font-family:${v.css}">가나다 ABC</span><small>${v.label}</small></button>`).join('')}</div></div>
+      <div class="wd-section"><h3>④ 글씨 색상</h3><div class="wd-color-grid text-color-grid">${Object.entries(WORLD_TEXT_COLORS).map(([k,v])=>`<button type="button" class="wd-color-option" data-wd-text="${k}"><span class="text-swatch" style="background:${v.value}"></span><b>${v.label}</b></button>`).join('')}</div></div>
+      <div class="wd-section"><h3>⑤ 버튼 모양</h3><div class="wd-button-grid">${Object.entries(WORLD_BUTTON_SHAPES).map(([k,v])=>`<button type="button" class="wd-shape-option" data-wd-button="${k}"><span style="border-radius:${v.radius};transform:${v.transform}">버튼</span><small>${v.label}</small></button>`).join('')}</div></div>
+      <div class="world-decor-preview"><div class="wd-preview-title">LIVE PREVIEW</div><div id="worldDecorPreview" class="world-decor-preview-frame"></div></div>
+      <div class="wd-actions"><button type="button" id="wdCancel">취소</button><button type="button" id="wdSave">저장하기</button></div>
     </div>`;
     document.body.appendChild(modal);
-    const initialPreset=getGenreDesignPreset(w.genre);
-    let chosenStyle=(w.designStyle && w.designStyle!=='fantasy') ? w.designStyle : initialPreset.style;
-    let chosenColor=(w.designColor && w.designColor!=='purple') ? w.designColor : initialPreset.color;
+
     const refresh=()=>{
-        modal.querySelectorAll('[data-wd-style]').forEach(b=>b.classList.toggle('selected',b.dataset.wdStyle===chosenStyle));
-        modal.querySelectorAll('[data-wd-color]').forEach(b=>b.classList.toggle('selected',b.dataset.wdColor===chosenColor));
-        const saveBtn=modal.querySelector('#wdSave'); saveBtn.style.background=WORLD_DESIGN_COLORS[chosenColor];
-        const preview=modal.querySelector('#worldDecorPreview');
-        const st=WORLD_DESIGN_STYLES[chosenStyle]||WORLD_DESIGN_STYLES.fantasy;
-        const accent=WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple;
-        if(preview){
-            preview.style.background=chosenStyle==='sf'||chosenStyle==='cyberpunk'||chosenStyle==='darkfantasy'||chosenStyle==='horror' ? '#111' : '#f7f3ea';
-            preview.style.color=chosenStyle==='sf'||chosenStyle==='cyberpunk'||chosenStyle==='darkfantasy'||chosenStyle==='horror' ? '#fff' : '#3a3025';
-            preview.style.border='1px solid '+accent;
-            preview.style.borderRadius=st.radius;
-            preview.innerHTML='<div style="font-family:'+st.font+'"><strong>'+esc(w.name)+'</strong><div class="world-decor-preview-tabs" style="margin-top:10px;"><span style="border-color:'+accent+';background:'+accent+';color:#fff;">개요</span><span>캐릭터</span><span>지역</span><span>스토리</span></div><small style="display:block;margin-top:10px;opacity:.75;">'+st.label+' 스타일 UI 미리보기</small></div>';
-        }
+      modal.querySelectorAll('[data-wd-style]').forEach(b=>b.classList.toggle('selected',b.dataset.wdStyle===chosenStyle));
+      modal.querySelectorAll('[data-wd-color]').forEach(b=>b.classList.toggle('selected',b.dataset.wdColor===chosenColor));
+      modal.querySelectorAll('[data-wd-font]').forEach(b=>b.classList.toggle('selected',b.dataset.wdFont===chosenFont));
+      modal.querySelectorAll('[data-wd-text]').forEach(b=>b.classList.toggle('selected',b.dataset.wdText===chosenTextColor));
+      modal.querySelectorAll('[data-wd-button]').forEach(b=>b.classList.toggle('selected',b.dataset.wdButton===chosenButtonShape));
+      const preview=modal.querySelector('#worldDecorPreview');
+      const st=WORLD_DESIGN_STYLES[chosenStyle]||WORLD_DESIGN_STYLES.fantasy;
+      const accent=WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple;
+      const font=WORLD_FONT_OPTIONS[chosenFont]||WORLD_FONT_OPTIONS.system;
+      const txt=WORLD_TEXT_COLORS[chosenTextColor]||WORLD_TEXT_COLORS.default;
+      const bs=WORLD_BUTTON_SHAPES[chosenButtonShape]||WORLD_BUTTON_SHAPES.rounded;
+      if(preview){
+        preview.style.background=['sf','cyberpunk','darkfantasy','horror'].includes(chosenStyle)?'#11151b':'#f7f3ea';
+        preview.style.color=['sf','cyberpunk','darkfantasy','horror'].includes(chosenStyle)?'#fff':txt.value;
+        preview.style.fontFamily=font.css; preview.style.borderColor=accent; preview.style.borderRadius=bs.radius;
+        preview.innerHTML=`<div class="wd-preview-world"><strong>${esc(w.name)}</strong><small>${esc(st.label)} · ${esc(font.label)}</small><div class="world-decor-preview-tabs"><span style="background:${accent};color:#fff;border-radius:${bs.radius}">개요</span><span style="border-radius:${bs.radius}">캐릭터</span><span style="border-radius:${bs.radius}">지역</span><span style="border-radius:${bs.radius}">스토리</span></div><article><b style="color:${txt.value}">세계관의 분위기를 미리 확인하세요.</b><p>글씨체, 글씨색, 버튼 모양이 함께 적용됩니다.</p></article></div>`;
+      }
     };
+    refresh();
     modal.querySelectorAll('[data-wd-style]').forEach(b=>b.onclick=()=>{chosenStyle=b.dataset.wdStyle;refresh();});
     modal.querySelectorAll('[data-wd-color]').forEach(b=>b.onclick=()=>{chosenColor=b.dataset.wdColor;refresh();});
-    modal.querySelector('#wdCancel').onclick=()=>modal.remove();
-    modal.onclick=e=>{if(e.target===modal)modal.remove();};
+    modal.querySelectorAll('[data-wd-font]').forEach(b=>b.onclick=()=>{chosenFont=b.dataset.wdFont;refresh();});
+    modal.querySelectorAll('[data-wd-text]').forEach(b=>b.onclick=()=>{chosenTextColor=b.dataset.wdText;refresh();});
+    modal.querySelectorAll('[data-wd-button]').forEach(b=>b.onclick=()=>{chosenButtonShape=b.dataset.wdButton;refresh();});
+    const close=()=>modal.remove();
+    modal.querySelector('#wdCancel').onclick=close; modal.querySelector('#wdX').onclick=close;
+    modal.addEventListener('click',e=>{if(e.target===modal)close();});
     modal.querySelector('#wdSave').onclick=async()=>{
-        const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor}).eq('id',w.id).eq('owner_id',currentUserId);
-        if(error){alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
-        w.designStyle=chosenStyle; w.designColor=chosenColor;
-        modal.remove();
-        renderWorld();
-        alert('세계관 디자인이 저장되었습니다!');
+      const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor}).eq('id',w.id).eq('owner_id',currentUserId);
+      if(error){alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
+      w.designStyle=chosenStyle; w.designColor=chosenColor; w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape;
+      try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape}));}catch(e){}
+      // 신규 컬럼이 이미 존재하는 DB라면 함께 저장합니다. 없어도 기본 디자인 저장은 유지됩니다.
+      try{await supabaseClient.from('worlds').update({design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape}).eq('id',w.id).eq('owner_id',currentUserId);}catch(e){}
+      modal.remove(); applyWorldDesign(w); renderWorld();
+      alert('세계관 디자인이 저장되었습니다!');
     };
 }
 
