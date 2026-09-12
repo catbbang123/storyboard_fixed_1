@@ -718,3 +718,169 @@
  .wd-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
 @media(max-width:420px){.world-decor-grid{grid-template-columns:1fr!important}.wd-color-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+
+/* =========================================================
+   판타지 장식 1단계 — 기존 UI는 유지하고 분위기 장식만 추가
+   ========================================================= */
+#world.world-design[data-design-style="fantasy"]{
+  --fantasy-accent:var(--wd-accent,#c59b45);
+  --fantasy-deep:color-mix(in srgb,var(--fantasy-accent) 58%,#3b2a1a);
+  position:relative!important;
+  overflow:hidden!important;
+}
+
+/* 기존 runtime의 > * position 규칙 때문에 상단 버튼이 아래로 내려가는 문제 방지 */
+#world.world-design .hero .back{
+  position:absolute!important;
+  left:18px!important;
+  top:18px!important;
+  z-index:8!important;
+}
+#world.world-design .hero .actions{
+  position:absolute!important;
+  right:18px!important;
+  top:18px!important;
+  z-index:8!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+
+/* 판타지 장식은 버튼/카드의 모양을 바꾸지 않고 주변에만 표시 */
+#world.world-design[data-design-style="fantasy"]::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  opacity:.72;
+  background:
+    radial-gradient(circle at 3% 8%,var(--fantasy-accent) 0 2px,transparent 2.5px),
+    radial-gradient(circle at 97% 13%,var(--fantasy-accent) 0 2px,transparent 2.5px),
+    radial-gradient(circle at 5% 92%,var(--fantasy-accent) 0 1.5px,transparent 2px),
+    radial-gradient(circle at 95% 88%,var(--fantasy-accent) 0 1.5px,transparent 2px);
+}
+
+/* 영웅 배너의 네 모서리에 얇은 금속/마법 장식 */
+#world.world-design[data-design-style="fantasy"] .hero::before,
+#world.world-design[data-design-style="fantasy"] .hero::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  z-index:4;
+  width:76px;
+  height:76px;
+  border-color:var(--fantasy-accent);
+  opacity:.9;
+}
+#world.world-design[data-design-style="fantasy"] .hero::before{
+  left:10px;
+  top:10px;
+  border-left:2px solid var(--fantasy-accent);
+  border-top:2px solid var(--fantasy-accent);
+  border-radius:20px 0 0 0;
+  box-shadow:8px 8px 0 -7px rgba(255,255,255,.8);
+}
+#world.world-design[data-design-style="fantasy"] .hero::after{
+  right:10px;
+  bottom:10px;
+  border-right:2px solid var(--fantasy-accent);
+  border-bottom:2px solid var(--fantasy-accent);
+  border-radius:0 0 20px 0;
+  box-shadow:-8px -8px 0 -7px rgba(255,255,255,.8);
+}
+
+/* 페이지 상단/콘텐츠 사이에 가느다란 덩굴 같은 곡선 장식 */
+#world.world-design[data-design-style="fantasy"] .tabs{
+  position:relative!important;
+  overflow:visible!important;
+}
+#world.world-design[data-design-style="fantasy"] .tabs::before{
+  content:"";
+  position:absolute;
+  left:10px;
+  right:10px;
+  top:-9px;
+  height:18px;
+  pointer-events:none;
+  opacity:.75;
+  border-top:1.5px solid var(--fantasy-accent);
+  border-radius:50%;
+}
+#world.world-design[data-design-style="fantasy"] .tabs::after{
+  content:"✦";
+  position:absolute;
+  left:50%;
+  top:-17px;
+  transform:translateX(-50%);
+  padding:0 7px;
+  background:var(--wd-bg,#f3ead7);
+  color:var(--fantasy-accent);
+  font-size:13px;
+  line-height:16px;
+  pointer-events:none;
+}
+
+/* 콘텐츠 패널 모서리에 잎사귀를 연상시키는 곡선 */
+#world.world-design[data-design-style="fantasy"] .content{
+  position:relative!important;
+  overflow:hidden!important;
+}
+#world.world-design[data-design-style="fantasy"] .content::before,
+#world.world-design[data-design-style="fantasy"] .content::after{
+  content:"";
+  position:absolute;
+  width:72px;
+  height:72px;
+  pointer-events:none;
+  opacity:.55;
+  border:1.5px solid var(--fantasy-accent);
+}
+#world.world-design[data-design-style="fantasy"] .content::before{
+  left:-35px;
+  bottom:-35px;
+  border-radius:60% 0 60% 0;
+  transform:rotate(-25deg);
+}
+#world.world-design[data-design-style="fantasy"] .content::after{
+  right:-35px;
+  top:-35px;
+  border-radius:0 60% 0 60%;
+  transform:rotate(-25deg);
+}
+
+/* 섹션 제목 옆에 작은 마법 별 장식 */
+#world.world-design[data-design-style="fantasy"] .content-head h2,
+#world.world-design[data-design-style="fantasy"] .content>h2{
+  position:relative;
+}
+#world.world-design[data-design-style="fantasy"] .content-head h2::before,
+#world.world-design[data-design-style="fantasy"] .content>h2::before{
+  content:"✦";
+  display:inline-block;
+  margin-right:7px;
+  color:var(--fantasy-accent);
+  font-size:.72em;
+  vertical-align:middle;
+}
+
+/* 장르 포인트 색이 바뀌면 장식도 함께 바뀜 */
+#world.world-design[data-design-style="fantasy"][data-design-color="purple"]{--fantasy-accent:#7c5cff}
+#world.world-design[data-design-style="fantasy"][data-design-color="blue"]{--fantasy-accent:#4d7cff}
+#world.world-design[data-design-style="fantasy"][data-design-color="sky"]{--fantasy-accent:#57b7e6}
+#world.world-design[data-design-style="fantasy"][data-design-color="green"]{--fantasy-accent:#62a86b}
+#world.world-design[data-design-style="fantasy"][data-design-color="teal"]{--fantasy-accent:#45a89a}
+#world.world-design[data-design-style="fantasy"][data-design-color="gold"]{--fantasy-accent:#c59b45}
+#world.world-design[data-design-style="fantasy"][data-design-color="red"]{--fantasy-accent:#c85b5b}
+#world.world-design[data-design-style="fantasy"][data-design-color="orange"]{--fantasy-accent:#d88945}
+#world.world-design[data-design-style="fantasy"][data-design-color="pink"]{--fantasy-accent:#d47aa5}
+#world.world-design[data-design-style="fantasy"][data-design-color="black"]{--fantasy-accent:#333}
+#world.world-design[data-design-style="fantasy"][data-design-color="white"]{--fantasy-accent:#f5f5f5}
+
+@media(max-width:700px){
+  #world.world-design .hero .back{left:10px!important;top:10px!important}
+  #world.world-design .hero .actions{right:10px!important;top:10px!important;gap:4px!important}
+  #world.world-design[data-design-style="fantasy"] .hero::before,
+  #world.world-design[data-design-style="fantasy"] .hero::after{width:48px;height:48px}
+}
