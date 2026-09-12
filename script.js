@@ -1867,6 +1867,159 @@ function ensureWorldDesignStyles(){
       .world-decor-preview-tabs{display:flex;gap:6px;flex-wrap:wrap;}
       .world-decor-preview-tabs span{padding:7px 10px;border:1px solid currentColor;border-radius:inherit;font-size:11px;}
       @media(max-width:560px){.world-decor-grid{grid-template-columns:1fr;}.world-decor-box{padding:20px;}}
+
+      /* =========================================================
+         장르별 UI 2차 디자인 — 색상뿐 아니라 형태/질감/배치까지 차별화
+      ========================================================= */
+      #world.world-design::before{
+        content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.42;
+      }
+      #world.world-design > *{position:relative;z-index:1;}
+      #world.world-design .hero h1{letter-spacing:-.04em;}
+      #world.world-design .hero p{opacity:.9;}
+      #world.world-design .content{background:var(--wd-bg);}
+      #world.world-design .content-head h2,
+      #world.world-design .content > h2{font-family:inherit;}
+
+      /* SF: 그리드/HUD */
+      #world.world-design[data-design-style="sf"]::before{
+        background-image:linear-gradient(rgba(87,183,230,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(87,183,230,.06) 1px,transparent 1px);
+        background-size:28px 28px;
+      }
+      #world.world-design[data-design-style="sf"] .tabs{padding:14px 18px;}
+      #world.world-design[data-design-style="sf"] .tabs button{border-radius:3px;letter-spacing:.05em;}
+      #world.world-design[data-design-style="sf"] .content .card,
+      #world.world-design[data-design-style="sf"] .content .story-card,
+      #world.world-design[data-design-style="sf"] .content .item,
+      #world.world-design[data-design-style="sf"] .content .setting-card{box-shadow:inset 0 0 0 1px rgba(87,183,230,.06),0 10px 30px rgba(0,0,0,.22);}
+
+      /* 사이버펑크: 사선/네온 */
+      #world.world-design[data-design-style="cyberpunk"]::before{
+        background:repeating-linear-gradient(135deg,transparent 0 24px,rgba(0,220,255,.025) 25px,transparent 26px);
+      }
+      #world.world-design[data-design-style="cyberpunk"] .hero::after{
+        content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--wd-accent),#ff2abf,var(--wd-accent),transparent);box-shadow:0 0 18px var(--wd-accent);
+      }
+      #world.world-design[data-design-style="cyberpunk"] .tabs button{clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);}
+      #world.world-design[data-design-style="cyberpunk"] .content .card,
+      #world.world-design[data-design-style="cyberpunk"] .content .story-card,
+      #world.world-design[data-design-style="cyberpunk"] .content .item,
+      #world.world-design[data-design-style="cyberpunk"] .content .setting-card{border-left:3px solid var(--wd-accent);}
+
+      /* 판타지: 양피지 + 장식선 */
+      #world.world-design[data-design-style="fantasy"]::before{
+        background:radial-gradient(circle at 15% 15%,rgba(197,155,69,.10),transparent 22%),radial-gradient(circle at 85% 80%,rgba(124,92,255,.07),transparent 24%);
+      }
+      #world.world-design[data-design-style="fantasy"] .tabs{border-top:1px solid rgba(130,90,40,.2);border-bottom:1px solid rgba(130,90,40,.2);}
+      #world.world-design[data-design-style="fantasy"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;}
+      #world.world-design[data-design-style="fantasy"] .content .card,
+      #world.world-design[data-design-style="fantasy"] .content .story-card,
+      #world.world-design[data-design-style="fantasy"] .content .item,
+      #world.world-design[data-design-style="fantasy"] .content .setting-card{box-shadow:0 8px 22px rgba(80,50,20,.10),inset 0 0 0 1px rgba(197,155,69,.12);}
+
+      /* 다크 판타지: 고딕 + 촛불 */
+      #world.world-design[data-design-style="darkfantasy"]::before{
+        background:radial-gradient(circle at 20% 10%,rgba(160,45,55,.10),transparent 18%),radial-gradient(circle at 80% 30%,rgba(100,30,50,.08),transparent 22%);
+      }
+      #world.world-design[data-design-style="darkfantasy"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;border-top-color:rgba(200,80,90,.4);}
+      #world.world-design[data-design-style="darkfantasy"] .content .card,
+      #world.world-design[data-design-style="darkfantasy"] .content .story-card,
+      #world.world-design[data-design-style="darkfantasy"] .content .item,
+      #world.world-design[data-design-style="darkfantasy"] .content .setting-card{box-shadow:0 18px 40px rgba(0,0,0,.35),inset 0 0 18px rgba(130,30,45,.04);}
+
+      /* 공포: CCTV/사건기록 */
+      #world.world-design[data-design-style="horror"]::before{
+        background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0 1px,transparent 1px 4px);
+      }
+      #world.world-design[data-design-style="horror"] .hero{filter:saturate(.75);}
+      #world.world-design[data-design-style="horror"] .tabs button{font-family:monospace;letter-spacing:.02em;}
+      #world.world-design[data-design-style="horror"] .content .card,
+      #world.world-design[data-design-style="horror"] .content .story-card,
+      #world.world-design[data-design-style="horror"] .content .item,
+      #world.world-design[data-design-style="horror"] .content .setting-card{box-shadow:0 8px 26px rgba(0,0,0,.4);}
+
+      /* 로맨스: 편지/다이어리 */
+      #world.world-design[data-design-style="romance"]::before{
+        background:radial-gradient(circle at 12% 20%,rgba(212,122,165,.10),transparent 18%),radial-gradient(circle at 88% 75%,rgba(255,190,215,.12),transparent 22%);
+      }
+      #world.world-design[data-design-style="romance"] .tabs{justify-content:center;}
+      #world.world-design[data-design-style="romance"] .tabs button{background:rgba(255,255,255,.78);font-weight:600;}
+      #world.world-design[data-design-style="romance"] .content .card,
+      #world.world-design[data-design-style="romance"] .content .story-card,
+      #world.world-design[data-design-style="romance"] .content .item,
+      #world.world-design[data-design-style="romance"] .content .setting-card{box-shadow:0 12px 30px rgba(190,90,135,.10);}
+
+      /* 학원물: 공책 줄 + 스티커 카드 */
+      #world.world-design[data-design-style="school"]::before{
+        background-image:linear-gradient(rgba(80,110,145,.045) 1px,transparent 1px);background-size:100% 28px;
+      }
+      #world.world-design[data-design-style="school"] .tabs button{box-shadow:0 2px 0 rgba(40,60,80,.08);}
+      #world.world-design[data-design-style="school"] .content .card,
+      #world.world-design[data-design-style="school"] .content .story-card,
+      #world.world-design[data-design-style="school"] .content .item,
+      #world.world-design[data-design-style="school"] .content .setting-card{box-shadow:2px 4px 12px rgba(40,60,80,.08);}
+
+      /* 무협: 수묵 */
+      #world.world-design[data-design-style="martial"]::before{
+        background:radial-gradient(ellipse at 20% 20%,rgba(30,30,30,.08),transparent 25%),radial-gradient(ellipse at 80% 70%,rgba(30,30,30,.06),transparent 28%);
+      }
+      #world.world-design[data-design-style="martial"] .tabs{justify-content:center;}
+      #world.world-design[data-design-style="martial"] .tabs button{font-family:"Noto Serif KR",Georgia,serif;background:rgba(250,248,242,.7);}
+      #world.world-design[data-design-style="martial"] .content .card,
+      #world.world-design[data-design-style="martial"] .content .story-card,
+      #world.world-design[data-design-style="martial"] .content .item,
+      #world.world-design[data-design-style="martial"] .content .setting-card{box-shadow:0 10px 24px rgba(40,35,30,.10);}
+
+      /* 추리: 서류철 */
+      #world.world-design[data-design-style="mystery"]::before{
+        background:linear-gradient(115deg,rgba(30,30,30,.035),transparent 35%),linear-gradient(0deg,rgba(120,100,70,.035),transparent 50%);
+      }
+      #world.world-design[data-design-style="mystery"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;text-transform:none;}
+      #world.world-design[data-design-style="mystery"] .content .card,
+      #world.world-design[data-design-style="mystery"] .content .story-card,
+      #world.world-design[data-design-style="mystery"] .content .item,
+      #world.world-design[data-design-style="mystery"] .content .setting-card{box-shadow:2px 5px 12px rgba(50,45,35,.10);}
+
+      /* 역사극: 문서 */
+      #world.world-design[data-design-style="historical"]::before{
+        background:radial-gradient(circle at 50% 0,rgba(150,110,50,.09),transparent 30%);
+      }
+      #world.world-design[data-design-style="historical"] .tabs button{font-family:"Noto Serif KR",Georgia,serif;}
+      #world.world-design[data-design-style="historical"] .content .card,
+      #world.world-design[data-design-style="historical"] .content .story-card,
+      #world.world-design[data-design-style="historical"] .content .item,
+      #world.world-design[data-design-style="historical"] .content .setting-card{box-shadow:0 9px 24px rgba(100,75,40,.09);}
+
+      /* 힐링: 자연스럽고 둥근 카드 */
+      #world.world-design[data-design-style="healing"]::before{
+        background:radial-gradient(circle at 10% 15%,rgba(100,170,120,.09),transparent 20%),radial-gradient(circle at 90% 85%,rgba(180,210,150,.10),transparent 25%);
+      }
+      #world.world-design[data-design-style="healing"] .tabs{justify-content:center;}
+      #world.world-design[data-design-style="healing"] .tabs button{background:rgba(255,255,255,.78);}
+      #world.world-design[data-design-style="healing"] .content .card,
+      #world.world-design[data-design-style="healing"] .content .story-card,
+      #world.world-design[data-design-style="healing"] .content .item,
+      #world.world-design[data-design-style="healing"] .content .setting-card{box-shadow:0 10px 26px rgba(80,120,90,.08);}
+
+      /* 종교/신화: 성전/제단 */
+      #world.world-design[data-design-style="religion"]::before{
+        background:radial-gradient(circle at 50% 5%,rgba(197,155,69,.12),transparent 25%);
+      }
+      #world.world-design[data-design-style="religion"] .tabs{justify-content:center;}
+      #world.world-design[data-design-style="religion"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;}
+      #world.world-design[data-design-style="religion"] .content .card,
+      #world.world-design[data-design-style="religion"] .content .story-card,
+      #world.world-design[data-design-style="religion"] .content .item,
+      #world.world-design[data-design-style="religion"] .content .setting-card{box-shadow:0 12px 28px rgba(100,80,50,.09);}
+
+      /* 장르별 꾸미기 선택 카드도 실제 분위기를 보여줌 */
+      .world-decor-option[data-wd-style="sf"],.world-decor-option[data-wd-style="cyberpunk"]{background:#0d1720;color:#e8f7ff;border-color:#28546a;}
+      .world-decor-option[data-wd-style="darkfantasy"],.world-decor-option[data-wd-style="horror"]{background:#171216;color:#eee;border-color:#593039;}
+      .world-decor-option[data-wd-style="fantasy"],.world-decor-option[data-wd-style="historical"],.world-decor-option[data-wd-style="martial"],.world-decor-option[data-wd-style="religion"]{background:#faf5e9;color:#403629;border-color:#cdbb98;}
+      .world-decor-option[data-wd-style="romance"]{background:#fff3f7;color:#583846;border-color:#efc2d3;}
+      .world-decor-option[data-wd-style="school"]{background:#f2f6fb;color:#30445b;border-color:#c9d6e4;}
+      .world-decor-option[data-wd-style="mystery"]{background:#eeeae0;color:#333;border-color:#c7c0ae;}
+      .world-decor-option[data-wd-style="healing"]{background:#f1f8f2;color:#35503c;border-color:#c6ddca;}
     `;
     document.head.appendChild(style);
 }
@@ -3023,7 +3176,7 @@ function openModal(id=null){
     
  editId=id;let w=id?get(id):null;
  $('mtitle').textContent=id?'세계관 수정':'새로운 세계관 만들기';
- $('name').value=w?.name||'';$('desc').value=w?.description||'';$('genre').value=['판타지','SF','현대','역사','공포','기타'].includes(w?.genre)?(w?.genre||'판타지'):'기타';$('customGenre').value=(w?.genre&& !['판타지','SF','현대','역사','공포'].includes(w.genre))?w.genre:'';updateCustomGenreField();$('visibility').value=w?.visibility||'public';$('theme').value=w?.theme||'purple';
+ $('name').value=w?.name||'';$('desc').value=w?.description||'';$('genre').value=['판타지','다크 판타지','SF','사이버펑크','현대','로맨스','학원물','무협','추리물','공포','역사극','힐링','종교/신화','기타'].includes(w?.genre)?(w?.genre||'판타지'):'기타';$('customGenre').value=(w?.genre&& !['판타지','다크 판타지','SF','사이버펑크','현대','로맨스','학원물','무협','추리물','공포','역사극','힐링','종교/신화'].includes(w.genre))?w.genre:'';updateCustomGenreField();$('visibility').value=w?.visibility||'public';$('theme').value=w?.theme||'purple';
  $('coverFile').value='';setCoverPreview(w?.coverImage||'');
  $('modal').classList.add('show')
 }
