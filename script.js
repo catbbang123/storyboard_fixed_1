@@ -1835,6 +1835,133 @@ function ensureWorldDesignStyles(){
         color:#5b3d1b;
       }
 
+      /* 판타지: 기존 UI는 그대로 두고, 주변에만 장르 장식 추가 */
+      #world.world-design[data-design-style="fantasy"]{
+        --fantasy-ink:var(--wd-accent);
+        --fantasy-paper:#f5efe2;
+      }
+      #world.world-design[data-design-style="fantasy"]::before{
+        opacity:.55;
+        background:
+          radial-gradient(circle at 8% 12%, color-mix(in srgb,var(--fantasy-ink) 13%,transparent) 0 2px, transparent 3px),
+          radial-gradient(circle at 92% 26%, color-mix(in srgb,var(--fantasy-ink) 10%,transparent) 0 2px, transparent 3px),
+          radial-gradient(circle at 18% 82%, color-mix(in srgb,var(--fantasy-ink) 9%,transparent) 0 1.5px, transparent 3px),
+          linear-gradient(115deg,transparent 0 49.5%,color-mix(in srgb,var(--fantasy-ink) 4%,transparent) 50%,transparent 50.5%);
+        background-size:130px 130px,170px 170px,190px 190px,100% 100%;
+      }
+      #world.world-design[data-design-style="fantasy"] .hero{
+        isolation:isolate;
+      }
+      #world.world-design[data-design-style="fantasy"] .hero::before{
+        content:"";
+        position:absolute;
+        z-index:0;
+        pointer-events:none;
+        width:58%;
+        height:125px;
+        right:-7%;
+        top:-42px;
+        border:2px solid color-mix(in srgb,var(--fantasy-ink) 58%,transparent);
+        border-left-color:transparent;
+        border-bottom-color:transparent;
+        border-radius:50%;
+        transform:rotate(9deg);
+        opacity:.72;
+        background:
+          radial-gradient(circle at 18% 76%,var(--fantasy-ink) 0 4px,transparent 5px),
+          radial-gradient(ellipse at 28% 66%,color-mix(in srgb,var(--fantasy-ink) 72%,transparent) 0 5px,transparent 6px),
+          radial-gradient(ellipse at 39% 58%,color-mix(in srgb,var(--fantasy-ink) 62%,transparent) 0 5px,transparent 6px),
+          radial-gradient(ellipse at 51% 47%,color-mix(in srgb,var(--fantasy-ink) 72%,transparent) 0 5px,transparent 6px);
+      }
+      #world.world-design[data-design-style="fantasy"] .hero::after{
+        content:"";
+        position:absolute;
+        z-index:0;
+        pointer-events:none;
+        width:46%;
+        height:95px;
+        left:-12%;
+        bottom:-45px;
+        border:2px solid color-mix(in srgb,var(--fantasy-ink) 48%,transparent);
+        border-right-color:transparent;
+        border-top-color:transparent;
+        border-radius:50%;
+        transform:rotate(-12deg);
+        opacity:.55;
+      }
+      #world.world-design[data-design-style="fantasy"] .hero > *{
+        position:relative;
+        z-index:1;
+      }
+      #world.world-design[data-design-style="fantasy"] .tabs{
+        position:relative;
+        background-color:color-mix(in srgb,var(--wd-bg) 92%,var(--fantasy-ink) 8%);
+        background-image:
+          radial-gradient(circle at 4% 50%,color-mix(in srgb,var(--fantasy-ink) 38%,transparent) 0 2px,transparent 3px),
+          radial-gradient(circle at 96% 50%,color-mix(in srgb,var(--fantasy-ink) 30%,transparent) 0 2px,transparent 3px);
+        background-size:24px 24px,24px 24px;
+        background-repeat:no-repeat;
+        background-position:left center,right center;
+      }
+      #world.world-design[data-design-style="fantasy"] .tabs::after{
+        content:"✦";
+        position:absolute;
+        left:50%;
+        bottom:-8px;
+        transform:translateX(-50%);
+        padding:0 9px;
+        background:var(--wd-bg);
+        color:var(--fantasy-ink);
+        font-size:12px;
+        line-height:16px;
+        opacity:.72;
+        pointer-events:none;
+      }
+      #world.world-design[data-design-style="fantasy"] .content{
+        position:relative;
+        background-color:var(--wd-bg);
+      }
+      #world.world-design[data-design-style="fantasy"] .content::before{
+        content:"";
+        position:absolute;
+        pointer-events:none;
+        top:24px;
+        right:-35px;
+        width:105px;
+        height:230px;
+        border:2px solid color-mix(in srgb,var(--fantasy-ink) 22%,transparent);
+        border-left-color:transparent;
+        border-bottom-color:transparent;
+        border-radius:55% 45% 60% 40%;
+        transform:rotate(18deg);
+        opacity:.8;
+      }
+      #world.world-design[data-design-style="fantasy"] .content::after{
+        content:"❧";
+        position:absolute;
+        pointer-events:none;
+        left:18px;
+        bottom:18px;
+        color:color-mix(in srgb,var(--fantasy-ink) 48%,transparent);
+        font-size:24px;
+        transform:rotate(-12deg);
+      }
+      #world.world-design[data-design-style="fantasy"] .content-head h2,
+      #world.world-design[data-design-style="fantasy"] .content > h2{
+        position:relative;
+      }
+      #world.world-design[data-design-style="fantasy"] .content-head h2::after,
+      #world.world-design[data-design-style="fantasy"] .content > h2::after{
+        content:"";
+        display:block;
+        width:62px;
+        height:1px;
+        margin-top:7px;
+        background:linear-gradient(90deg,var(--fantasy-ink),transparent);
+        opacity:.65;
+      }
+      /* 장식은 장르 분위기만 담당합니다. 기존 버튼/카드의 모양과 배치는 변경하지 않습니다. */
+
       /* 다크 판타지 — 고딕 / 붉은 포인트 */
       #world.world-design[data-design-style="darkfantasy"]{
         --wd-bg:#110e12;--wd-panel:#1a151a;--wd-text:#eee4e5;
