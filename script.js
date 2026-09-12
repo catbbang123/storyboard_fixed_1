@@ -685,26 +685,31 @@ profileIconCache = {};
         }
     }
 
-    const { data: memberCountData, error: memberCountError } =
-    await supabaseClient
-        .from('world_members')
-        .select('world_id, user_id, status');
+    // 로그아웃 상태에서는 world_members 조회를 하지 않습니다.
+    // world_members RLS가 비로그인 사용자의 조회를 막고 있으므로
+    // 불필요한 401 오류가 콘솔에 발생하지 않도록 합니다.
+    const memberCountMap = {};
 
-if(memberCountError){
-    console.error('세계관 가입자 수 불러오기 실패:', memberCountError);
-}
+    if(currentUserId){
+        const { data: memberCountData, error: memberCountError } =
+            await supabaseClient
+                .from('world_members')
+                .select('world_id, user_id, status');
 
-const memberCountMap = {};
+        if(memberCountError){
+            console.error('세계관 가입자 수 불러오기 실패:', memberCountError);
+        }else{
+            (memberCountData || []).forEach(member => {
+                if(member.status !== 'approved') return;
 
-(memberCountData || []).forEach(member => {
-    if(member.status !== 'approved') return;
+                if(!memberCountMap[member.world_id]){
+                    memberCountMap[member.world_id] = 0;
+                }
 
-    if(!memberCountMap[member.world_id]){
-        memberCountMap[member.world_id] = 0;
+                memberCountMap[member.world_id]++;
+            });
+        }
     }
-
-    memberCountMap[member.world_id]++;
-});
 
     // 세계관 인원 수를 실제 승인된 가입자 수로 다시 계산합니다.
     // worlds.members에 남아 있는 예전 숫자(기본값 1)를 그대로 사용하지 않습니다.
