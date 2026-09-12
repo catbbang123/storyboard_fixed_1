@@ -1642,16 +1642,16 @@ const WORLD_DESIGN_COLORS = {
 
 // 세계관 글꼴 / 글자색 / 버튼 모양 커스터마이징
 const WORLD_FONT_OPTIONS = {
-  system:{label:'기본 고딕', css:'system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif'},
-  sans:{label:'깔끔한 산세리프', css:'"Noto Sans KR", "Noto Sans", sans-serif'},
-  serif:{label:'고전 명조', css:'"Noto Serif KR", Georgia, serif'},
-  gothic:{label:'고딕 장식체', css:'"UnifrakturCook", "Noto Serif KR", serif'},
-  mono:{label:'터미널/기록체', css:'"Noto Sans Mono", "D2Coding", monospace'},
-  rounded:{label:'둥근 감성체', css:'"Noto Sans KR", system-ui, sans-serif'},
-  elegant:{label:'우아한 명조', css:'"Noto Serif KR", "Nanum Myeongjo", serif'},
-  handwritten:{label:'손글씨 느낌', css:'"Gaegu", "Noto Sans KR", sans-serif'},
-  retro:{label:'레트로', css:'"Noto Sans KR", sans-serif'},
-  display:{label:'전시/타이틀체', css:'"Noto Serif KR", Georgia, serif'}
+  system:{label:'기본 고딕', css:'"Noto Sans KR", system-ui, sans-serif'},
+  clean:{label:'모던 산세리프', css:'"Noto Sans KR", sans-serif'},
+  serif:{label:'고전 명조', css:'"Noto Serif KR", serif'},
+  elegant:{label:'우아한 세리프', css:'"Playfair Display", "Noto Serif KR", serif'},
+  mono:{label:'터미널', css:'"DM Mono", "Noto Sans Mono", monospace'},
+  orbit:{label:'미래형', css:'"Orbitron", "Noto Sans KR", sans-serif'},
+  handwritten:{label:'손글씨', css:'"Gaegu", "Noto Sans KR", sans-serif'},
+  gothic:{label:'고딕 장식', css:'Georgia, "Noto Serif KR", serif'},
+  editorial:{label:'매거진', css:'"Playfair Display", "Noto Sans KR", serif'},
+  rounded:{label:'둥근 감성', css:'"Noto Sans KR", system-ui, sans-serif'}
 };
 const WORLD_TEXT_COLORS = {
   default:{label:'기본',value:'#202124'}, ivory:{label:'아이보리',value:'#f7f1df'}, white:{label:'화이트',value:'#ffffff'},
@@ -1660,10 +1660,16 @@ const WORLD_TEXT_COLORS = {
   gold:{label:'금빛',value:'#b07a20'}, sky:{label:'하늘',value:'#2879a8'}, orange:{label:'주황',value:'#c46325'}
 };
 const WORLD_BUTTON_SHAPES = {
-  rounded:{label:'둥근',radius:'14px',transform:'none'}, pill:{label:'알약형',radius:'999px',transform:'none'},
-  square:{label:'각진',radius:'3px',transform:'none'}, soft:{label:'부드러운 사각',radius:'8px',transform:'none'},
-  cut:{label:'사선 컷',radius:'3px',transform:'skewX(-4deg)'}, ticket:{label:'티켓형',radius:'6px',transform:'none'},
-  outline:{label:'선형',radius:'2px',transform:'none'}, stamp:{label:'도장형',radius:'2px',transform:'rotate(-1deg)'}
+  rounded:{label:'라운드',radius:'14px',transform:'none',className:'shape-rounded'},
+  pill:{label:'알약',radius:'999px',transform:'none',className:'shape-pill'},
+  square:{label:'각진 사각',radius:'2px',transform:'none',className:'shape-square'},
+  soft:{label:'소프트 카드',radius:'9px',transform:'none',className:'shape-soft'},
+  cut:{label:'사선 컷',radius:'2px',transform:'skewX(-5deg)',className:'shape-cut'},
+  ticket:{label:'티켓',radius:'7px',transform:'none',className:'shape-ticket'},
+  outline:{label:'아웃라인',radius:'4px',transform:'none',className:'shape-outline'},
+  stamp:{label:'도장',radius:'3px',transform:'rotate(-2deg)',className:'shape-stamp'},
+  tab:{label:'탭형',radius:'6px 6px 0 0',transform:'none',className:'shape-tab'},
+  diamond:{label:'다이아',radius:'4px',transform:'skewX(-8deg)',className:'shape-diamond'}
 };
 
 function getWorldDecorExtras(w){
@@ -2116,65 +2122,115 @@ async function openWorldDecorModal(worldId){
     ensureWorldDesignStyles();
     document.querySelector('.world-decor-modal')?.remove();
 
-    const modal=document.createElement('div');
-    modal.className='world-decor-modal';
-    const styles=[['sf','SF','HUD · 미래도시 · 데이터 인터페이스'],['cyberpunk','사이버펑크','네온 · 글리치 · 기계적인 인터페이스'],['fantasy','판타지','고서 · 마법 · 고전 장식'],['darkfantasy','다크 판타지','고딕 · 어두운 패널 · 붉은 포인트'],['horror','공포','사건 기록 · 경고 · 긴장감'],['romance','로맨스','다이어리 · 부드러운 카드 · 감성 UI'],['school','학원물','노트 · 게시판 · 깔끔한 카드'],['martial','무협','한지 · 수묵 · 동양식 장식'],['mystery','추리물','탐정 파일 · 기록 · 사건 보드'],['historical','역사극','기록물 · 박물관 · 고전 문서'],['healing','힐링','자연 · 여백 · 편안한 카드'],['religion','종교/신화','성전 · 고전 · 경건한 분위']];
-    const colors=[['purple','보라'],['blue','파랑'],['sky','하늘색'],['green','초록'],['teal','청록'],['gold','금색'],['red','빨강'],['orange','주황'],['pink','분홍'],['black','검정'],['white','흰색']];
+    const styles=[
+      ['sf','SF','미래 · 우주 · HUD'],['cyberpunk','사이버펑크','네온 · 글리치 · 기계'],
+      ['fantasy','판타지','마법 · 고서 · 모험'],['darkfantasy','다크 판타지','고딕 · 어둠 · 붉은빛'],
+      ['horror','공포','기록 · 경고 · 긴장'],['romance','로맨스','다이어리 · 감성 · 부드러움'],
+      ['school','학원물','노트 · 게시판 · 청춘'],['martial','무협','한지 · 수묵 · 동양풍'],
+      ['mystery','추리물','사건 파일 · 기록'],['historical','역사극','고전 문서 · 기록물'],
+      ['healing','힐링','자연 · 여백 · 편안함'],['religion','종교/신화','성전 · 신화 · 장엄함']
+    ];
+    const colors=[['purple','보라'],['blue','파랑'],['sky','하늘'],['green','초록'],['teal','청록'],['gold','금색'],['red','빨강'],['orange','주황'],['pink','분홍'],['black','검정'],['white','흰색']];
     const extras=getWorldDecorExtras(w);
-    let chosenStyle=(w.designStyle && w.designStyle!=='fantasy') ? w.designStyle : getGenreDesignPreset(w.genre).style;
-    let chosenColor=(w.designColor && w.designColor!=='purple') ? w.designColor : getGenreDesignPreset(w.genre).color;
+    let chosenStyle=w.designStyle || getGenreDesignPreset(w.genre).style;
+    let chosenColor=w.designColor || getGenreDesignPreset(w.genre).color;
     let chosenFont=extras.font, chosenTextColor=extras.textColor, chosenButtonShape=extras.buttonShape;
 
-    modal.innerHTML=`<div class="world-decor-box">
-      <div class="wd-head"><div><span class="wd-kicker">WORLD CUSTOMIZATION</span><h2>🎨 세계관 꾸미기</h2><p>${esc(w.name)}의 화면을 원하는 분위기로 바꿔보세요.</p></div><button type="button" id="wdX" class="wd-close">×</button></div>
-      <div class="wd-section"><h3>① 전체 분위기</h3><div class="world-decor-grid">${styles.map(x=>`<button type="button" class="world-decor-option" data-wd-style="${x[0]}"><b>${x[1]}</b><small>${x[2]}</small></button>`).join('')}</div></div>
-      <div class="wd-section"><h3>② 포인트 색상</h3><div class="wd-color-grid">${colors.map(x=>`<button type="button" class="wd-color-option" data-wd-color="${x[0]}"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div></div>
-      <div class="wd-section"><h3>③ 글씨체</h3><div class="wd-choice-grid">${Object.entries(WORLD_FONT_OPTIONS).map(([k,v])=>`<button type="button" class="wd-choice" data-wd-font="${k}"><span style="font-family:${v.css}">가나다 ABC</span><small>${v.label}</small></button>`).join('')}</div></div>
-      <div class="wd-section"><h3>④ 글씨 색상</h3><div class="wd-color-grid text-color-grid">${Object.entries(WORLD_TEXT_COLORS).map(([k,v])=>`<button type="button" class="wd-color-option" data-wd-text="${k}"><span class="text-swatch" style="background:${v.value}"></span><b>${v.label}</b></button>`).join('')}</div></div>
-      <div class="wd-section"><h3>⑤ 버튼 모양</h3><div class="wd-button-grid">${Object.entries(WORLD_BUTTON_SHAPES).map(([k,v])=>`<button type="button" class="wd-shape-option" data-wd-button="${k}"><span style="border-radius:${v.radius};transform:${v.transform}">버튼</span><small>${v.label}</small></button>`).join('')}</div></div>
-      <div class="world-decor-preview"><div class="wd-preview-title">LIVE PREVIEW</div><div id="worldDecorPreview" class="world-decor-preview-frame"></div></div>
+    const modal=document.createElement('div');
+    modal.className='world-decor-modal';
+    modal.innerHTML=`<div class="world-decor-box" role="dialog" aria-modal="true" aria-label="세계관 꾸미기">
+      <div class="wd-head">
+        <div><span class="wd-kicker">WORLD CUSTOMIZATION</span><h2>🎨 세계관 꾸미기</h2><p>${esc(w.name)}의 각 요소를 <b>따로</b> 선택할 수 있습니다.</p></div>
+        <button type="button" id="wdX" class="wd-close" aria-label="닫기">×</button>
+      </div>
+
+      <div class="wd-current"><span>현재 조합</span><strong id="wdCurrentText"></strong></div>
+
+      <div class="wd-section">
+        <div class="wd-section-head"><h3>① 전체 분위기</h3><button type="button" class="wd-reset" data-reset="style">기본 분위기</button></div>
+        <div class="world-decor-grid">${styles.map(x=>`<button type="button" class="world-decor-option" data-wd-style="${x[0]}" aria-pressed="false"><span class="wd-check">✓</span><b>${x[1]}</b><small>${x[2]}</small></button>`).join('')}</div>
+      </div>
+
+      <div class="wd-section">
+        <div class="wd-section-head"><h3>② 포인트 색상</h3><button type="button" class="wd-reset" data-reset="color">기본 색상</button></div>
+        <div class="wd-color-grid">${colors.map(x=>`<button type="button" class="wd-color-option" data-wd-color="${x[0]}" aria-pressed="false"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div>
+      </div>
+
+      <div class="wd-section">
+        <div class="wd-section-head"><h3>③ 글씨체</h3><button type="button" class="wd-reset" data-reset="font">기본 글씨체</button></div>
+        <div class="wd-choice-grid">${Object.entries(WORLD_FONT_OPTIONS).map(([k,v])=>`<button type="button" class="wd-choice" data-wd-font="${k}" aria-pressed="false"><span style="font-family:${v.css}">가나다 ABC</span><small>${v.label}</small></button>`).join('')}</div>
+      </div>
+
+      <div class="wd-section">
+        <div class="wd-section-head"><h3>④ 글씨 색상</h3><button type="button" class="wd-reset" data-reset="text">기본 글씨색</button></div>
+        <div class="wd-color-grid text-color-grid">${Object.entries(WORLD_TEXT_COLORS).map(([k,v])=>`<button type="button" class="wd-color-option" data-wd-text="${k}" aria-pressed="false"><span class="text-swatch" style="background:${v.value}"></span><b>${v.label}</b></button>`).join('')}</div>
+      </div>
+
+      <div class="wd-section">
+        <div class="wd-section-head"><h3>⑤ 버튼 모양</h3><button type="button" class="wd-reset" data-reset="button">기본 버튼</button></div>
+        <div class="wd-button-grid">${Object.entries(WORLD_BUTTON_SHAPES).map(([k,v])=>`<button type="button" class="wd-shape-option" data-wd-button="${k}" aria-pressed="false"><span class="shape-demo ${v.className}">버튼</span><small>${v.label}</small></button>`).join('')}</div>
+      </div>
+
+      <div class="world-decor-preview"><div class="wd-preview-title">LIVE PREVIEW · 선택 즉시 변경</div><div id="worldDecorPreview" class="world-decor-preview-frame"></div></div>
       <div class="wd-actions"><button type="button" id="wdCancel">취소</button><button type="button" id="wdSave">저장하기</button></div>
     </div>`;
     document.body.appendChild(modal);
 
     const refresh=()=>{
-      modal.querySelectorAll('[data-wd-style]').forEach(b=>b.classList.toggle('selected',b.dataset.wdStyle===chosenStyle));
-      modal.querySelectorAll('[data-wd-color]').forEach(b=>b.classList.toggle('selected',b.dataset.wdColor===chosenColor));
-      modal.querySelectorAll('[data-wd-font]').forEach(b=>b.classList.toggle('selected',b.dataset.wdFont===chosenFont));
-      modal.querySelectorAll('[data-wd-text]').forEach(b=>b.classList.toggle('selected',b.dataset.wdText===chosenTextColor));
-      modal.querySelectorAll('[data-wd-button]').forEach(b=>b.classList.toggle('selected',b.dataset.wdButton===chosenButtonShape));
-      const preview=modal.querySelector('#worldDecorPreview');
+      const toggle=(sel,key,val)=>modal.querySelectorAll(sel).forEach(b=>{
+        const on=b.dataset[key]===val; b.classList.toggle('selected',on); b.setAttribute('aria-pressed',String(on));
+      });
+      toggle('[data-wd-style]','wdStyle',chosenStyle); toggle('[data-wd-color]','wdColor',chosenColor);
+      toggle('[data-wd-font]','wdFont',chosenFont); toggle('[data-wd-text]','wdText',chosenTextColor); toggle('[data-wd-button]','wdButton',chosenButtonShape);
       const st=WORLD_DESIGN_STYLES[chosenStyle]||WORLD_DESIGN_STYLES.fantasy;
       const accent=WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple;
       const font=WORLD_FONT_OPTIONS[chosenFont]||WORLD_FONT_OPTIONS.system;
       const txt=WORLD_TEXT_COLORS[chosenTextColor]||WORLD_TEXT_COLORS.default;
       const bs=WORLD_BUTTON_SHAPES[chosenButtonShape]||WORLD_BUTTON_SHAPES.rounded;
-      if(preview){
-        preview.style.background=['sf','cyberpunk','darkfantasy','horror'].includes(chosenStyle)?'#11151b':'#f7f3ea';
-        preview.style.color=['sf','cyberpunk','darkfantasy','horror'].includes(chosenStyle)?'#fff':txt.value;
-        preview.style.fontFamily=font.css; preview.style.borderColor=accent; preview.style.borderRadius=bs.radius;
-        preview.innerHTML=`<div class="wd-preview-world"><strong>${esc(w.name)}</strong><small>${esc(st.label)} · ${esc(font.label)}</small><div class="world-decor-preview-tabs"><span style="background:${accent};color:#fff;border-radius:${bs.radius}">개요</span><span style="border-radius:${bs.radius}">캐릭터</span><span style="border-radius:${bs.radius}">지역</span><span style="border-radius:${bs.radius}">스토리</span></div><article><b style="color:${txt.value}">세계관의 분위기를 미리 확인하세요.</b><p>글씨체, 글씨색, 버튼 모양이 함께 적용됩니다.</p></article></div>`;
-      }
+      modal.querySelector('#wdCurrentText').textContent=`${st.label} · ${font.label} · ${txt.label} · ${bs.label}`;
+      const preview=modal.querySelector('#worldDecorPreview');
+      const dark=['sf','cyberpunk','darkfantasy','horror'].includes(chosenStyle);
+      preview.style.background=dark?'#101722':'#fbf8f0'; preview.style.color=txt.value; preview.style.borderColor=accent;
+      preview.style.fontFamily=font.css;
+      preview.innerHTML=`<div class="wd-preview-world" style="--preview-accent:${accent};--preview-radius:${bs.radius}">
+        <div class="wd-preview-badge" style="border-color:${accent};color:${accent}">${st.label}</div>
+        <strong>${esc(w.name)}</strong><small>${font.label} · ${txt.label} · ${bs.label}</small>
+        <div class="world-decor-preview-tabs"><span class="preview-btn preview-active">개요</span><span class="preview-btn">캐릭터</span><span class="preview-btn">지역</span><span class="preview-btn">스토리</span></div>
+        <article><b>세계관의 분위기를 미리 확인하세요.</b><p>각 설정은 서로 독립적으로 적용됩니다.</p></article>
+      </div>`;
+      preview.querySelectorAll('.preview-btn').forEach((el,i)=>{el.style.borderRadius=bs.radius;el.style.transform=bs.transform;el.style.borderColor=accent;el.style.color=i===0?'#fff':txt.value;el.style.background=i===0?accent:'transparent';});
     };
+
     refresh();
-    modal.querySelectorAll('[data-wd-style]').forEach(b=>b.onclick=()=>{chosenStyle=b.dataset.wdStyle;refresh();});
-    modal.querySelectorAll('[data-wd-color]').forEach(b=>b.onclick=()=>{chosenColor=b.dataset.wdColor;refresh();});
-    modal.querySelectorAll('[data-wd-font]').forEach(b=>b.onclick=()=>{chosenFont=b.dataset.wdFont;refresh();});
-    modal.querySelectorAll('[data-wd-text]').forEach(b=>b.onclick=()=>{chosenTextColor=b.dataset.wdText;refresh();});
-    modal.querySelectorAll('[data-wd-button]').forEach(b=>b.onclick=()=>{chosenButtonShape=b.dataset.wdButton;refresh();});
+    modal.querySelectorAll('[data-wd-style]').forEach(b=>b.addEventListener('click',()=>{chosenStyle=b.dataset.wdStyle;refresh();}));
+    modal.querySelectorAll('[data-wd-color]').forEach(b=>b.addEventListener('click',()=>{chosenColor=b.dataset.wdColor;refresh();}));
+    modal.querySelectorAll('[data-wd-font]').forEach(b=>b.addEventListener('click',()=>{chosenFont=b.dataset.wdFont;refresh();}));
+    modal.querySelectorAll('[data-wd-text]').forEach(b=>b.addEventListener('click',()=>{chosenTextColor=b.dataset.wdText;refresh();}));
+    modal.querySelectorAll('[data-wd-button]').forEach(b=>b.addEventListener('click',()=>{chosenButtonShape=b.dataset.wdButton;refresh();}));
+    modal.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>{
+      const k=b.dataset.reset;
+      if(k==='style') chosenStyle=getGenreDesignPreset(w.genre).style;
+      if(k==='color') chosenColor=getGenreDesignPreset(w.genre).color;
+      if(k==='font') chosenFont='system';
+      if(k==='text') chosenTextColor='default';
+      if(k==='button') chosenButtonShape='rounded';
+      refresh();
+    }));
     const close=()=>modal.remove();
-    modal.querySelector('#wdCancel').onclick=close; modal.querySelector('#wdX').onclick=close;
+    modal.querySelector('#wdCancel').addEventListener('click',close); modal.querySelector('#wdX').addEventListener('click',close);
     modal.addEventListener('click',e=>{if(e.target===modal)close();});
-    modal.querySelector('#wdSave').onclick=async()=>{
+    document.addEventListener('keydown',function escKey(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',escKey);}}, {once:true});
+
+    modal.querySelector('#wdSave').addEventListener('click',async()=>{
+      const saveBtn=modal.querySelector('#wdSave'); saveBtn.disabled=true; saveBtn.textContent='저장 중…';
       const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor}).eq('id',w.id).eq('owner_id',currentUserId);
-      if(error){alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
+      if(error){saveBtn.disabled=false;saveBtn.textContent='저장하기';alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
       w.designStyle=chosenStyle; w.designColor=chosenColor; w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape;
       try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape}));}catch(e){}
-      // 신규 컬럼이 이미 존재하는 DB라면 함께 저장합니다. 없어도 기본 디자인 저장은 유지됩니다.
+      // 선택값은 우선 브라우저에 즉시 보존하고, DB에 컬럼이 있는 경우도 저장합니다.
       try{await supabaseClient.from('worlds').update({design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape}).eq('id',w.id).eq('owner_id',currentUserId);}catch(e){}
       modal.remove(); applyWorldDesign(w); renderWorld();
-      alert('세계관 디자인이 저장되었습니다!');
-    };
+    });
 }
 
 function renderWorld(){
