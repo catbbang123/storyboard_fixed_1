@@ -685,31 +685,29 @@ profileIconCache = {};
         }
     }
 
-    // 로그아웃 상태에서는 world_members 조회를 하지 않습니다.
-    // world_members RLS가 비로그인 사용자의 조회를 막고 있으므로
-    // 불필요한 401 오류가 콘솔에 발생하지 않도록 합니다.
-    const memberCountMap = {};
-
+    let memberCountData = [];
+    let memberCountError = null;
     if(currentUserId){
-        const { data: memberCountData, error: memberCountError } =
-            await supabaseClient
-                .from('world_members')
-                .select('world_id, user_id, status');
-
-        if(memberCountError){
-            console.error('세계관 가입자 수 불러오기 실패:', memberCountError);
-        }else{
-            (memberCountData || []).forEach(member => {
-                if(member.status !== 'approved') return;
-
-                if(!memberCountMap[member.world_id]){
-                    memberCountMap[member.world_id] = 0;
-                }
-
-                memberCountMap[member.world_id]++;
-            });
-        }
+        const result = await supabaseClient.from('world_members').select('world_id, user_id, status');
+        memberCountData = result.data || [];
+        memberCountError = result.error;
     }
+
+if(memberCountError){
+    console.error('세계관 가입자 수 불러오기 실패:', memberCountError);
+}
+
+const memberCountMap = {};
+
+(memberCountData || []).forEach(member => {
+    if(member.status !== 'approved') return;
+
+    if(!memberCountMap[member.world_id]){
+        memberCountMap[member.world_id] = 0;
+    }
+
+    memberCountMap[member.world_id]++;
+});
 
     // 세계관 인원 수를 실제 승인된 가입자 수로 다시 계산합니다.
     // worlds.members에 남아 있는 예전 숫자(기본값 1)를 그대로 사용하지 않습니다.
@@ -862,10 +860,9 @@ if(userIds.length){
     }
 
 // ⑤ 소설 불러오기 (수정)
-    const { data: storyData, error: storyError } = await supabaseClient
-        .from('stories')
-        .select('*')
-        .order('created_at', { ascending: true });
+    let storyQuery = supabaseClient.from('stories').select('*').order('created_at', { ascending: true });
+    if(!currentUserId) storyQuery = storyQuery.eq('visibility', 'public');
+    const { data: storyData, error: storyError } = await storyQuery;
 
     if(storyError){
         console.error('Supabase stories 불러오기 실패:', storyError);
@@ -874,14 +871,13 @@ if(userIds.length){
     }
 
     // ⑤-1 회차 데이터 전체 불러오기 추가
-    const { data: chapterData, error: chapterError } = await supabaseClient
-        .from('chapters')
-        .select('*')
-        .order('chapter_number', { ascending: true });
-
-    if(chapterError){
-        console.error('Supabase chapters 불러오기 실패:', chapterError);
-        // 회차 테이블이 따로 없다면 빈 배열로 처리
+    let chapterData = [];
+    let chapterError = null;
+    if(currentUserId){
+        const result = await supabaseClient.from('chapters').select('*').order('chapter_number', { ascending: true });
+        chapterData = result.data || [];
+        chapterError = result.error;
+        if(chapterError){ console.error('Supabase chapters 불러오기 실패:', chapterError); chapterData = []; }
     }
 
     // ⑥ Supabase 데이터를 기준으로 화면 데이터를 완전히 교체
@@ -1698,13 +1694,6 @@ function section(w){
     const canAddContent = isOwner || isApprovedMember;
 
     if(tab==='stories'){
-        // 로그아웃 상태에서도 공개 소설의 표지/제목은 보여주되,
-        // 회차 수와 소설 본문으로 들어가는 기능은 보여주지 않습니다.
-        // 비공개 소설은 로그인 여부와 관계없이 표지도 공개하지 않습니다.
-        const visibleStories = w.stories.filter(s =>
-            s.visibility === 'public' || s.created_by === currentUserId
-        );
-
         return `<div class="content-head">
             <div>
                 <h2>소설</h2>
@@ -1713,8 +1702,8 @@ function section(w){
             ${canAddContent ? '<button id="addStoryButton" type="button">＋ 스토리 추가</button>' : ''}
         </div>`+
 
-        (visibleStories.length
-        ? `<div class="story-grid">${visibleStories.map(s=>`
+        (w.stories.length
+        ? `<div class="story-grid">${w.stories.map(s=>`
             <article class="story-card">
                 <div class="story-card-cover">
                     ${s.coverImage
@@ -1724,23 +1713,22 @@ function section(w){
 
                 <div class="story-card-info">
                     <h3>${esc(s.name)}</h3>
-                    <small class="author-name">
-                        <img
-                            src="${getAuthorIconUrl(s.created_by)}"
-                            class="dynamic-author-icon" data-author-id="${esc(s.created_by)}"
-                            alt="사용자 아이콘"
-                        >
-                        ${esc(profilesCache[s.created_by] || '사용자')}
-                    </small>
+<small class="author-name">
+    <img
+        src="${getAuthorIconUrl(s.created_by)}"
+        class="dynamic-author-icon" data-author-id="${esc(s.created_by)}"
+        alt="사용자 아이콘"
+    >
+    ${esc(profilesCache[s.created_by] || '사용자')}
+</small>
                     <p>${escWithBreaks(s.description||'')}</p>
 
                     <div class="meta">
-                        ${currentUserId
-                            ? `<span>📚 ${s.chapters?.length||0}화</span>
-                               <span>${s.visibility==='public'?'공개':'비공개'}</span>`
-                            : `<span>🔒 로그인 후 회차를 볼 수 있습니다.</span>`
-                        }
+                        ${currentUserId ? `<span>📚 ${s.chapters?.length||0}화</span>` : ''}
+                        <span>${s.visibility==='public'?'공개':'비공개'}</span>
                     </div>
+
+                    ${!currentUserId ? '<div class="story-login-notice">🔒 소설 회차는 로그인 후 볼 수 있습니다.</div>' : ''}
 
                     <div class="story-card-actions">
 
@@ -1777,13 +1765,12 @@ function section(w){
             </article>
         `).join('')}</div>`
         : `<div class="empty">
-            아직 공개된 스토리가 없습니다.<br><br>
+            아직 스토리가 없습니다.<br><br>
             ${canAddContent
                 ? '＋ 스토리 추가 버튼을 눌러 표지와 기본 설정부터 만들어보세요.'
-                : '로그인하면 공개 소설을 확인할 수 있습니다.'}
+                : '이 세계관에 가입하면 스토리를 추가할 수 있습니다.'}
         </div>`);
     }
-
 
     if(tab==='characters'){
         const order=[
@@ -2519,6 +2506,7 @@ function renderStorySettings(storyId){
 }
 
 async function openChapterReader(storyId, chapterId){
+  if(!currentUserId){ alert('소설을 읽으려면 먼저 로그인해주세요.'); return; }
  const { data: { session } } = await supabaseClient.auth.getSession();
  if(!session?.user){
    alert('소설을 읽으려면 먼저 로그인해주세요.');
