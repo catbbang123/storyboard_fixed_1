@@ -1659,6 +1659,22 @@ const WORLD_TEXT_COLORS = {
   emerald:{label:'에메랄드',value:'#176b58'}, violet:{label:'보라',value:'#6345a8'}, rose:{label:'장미',value:'#b54e78'},
   gold:{label:'금빛',value:'#b07a20'}, sky:{label:'하늘',value:'#2879a8'}, orange:{label:'주황',value:'#c46325'}
 };
+const WORLD_LAYOUT_COLORS = {
+  ivory:{label:'아이보리',bg:'#f5f0e4',panel:'#fffaf0',soft:'#eee5d4',border:'#d8c9ad',text:'#3f3528'},
+  lavender:{label:'라벤더',bg:'#f0edfb',panel:'#fbf9ff',soft:'#e5dff5',border:'#cfc5e8',text:'#352f43'},
+  mist:{label:'안개빛',bg:'#eaf2f6',panel:'#f8fbfc',soft:'#dce9ef',border:'#c2d5de',text:'#293943'},
+  rose:{label:'로즈',bg:'#f7edf1',panel:'#fff9fb',soft:'#eedde4',border:'#dfc2ce',text:'#49333c'},
+  mint:{label:'민트',bg:'#eaf4ee',panel:'#f9fdfb',soft:'#dcece2',border:'#bfd6c7',text:'#2e4135'},
+  parchment:{label:'양피지',bg:'#e9dfc9',panel:'#fbf4e4',soft:'#ded0b4',border:'#c5b28f',text:'#473a2a'},
+  charcoal:{label:'차콜',bg:'#252934',panel:'#303542',soft:'#3a4050',border:'#555d70',text:'#f2f3f6'},
+  white:{label:'화이트',bg:'#f7f8fa',panel:'#ffffff',soft:'#edf0f4',border:'#d9dde5',text:'#252831'}
+};
+
+function getDefaultLayoutColor(w){
+  const map={purple:'lavender',blue:'mist',pink:'rose',red:'parchment'};
+  return map[w?.theme] || 'ivory';
+}
+
 const WORLD_BUTTON_SHAPES = {
   rounded:{label:'라운드',radius:'14px',transform:'none',className:'shape-rounded'},
   pill:{label:'알약',radius:'999px',transform:'none',className:'shape-pill'},
@@ -1673,7 +1689,7 @@ const WORLD_BUTTON_SHAPES = {
 };
 
 function getWorldDecorExtras(w){
-  let extras={font:'system',textColor:'default',buttonShape:'rounded'};
+  let extras={font:'system',textColor:'default',buttonShape:'rounded',layoutColor:getDefaultLayoutColor(w)};
   try{
     const local=localStorage.getItem('world_platform_design_'+w.id);
     if(local) extras={...extras,...JSON.parse(local)};
@@ -1681,7 +1697,8 @@ function getWorldDecorExtras(w){
   return {
     font:w.designFont || extras.font,
     textColor:w.designTextColor || extras.textColor,
-    buttonShape:w.designButtonShape || extras.buttonShape
+    buttonShape:w.designButtonShape || extras.buttonShape,
+    layoutColor:w.designLayoutColor || extras.layoutColor || getDefaultLayoutColor(w)
   };
 }
 
@@ -2131,6 +2148,7 @@ function applyWorldDesign(w){
     const font=WORLD_FONT_OPTIONS[extras.font]||WORLD_FONT_OPTIONS.system;
     const textColor=WORLD_TEXT_COLORS[extras.textColor]||WORLD_TEXT_COLORS.default;
     const buttonShape=WORLD_BUTTON_SHAPES[extras.buttonShape]||WORLD_BUTTON_SHAPES.rounded;
+    const layout=WORLD_LAYOUT_COLORS[extras.layoutColor]||WORLD_LAYOUT_COLORS.ivory;
 
     el.classList.add('world-design');
     Object.keys(WORLD_DESIGN_STYLES).forEach(k=>el.classList.remove('wd-style-'+k));
@@ -2145,9 +2163,15 @@ function applyWorldDesign(w){
     el.style.setProperty('--wd-text-color',textColor.value);
     el.style.setProperty('--wd-button-radius',buttonShape.radius);
     el.style.setProperty('--wd-button-transform',buttonShape.transform);
+    el.style.setProperty('--wd-layout-bg',layout.bg);
+    el.style.setProperty('--wd-layout-panel',layout.panel);
+    el.style.setProperty('--wd-layout-soft',layout.soft);
+    el.style.setProperty('--wd-layout-border',layout.border);
+    el.style.setProperty('--wd-layout-text',layout.text);
     el.dataset.designFont=extras.font;
     el.dataset.designTextColor=extras.textColor;
     el.dataset.designButtonShape=extras.buttonShape;
+    el.dataset.designLayoutColor=extras.layoutColor;
     el.style.fontFamily=font.css;
 }
 
@@ -2173,7 +2197,7 @@ async function openWorldDecorModal(worldId){
     const extras=getWorldDecorExtras(w);
     let chosenStyle=w.designStyle || getGenreDesignPreset(w.genre).style;
     let chosenColor=w.designColor || getGenreDesignPreset(w.genre).color;
-    let chosenFont=extras.font, chosenTextColor=extras.textColor, chosenButtonShape=extras.buttonShape;
+    let chosenFont=extras.font, chosenTextColor=extras.textColor, chosenButtonShape=extras.buttonShape, chosenLayoutColor=extras.layoutColor;
 
     const modal=document.createElement('div');
     modal.className='world-decor-modal';
@@ -2196,17 +2220,22 @@ async function openWorldDecorModal(worldId){
       </div>
 
       <div class="wd-section">
-        <div class="wd-section-head"><h3>③ 글씨체</h3><button type="button" class="wd-reset" data-reset="font">기본 글씨체</button></div>
+        <div class="wd-section-head"><h3>③ 바깥 레이아웃 색상</h3><button type="button" class="wd-reset" data-reset="layout">기본 레이아웃</button></div>
+        <div class="wd-layout-grid">${Object.entries(WORLD_LAYOUT_COLORS).map(([k,v])=>`<button type="button" class="wd-layout-option" data-wd-layout="${k}" aria-pressed="false"><span class="layout-preview-swatch" style="background:linear-gradient(135deg,${v.bg},${v.panel});border-color:${v.border}"></span><b>${v.label}</b><small>${k==='parchment'?'고전적인 양피지':k==='charcoal'?'어두운 외곽':k==='mint'?'자연스러운 민트':k==='mist'?'차분한 안개빛':'부드러운 바탕'}</small></button>`).join('')}</div>
+      </div>
+
+      <div class="wd-section">
+        <div class="wd-section-head"><h3>④ 글씨체</h3><button type="button" class="wd-reset" data-reset="font">기본 글씨체</button></div>
         <div class="wd-choice-grid">${Object.entries(WORLD_FONT_OPTIONS).map(([k,v])=>`<button type="button" class="wd-choice" data-wd-font="${k}" aria-pressed="false"><span style="font-family:${v.css}">가나다 ABC</span><small>${v.label}</small></button>`).join('')}</div>
       </div>
 
       <div class="wd-section">
-        <div class="wd-section-head"><h3>④ 글씨 색상</h3><button type="button" class="wd-reset" data-reset="text">기본 글씨색</button></div>
+        <div class="wd-section-head"><h3>⑤ 글씨 색상</h3><button type="button" class="wd-reset" data-reset="text">기본 글씨색</button></div>
         <div class="wd-color-grid text-color-grid">${Object.entries(WORLD_TEXT_COLORS).map(([k,v])=>`<button type="button" class="wd-color-option" data-wd-text="${k}" aria-pressed="false"><span class="text-swatch" style="background:${v.value}"></span><b>${v.label}</b></button>`).join('')}</div>
       </div>
 
       <div class="wd-section">
-        <div class="wd-section-head"><h3>⑤ 버튼 모양</h3><button type="button" class="wd-reset" data-reset="button">기본 버튼</button></div>
+        <div class="wd-section-head"><h3>⑥ 버튼 모양</h3><button type="button" class="wd-reset" data-reset="button">기본 버튼</button></div>
         <div class="wd-button-grid">${Object.entries(WORLD_BUTTON_SHAPES).map(([k,v])=>`<button type="button" class="wd-shape-option" data-wd-button="${k}" aria-pressed="false"><span class="shape-demo ${v.className}">버튼</span><small>${v.label}</small></button>`).join('')}</div>
       </div>
 
@@ -2219,19 +2248,20 @@ async function openWorldDecorModal(worldId){
       const toggle=(sel,key,val)=>modal.querySelectorAll(sel).forEach(b=>{
         const on=b.dataset[key]===val; b.classList.toggle('selected',on); b.setAttribute('aria-pressed',String(on));
       });
-      toggle('[data-wd-style]','wdStyle',chosenStyle); toggle('[data-wd-color]','wdColor',chosenColor);
+      toggle('[data-wd-style]','wdStyle',chosenStyle); toggle('[data-wd-color]','wdColor',chosenColor); toggle('[data-wd-layout]','wdLayout',chosenLayoutColor);
       toggle('[data-wd-font]','wdFont',chosenFont); toggle('[data-wd-text]','wdText',chosenTextColor); toggle('[data-wd-button]','wdButton',chosenButtonShape);
       const st=WORLD_DESIGN_STYLES[chosenStyle]||WORLD_DESIGN_STYLES.fantasy;
       const accent=WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple;
       const font=WORLD_FONT_OPTIONS[chosenFont]||WORLD_FONT_OPTIONS.system;
       const txt=WORLD_TEXT_COLORS[chosenTextColor]||WORLD_TEXT_COLORS.default;
       const bs=WORLD_BUTTON_SHAPES[chosenButtonShape]||WORLD_BUTTON_SHAPES.rounded;
-      modal.querySelector('#wdCurrentText').textContent=`${st.label} · ${font.label} · ${txt.label} · ${bs.label}`;
+      const layout=WORLD_LAYOUT_COLORS[chosenLayoutColor]||WORLD_LAYOUT_COLORS.ivory;
+      modal.querySelector('#wdCurrentText').textContent=`${st.label} · ${layout.label} · ${font.label} · ${txt.label} · ${bs.label}`;
       const preview=modal.querySelector('#worldDecorPreview');
-      const dark=['sf','cyberpunk','darkfantasy','horror'].includes(chosenStyle);
-      preview.style.background=dark?'#101722':'#fbf8f0'; preview.style.color=txt.value; preview.style.borderColor=accent;
+      const dark=['sf','cyberpunk','darkfantasy','horror','charcoal'].includes(chosenStyle)||chosenLayoutColor==='charcoal';
+      preview.style.background=layout.bg; preview.style.color=txt.value; preview.style.borderColor=layout.border;
       preview.style.fontFamily=font.css;
-      preview.innerHTML=`<div class="wd-preview-world" style="--preview-accent:${accent};--preview-radius:${bs.radius}">
+      preview.innerHTML=`<div class="wd-preview-world" style="--preview-accent:${accent};--preview-radius:${bs.radius};--preview-layout-bg:${layout.bg};--preview-layout-panel:${layout.panel};--preview-layout-soft:${layout.soft};--preview-layout-border:${layout.border}">
         <div class="wd-preview-badge" style="border-color:${accent};color:${accent}">${st.label}</div>
         <strong>${esc(w.name)}</strong><small>${font.label} · ${txt.label} · ${bs.label}</small>
         <div class="world-decor-preview-tabs"><span class="preview-btn preview-active">개요</span><span class="preview-btn">캐릭터</span><span class="preview-btn">지역</span><span class="preview-btn">스토리</span></div>
@@ -2243,6 +2273,7 @@ async function openWorldDecorModal(worldId){
     refresh();
     modal.querySelectorAll('[data-wd-style]').forEach(b=>b.addEventListener('click',()=>{chosenStyle=b.dataset.wdStyle;refresh();}));
     modal.querySelectorAll('[data-wd-color]').forEach(b=>b.addEventListener('click',()=>{chosenColor=b.dataset.wdColor;refresh();}));
+    modal.querySelectorAll('[data-wd-layout]').forEach(b=>b.addEventListener('click',()=>{chosenLayoutColor=b.dataset.wdLayout;refresh();}));
     modal.querySelectorAll('[data-wd-font]').forEach(b=>b.addEventListener('click',()=>{chosenFont=b.dataset.wdFont;refresh();}));
     modal.querySelectorAll('[data-wd-text]').forEach(b=>b.addEventListener('click',()=>{chosenTextColor=b.dataset.wdText;refresh();}));
     modal.querySelectorAll('[data-wd-button]').forEach(b=>b.addEventListener('click',()=>{chosenButtonShape=b.dataset.wdButton;refresh();}));
@@ -2250,6 +2281,7 @@ async function openWorldDecorModal(worldId){
       const k=b.dataset.reset;
       if(k==='style') chosenStyle=getGenreDesignPreset(w.genre).style;
       if(k==='color') chosenColor=getGenreDesignPreset(w.genre).color;
+      if(k==='layout') chosenLayoutColor=getDefaultLayoutColor(w);
       if(k==='font') chosenFont='system';
       if(k==='text') chosenTextColor='default';
       if(k==='button') chosenButtonShape='rounded';
@@ -2264,8 +2296,8 @@ async function openWorldDecorModal(worldId){
       const saveBtn=modal.querySelector('#wdSave'); saveBtn.disabled=true; saveBtn.textContent='저장 중…';
       const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor}).eq('id',w.id).eq('owner_id',currentUserId);
       if(error){saveBtn.disabled=false;saveBtn.textContent='저장하기';alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
-      w.designStyle=chosenStyle; w.designColor=chosenColor; w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape;
-      try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape}));}catch(e){}
+      w.designStyle=chosenStyle; w.designColor=chosenColor; w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape; w.designLayoutColor=chosenLayoutColor;
+      try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
       // 선택값은 우선 브라우저에 즉시 보존하고, DB에 컬럼이 있는 경우도 저장합니다.
       try{await supabaseClient.from('worlds').update({design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape}).eq('id',w.id).eq('owner_id',currentUserId);}catch(e){}
       modal.remove(); applyWorldDesign(w); renderWorld();
