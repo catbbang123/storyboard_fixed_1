@@ -561,6 +561,8 @@ async function save(){
         members: w.members ?? 1,
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
+        design_style: w.designStyle ?? 'fantasy',
+        design_color: w.designColor ?? 'purple',
         cover_image: w.coverImage ?? ''
     }));
 
@@ -894,6 +896,8 @@ if(userIds.length){
         
         icon: w.icon ?? '✦',
         theme: w.theme ?? 'purple',
+        designStyle: w.design_style ?? 'fantasy',
+        designColor: w.design_color ?? 'purple',
         coverImage: w.cover_image ?? '',
         joined: myWorldMemberships.some(
             m => m.world_id === w.id && m.status === 'approved'
@@ -1272,7 +1276,7 @@ function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()
                 c.querySelector('.more>button').onclick=e=>{e.stopPropagation();
                  document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'));m.classList.add('show')};
                  c.querySelector('.edit').onclick=()=>openModal(id);
-                c.querySelector('.decorate').onclick=()=>openModal(id,true);
+                c.querySelector('.decorate').onclick=()=>openWorldDecorModal(id);
                 c.querySelector('.join').onclick=()=>{
                     const world = get(id);
                 
@@ -1609,6 +1613,114 @@ async function openMembershipRequests(worldId){
     });
 }
 
+
+// =========================
+// 세계관 내부 디자인
+// =========================
+const WORLD_DESIGN_STYLES = {
+    sf: { label:'SF', font:'system-ui, sans-serif', radius:'10px', shadow:'0 8px 24px rgba(0,0,0,.12)', border:'1px solid rgba(90,120,160,.25)' },
+    fantasy: { label:'판타지', font:'Georgia, "Noto Serif KR", serif', radius:'16px', shadow:'0 12px 30px rgba(80,50,20,.16)', border:'1px solid rgba(120,80,30,.25)' },
+    martial: { label:'무협', font:'"Noto Serif KR", Georgia, serif', radius:'4px', shadow:'0 8px 24px rgba(30,30,30,.16)', border:'1px solid rgba(60,60,60,.3)' },
+    mystery: { label:'추리물', font:'Georgia, "Noto Serif KR", serif', radius:'2px', shadow:'0 6px 18px rgba(0,0,0,.14)', border:'1px solid rgba(40,40,40,.35)' },
+    healing: { label:'힐링', font:'system-ui, "Noto Sans KR", sans-serif', radius:'22px', shadow:'0 8px 24px rgba(80,120,90,.12)', border:'1px solid rgba(100,150,110,.2)' },
+    religion: { label:'종교', font:'Georgia, "Noto Serif KR", serif', radius:'12px', shadow:'0 10px 28px rgba(100,80,50,.14)', border:'1px solid rgba(130,110,70,.25)' }
+};
+const WORLD_DESIGN_COLORS = {
+    purple:'#7c5cff', blue:'#4d7cff', sky:'#57b7e6', green:'#62a86b', teal:'#45a89a', gold:'#c59b45', red:'#c85b5b', orange:'#d88945', pink:'#d47aa5', black:'#222222', white:'#f5f5f5'
+};
+
+function ensureWorldDesignStyles(){
+    if(document.getElementById('worldDesignRuntimeStyle')) return;
+    const style=document.createElement('style');
+    style.id='worldDesignRuntimeStyle';
+    style.textContent=`
+      #world.world-design{--wd-accent:#7c5cff;--wd-bg:#faf9ff;--wd-radius:16px;--wd-shadow:0 12px 30px rgba(0,0,0,.12);--wd-border:1px solid rgba(0,0,0,.12);font-family:system-ui,sans-serif;background:var(--wd-bg);min-height:100%;}
+      #world.world-design .hero{font-family:inherit;border-radius:0 0 var(--wd-radius) var(--wd-radius);}
+      #world.world-design .tabs{gap:8px;padding:10px 12px;flex-wrap:wrap;background:var(--wd-bg);}
+      #world.world-design .tabs button{border:var(--wd-border);border-radius:var(--wd-radius);box-shadow:none;transition:.18s;}
+      #world.world-design .tabs button.active{background:var(--wd-accent);color:#fff;border-color:var(--wd-accent);}
+      #world.world-design .content .card,#world.world-design .content .story-card,#world.world-design .content .item,#world.world-design .content .setting-card{border-radius:var(--wd-radius);box-shadow:var(--wd-shadow);border:var(--wd-border);}
+      #world.world-design button:not(.back){border-radius:var(--wd-radius);}
+      #world.world-design .wd-section-title{border-left:5px solid var(--wd-accent);padding-left:10px;}
+      #world.world-design[data-design-style="sf"] .hero{letter-spacing:.01em;}
+      #world.world-design[data-design-style="fantasy"] .hero{font-family:Georgia,"Noto Serif KR",serif;}
+      #world.world-design[data-design-style="martial"] .hero{font-family:"Noto Serif KR",Georgia,serif;}
+      #world.world-design[data-design-style="mystery"] .content{filter:saturate(.9);}
+      #world.world-design[data-design-style="healing"]{--wd-bg:#f7fbf7;}
+      #world.world-design[data-design-style="religion"] .hero{font-family:Georgia,"Noto Serif KR",serif;}
+      .world-decor-modal{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
+      .world-decor-box{width:min(680px,100%);max-height:88vh;overflow:auto;background:#fff;color:#222;border-radius:20px;padding:26px;box-sizing:border-box;box-shadow:0 24px 70px rgba(0,0,0,.28);}
+      .world-decor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
+      .world-decor-option{padding:15px;border:1px solid #ddd;background:#fff;color:#222;border-radius:14px;text-align:left;cursor:pointer;}
+      .world-decor-option.selected{border:2px solid var(--wd-accent,#7c5cff);box-shadow:0 0 0 3px rgba(124,92,255,.12);}
+      .world-decor-swatch{width:34px;height:34px;border-radius:50%;display:inline-block;vertical-align:middle;border:1px solid rgba(0,0,0,.12);margin-right:8px;}
+      @media(max-width:560px){.world-decor-grid{grid-template-columns:1fr;}.world-decor-box{padding:20px;}}
+    `;
+    document.head.appendChild(style);
+}
+
+function applyWorldDesign(w){
+    ensureWorldDesignStyles();
+    const el=$('world');
+    if(!el || !w) return;
+    const styleKey=w.designStyle||'fantasy';
+    const colorKey=w.designColor||'purple';
+    const style=WORLD_DESIGN_STYLES[styleKey]||WORLD_DESIGN_STYLES.fantasy;
+    const accent=WORLD_DESIGN_COLORS[colorKey]||WORLD_DESIGN_COLORS.purple;
+    el.classList.add('world-design');
+    el.dataset.designStyle=styleKey;
+    el.dataset.designColor=colorKey;
+    el.style.setProperty('--wd-accent',accent);
+    el.style.setProperty('--wd-radius',style.radius);
+    el.style.setProperty('--wd-shadow',style.shadow);
+    el.style.setProperty('--wd-border',style.border);
+    el.style.fontFamily=style.font;
+}
+
+async function openWorldDecorModal(worldId){
+    const w=get(worldId);
+    if(!w) return;
+    if(!currentUserId || w.owner_id!==currentUserId){
+        alert('세계관 소유자만 꾸밀 수 있습니다.');
+        return;
+    }
+    ensureWorldDesignStyles();
+    document.querySelector('.world-decor-modal')?.remove();
+    const modal=document.createElement('div');
+    modal.className='world-decor-modal';
+    const styles=[['sf','SF','미래도시 · 네온 · 기계적인 느낌'],['fantasy','판타지','마법 · 고전 판타지 · 신비로운 느낌'],['martial','무협','동양풍 · 서예 · 무림 느낌'],['mystery','추리물','탐정 · 기록 · 어두운 긴장감'],['healing','힐링','자연 · 부드러움 · 편안한 느낌'],['religion','종교','성전 · 고전 · 경건한 느낌']];
+    const colors=[['purple','보라'],['blue','파랑'],['sky','하늘색'],['green','초록'],['teal','청록'],['gold','금색'],['red','빨강'],['orange','주황'],['pink','분홍'],['black','검정'],['white','흰색']];
+    modal.innerHTML=`<div class="world-decor-box">
+      <h2 style="margin:0 0 6px;">🎨 세계관 꾸미기</h2>
+      <p style="margin:0 0 20px;color:#666;">${esc(w.name)} 세계관의 내부 화면과 버튼 디자인을 설정합니다.</p>
+      <h3>분위기</h3>
+      <div class="world-decor-grid">${styles.map(x=>`<button type="button" class="world-decor-option ${x[0]===(w.designStyle||'fantasy')?'selected':''}" data-wd-style="${x[0]}"><b>${x[1]}</b><br><small>${x[2]}</small></button>`).join('')}</div>
+      <h3 style="margin-top:24px;">대표 색상</h3>
+      <div class="world-decor-grid">${colors.map(x=>`<button type="button" class="world-decor-option ${x[0]===(w.designColor||'purple')?'selected':''}" data-wd-color="${x[0]}"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:26px;"><button type="button" id="wdCancel">취소</button><button type="button" id="wdSave" style="background:${WORLD_DESIGN_COLORS[w.designColor||'purple']};color:#fff;border:0;padding:11px 18px;">저장</button></div>
+    </div>`;
+    document.body.appendChild(modal);
+    let chosenStyle=w.designStyle||'fantasy';
+    let chosenColor=w.designColor||'purple';
+    const refresh=()=>{
+        modal.querySelectorAll('[data-wd-style]').forEach(b=>b.classList.toggle('selected',b.dataset.wdStyle===chosenStyle));
+        modal.querySelectorAll('[data-wd-color]').forEach(b=>b.classList.toggle('selected',b.dataset.wdColor===chosenColor));
+        const saveBtn=modal.querySelector('#wdSave'); saveBtn.style.background=WORLD_DESIGN_COLORS[chosenColor];
+    };
+    modal.querySelectorAll('[data-wd-style]').forEach(b=>b.onclick=()=>{chosenStyle=b.dataset.wdStyle;refresh();});
+    modal.querySelectorAll('[data-wd-color]').forEach(b=>b.onclick=()=>{chosenColor=b.dataset.wdColor;refresh();});
+    modal.querySelector('#wdCancel').onclick=()=>modal.remove();
+    modal.onclick=e=>{if(e.target===modal)modal.remove();};
+    modal.querySelector('#wdSave').onclick=async()=>{
+        const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor}).eq('id',w.id).eq('owner_id',currentUserId);
+        if(error){alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
+        w.designStyle=chosenStyle; w.designColor=chosenColor;
+        modal.remove();
+        renderWorld();
+        alert('세계관 디자인이 저장되었습니다!');
+    };
+}
+
 function renderWorld(){
     let w=get(current);
     const isOwner = w.owner_id === currentUserId;
@@ -1642,6 +1754,7 @@ function renderWorld(){
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
 <h2>세계관 소개</h2><p>${escWithBreaks(w.description)}</p>`;
 else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
         addStoryButton.onclick = (e) => {
@@ -1659,11 +1772,11 @@ else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.cover
 };
 
 $('decoratePage').onclick=()=>{
-    if(!isOwner && !isApprovedMember){
-        alert('로그인 후 꾸밀 수 있습니다.');
+    if(!isOwner){
+        alert('세계관 소유자만 꾸밀 수 있습니다.');
         return;
     }
-    openModal(w.id,true);
+    openWorldDecorModal(w.id);
 };
 
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
