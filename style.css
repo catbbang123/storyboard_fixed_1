@@ -884,3 +884,183 @@
   #world.world-design[data-design-style="fantasy"] .hero::before,
   #world.world-design[data-design-style="fantasy"] .hero::after{width:48px;height:48px}
 }
+
+/* =========================================================
+   판타지 장식 2단계 — 참고 이미지처럼 '일러스트 프레임' 느낌
+   기존 UI/버튼/카드의 구조와 크기는 유지합니다.
+   ========================================================= */
+#world.world-design[data-design-style="fantasy"]{
+  --fantasy-accent:#c59b45;
+  --fantasy-ink:color-mix(in srgb,var(--fantasy-accent) 72%,#4b351c);
+  --fantasy-paper:#f7f0df;
+  --fantasy-paper2:#fffaf0;
+  background:
+    radial-gradient(circle at 12% 16%, color-mix(in srgb,var(--fantasy-accent) 10%,transparent) 0 90px, transparent 210px),
+    radial-gradient(circle at 88% 82%, color-mix(in srgb,var(--fantasy-accent) 9%,transparent) 0 110px, transparent 250px),
+    linear-gradient(135deg,#f8f2e4,#f2ead8 52%,#fbf6ea);
+  border:1px solid color-mix(in srgb,var(--fantasy-accent) 32%,#d7c7a8);
+  box-shadow:inset 0 0 55px rgba(111,78,31,.10);
+}
+
+#world.world-design[data-design-style="fantasy"]::before{
+  content:"";
+  position:absolute;
+  inset:9px;
+  border:1px solid color-mix(in srgb,var(--fantasy-accent) 48%,transparent);
+  border-radius:24px;
+  pointer-events:none;
+  z-index:0;
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.22), inset 0 0 34px rgba(91,65,29,.07);
+}
+
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  color:var(--fantasy-accent);
+  opacity:.92;
+  overflow:hidden!important;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art svg{
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-frame{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2.1;
+  opacity:.65;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-frame-soft{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1;
+  opacity:.28;
+  stroke-dasharray:3 6;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-vine path:first-child,
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-vine>path:not(.ff-leaves){
+  fill:none;
+  stroke:currentColor;
+  stroke-width:3;
+  stroke-linecap:round;
+  opacity:.72;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-leaves path{
+  fill:color-mix(in srgb,var(--fantasy-accent) 42%,transparent);
+  stroke:currentColor;
+  stroke-width:1.3;
+  opacity:.9;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-flower path{
+  fill:color-mix(in srgb,var(--fantasy-accent) 20%,transparent);
+  stroke:currentColor;
+  stroke-width:1.8;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-flower>circle:first-child{
+  fill:color-mix(in srgb,var(--fantasy-accent) 72%,white);
+  opacity:.7;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-flower .ff-core{
+  fill:currentColor;
+  stroke:none;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-sparkles path{
+  fill:currentColor;
+  opacity:.75;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-sparkles circle{
+  fill:currentColor;
+  opacity:.55;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-emblem path{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  opacity:.72;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art .ff-emblem circle{
+  fill:color-mix(in srgb,var(--fantasy-accent) 45%,transparent);
+  stroke:currentColor;
+  stroke-width:1.4;
+}
+
+/* 영웅 배너도 참고 이미지처럼 액자 안에 들어간 느낌 */
+#world.world-design[data-design-style="fantasy"] .hero{
+  margin:14px 14px 0!important;
+  width:calc(100% - 28px)!important;
+  border-radius:17px!important;
+  border:1px solid color-mix(in srgb,var(--fantasy-accent) 48%,#d8c9ad)!important;
+  box-shadow:0 5px 18px rgba(81,56,23,.10), inset 0 0 0 2px rgba(255,255,255,.22)!important;
+  z-index:1!important;
+}
+#world.world-design[data-design-style="fantasy"] .tabs,
+#world.world-design[data-design-style="fantasy"] .content{
+  position:relative!important;
+  z-index:1!important;
+  margin-left:14px!important;
+  margin-right:14px!important;
+}
+#world.world-design[data-design-style="fantasy"] .tabs{
+  border-color:color-mix(in srgb,var(--fantasy-accent) 34%,#ded3be)!important;
+  background:rgba(255,250,239,.74)!important;
+  box-shadow:0 3px 12px rgba(81,56,23,.06)!important;
+}
+#world.world-design[data-design-style="fantasy"] .content{
+  background:rgba(255,251,241,.82)!important;
+  border-color:color-mix(in srgb,var(--fantasy-accent) 32%,#ded3be)!important;
+  box-shadow:0 5px 18px rgba(81,56,23,.06)!important;
+}
+
+/* 콘텐츠 주변의 작은 고전 장식 */
+#world.world-design[data-design-style="fantasy"] .content::before{
+  content:"❧";
+  position:absolute;
+  left:10px;
+  top:8px;
+  color:var(--fantasy-accent);
+  font-size:24px;
+  opacity:.65;
+  transform:rotate(-12deg);
+}
+#world.world-design[data-design-style="fantasy"] .content::after{
+  content:"❧";
+  position:absolute;
+  right:10px;
+  bottom:8px;
+  color:var(--fantasy-accent);
+  font-size:24px;
+  opacity:.65;
+  transform:rotate(168deg);
+}
+
+/* 포인트 색상 */
+#world.world-design[data-design-style="fantasy"][data-design-color="purple"]{--fantasy-accent:#7957d8}
+#world.world-design[data-design-style="fantasy"][data-design-color="blue"]{--fantasy-accent:#4d79c9}
+#world.world-design[data-design-style="fantasy"][data-design-color="sky"]{--fantasy-accent:#4aa6d6}
+#world.world-design[data-design-style="fantasy"][data-design-color="green"]{--fantasy-accent:#5c9a62}
+#world.world-design[data-design-style="fantasy"][data-design-color="teal"]{--fantasy-accent:#399b91}
+#world.world-design[data-design-style="fantasy"][data-design-color="gold"]{--fantasy-accent:#bd9140}
+#world.world-design[data-design-style="fantasy"][data-design-color="red"]{--fantasy-accent:#b95858}
+#world.world-design[data-design-style="fantasy"][data-design-color="orange"]{--fantasy-accent:#d27d3f}
+#world.world-design[data-design-style="fantasy"][data-design-color="pink"]{--fantasy-accent:#cf709a}
+#world.world-design[data-design-style="fantasy"][data-design-color="black"]{--fantasy-accent:#5c5348}
+#world.world-design[data-design-style="fantasy"][data-design-color="white"]{--fantasy-accent:#b8b0a1}
+
+@media(max-width:700px){
+  #world.world-design[data-design-style="fantasy"] .hero{
+    margin:9px 9px 0!important;
+    width:calc(100% - 18px)!important;
+  }
+  #world.world-design[data-design-style="fantasy"] .tabs,
+  #world.world-design[data-design-style="fantasy"] .content{
+    margin-left:9px!important;
+    margin-right:9px!important;
+  }
+  #world.world-design[data-design-style="fantasy"] .fantasy-frame-art{opacity:.72}
+}
