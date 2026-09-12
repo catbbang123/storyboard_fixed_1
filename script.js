@@ -1796,44 +1796,39 @@ function ensureWorldDesignStyles(){
         box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
       }
 
-      /* 판타지 기본 포인트 색상 — 보라색 대신 고서풍 금빛 */
+      /* 판타지 기본 색상: 고서풍 금빛 (기존 판타지 UI 디자인은 그대로 유지) */
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"]{
         --wd-accent:#a8792f;
         --wd-bg:#f3ead7;
         --wd-panel:#fffaf0;
         --wd-text:#3b2a1a;
+        --wd-border:1px solid rgba(126,88,35,.30);
       }
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .tabs{
         background:#e8dbc0;
-        border-color:rgba(126,88,35,.30);
+        border-bottom:1px solid rgba(126,88,35,.30);
       }
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .tabs button.active{
-        background:#a8792f;
-        border-color:#a8792f;
-        color:#fffaf0;
+        background:#a8792f; color:#fffaf0; border-color:#a8792f;
+      }
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] button:not(.back){
+        border-color:#c9ad75;
       }
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .content-head button,
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .join button,
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-list-btn,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .story-read-btn{
-        background:#a8792f;
-        border-color:#a8792f;
-        color:#fffaf0;
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .story-read-btn,
+      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .add-btn{
+        background:#a8792f; color:#fffaf0; border-color:#a8792f;
       }
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .story-chapter-btn,
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-view-btn,
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-nav-btn{
-        background:#efe2c8;
-        color:#79551f;
-        border-color:#d2b57b;
+        background:#efe2c8; color:#79551f; border-color:#d2b57b;
       }
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .meta span,
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .character-group-count{
-        background:#efe2c8;
-        color:#79551f;
-      }
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .content{
-        border-color:rgba(126,88,35,.28);
+        background:#efe2c8; color:#79551f;
       }
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .content-head h2,
       #world.world-design[data-design-style="fantasy"][data-design-color="gold"] h2{
