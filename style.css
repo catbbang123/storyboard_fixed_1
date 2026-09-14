@@ -1216,6 +1216,33 @@
   #world.world-design[data-design-style="sf"] .hero::after{font-size:7px;left:12px;bottom:9px}
 }
 
+/* Cyberpunk layout: keep exactly the same outer layout spacing as Fantasy / SF / Martial. */
+#world.world-design[data-design-style="cyberpunk"] .hero{
+  margin:14px 14px 0!important;
+  width:calc(100% - 28px)!important;
+  border-radius:17px!important;
+  z-index:1!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .tabs,
+#world.world-design[data-design-style="cyberpunk"] .content{
+  position:relative!important;
+  z-index:1!important;
+  margin-left:14px!important;
+  margin-right:14px!important;
+}
+@media(max-width:700px){
+  #world.world-design[data-design-style="cyberpunk"] .hero{
+    margin:9px 9px 0!important;
+    width:calc(100% - 18px)!important;
+    border-radius:14px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .tabs,
+  #world.world-design[data-design-style="cyberpunk"] .content{
+    margin-left:9px!important;
+    margin-right:9px!important;
+  }
+}
+
 /* =========================================================
    CYBERPUNK — neon city / hacker / glitch atmosphere
    Existing World Platform layout remains unchanged.
@@ -1444,3 +1471,13 @@
   #world.world-design[data-design-style="martial"] .mj-lattice{opacity:.72}
 }
 
+
+/* Cyberpunk custom point color picker */
+.wd-custom-color{margin-top:12px;padding:12px 14px;border:1px dashed rgba(120,130,150,.35);border-radius:12px;background:rgba(255,255,255,.035)}
+.wd-custom-color label{display:block;font-weight:700;margin-bottom:8px}
+.wd-custom-color-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.wd-custom-color input[type="color"]{width:48px;height:38px;padding:2px;border:1px solid rgba(140,150,170,.45);border-radius:8px;background:transparent;cursor:pointer}
+.wd-custom-color-value{font-family:monospace}
+#wdCustomColorValue{font:700 12px/1 monospace;min-width:72px}
+#wdUseCustomColor{border:1px solid #5a6678;background:#151b27;color:#eef6ff;border-radius:8px;padding:9px 12px;cursor:pointer}
+#wdUseCustomColor:hover{box-shadow:0 0 12px rgba(25,217,255,.22)}
