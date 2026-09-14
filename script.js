@@ -902,6 +902,7 @@ if(userIds.length){
         theme: w.theme ?? 'purple',
         designStyle: w.design_style ?? 'fantasy',
         designColor: w.design_color ?? 'purple',
+        designCustomColor: w.design_custom_color ?? '',
         designFont: w.design_font ?? '',
         designTextColor: w.design_text_color ?? '',
         designButtonShape: w.design_button_shape ?? '',
@@ -2218,6 +2219,8 @@ async function openWorldDecorModal(worldId){
     const extras=getWorldDecorExtras(w);
     let chosenStyle=w.designStyle || getGenreDesignPreset(w.genre).style;
     let chosenColor=w.designColor || getGenreDesignPreset(w.genre).color;
+    let chosenCustomColor=(w.designCustomColor || '').trim();
+    if(chosenCustomColor && /^#[0-9a-fA-F]{6}$/.test(chosenCustomColor)) chosenColor='custom';
     let chosenFont=extras.font, chosenTextColor=extras.textColor, chosenButtonShape=extras.buttonShape, chosenLayoutColor=extras.layoutColor;
 
     const modal=document.createElement('div');
@@ -2238,6 +2241,7 @@ async function openWorldDecorModal(worldId){
       <div class="wd-section">
         <div class="wd-section-head"><h3>② 포인트 색상</h3><button type="button" class="wd-reset" data-reset="color">기본 색상</button></div>
         <div class="wd-color-grid">${colors.map(x=>`<button type="button" class="wd-color-option" data-wd-color="${x[0]}" aria-pressed="false"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div>
+        <div class="wd-custom-color"><label for="wdCustomColor">원하는 색 직접 선택</label><div class="wd-custom-color-row"><input id="wdCustomColor" type="color" value="${/^#[0-9a-fA-F]{6}$/.test(chosenCustomColor)?chosenCustomColor:(WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple)}"><span id="wdCustomColorValue">${/^#[0-9a-fA-F]{6}$/.test(chosenCustomColor)?chosenCustomColor.toUpperCase():(WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple).toUpperCase()}</span><button type="button" id="wdUseCustomColor">이 색 사용</button></div><small>사이버펑크의 네온 포인트 색을 원하는 색으로 직접 지정할 수 있습니다.</small></div>
       </div>
 
       <div class="wd-section">
@@ -2272,7 +2276,7 @@ async function openWorldDecorModal(worldId){
       toggle('[data-wd-style]','wdStyle',chosenStyle); toggle('[data-wd-color]','wdColor',chosenColor); toggle('[data-wd-layout]','wdLayout',chosenLayoutColor);
       toggle('[data-wd-font]','wdFont',chosenFont); toggle('[data-wd-text]','wdText',chosenTextColor); toggle('[data-wd-button]','wdButton',chosenButtonShape);
       const st=WORLD_DESIGN_STYLES[chosenStyle]||WORLD_DESIGN_STYLES.fantasy;
-      const accent=WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple;
+      const accent=(chosenColor==='custom' && /^#[0-9a-fA-F]{6}$/.test(chosenCustomColor)) ? chosenCustomColor : (WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple);
       const font=WORLD_FONT_OPTIONS[chosenFont]||WORLD_FONT_OPTIONS.system;
       const txt=WORLD_TEXT_COLORS[chosenTextColor]||WORLD_TEXT_COLORS.default;
       const bs=WORLD_BUTTON_SHAPES[chosenButtonShape]||WORLD_BUTTON_SHAPES.rounded;
@@ -2294,6 +2298,10 @@ async function openWorldDecorModal(worldId){
     refresh();
     modal.querySelectorAll('[data-wd-style]').forEach(b=>b.addEventListener('click',()=>{chosenStyle=b.dataset.wdStyle;refresh();}));
     modal.querySelectorAll('[data-wd-color]').forEach(b=>b.addEventListener('click',()=>{chosenColor=b.dataset.wdColor;refresh();}));
+    const customColorInput=modal.querySelector('#wdCustomColor');
+    const customColorValue=modal.querySelector('#wdCustomColorValue');
+    customColorInput?.addEventListener('input',()=>{if(customColorValue) customColorValue.textContent=customColorInput.value.toUpperCase();});
+    modal.querySelector('#wdUseCustomColor')?.addEventListener('click',()=>{chosenCustomColor=customColorInput.value;chosenColor='custom';refresh();});
     modal.querySelectorAll('[data-wd-layout]').forEach(b=>b.addEventListener('click',()=>{chosenLayoutColor=b.dataset.wdLayout;refresh();}));
     modal.querySelectorAll('[data-wd-font]').forEach(b=>b.addEventListener('click',()=>{chosenFont=b.dataset.wdFont;refresh();}));
     modal.querySelectorAll('[data-wd-text]').forEach(b=>b.addEventListener('click',()=>{chosenTextColor=b.dataset.wdText;refresh();}));
@@ -2301,7 +2309,7 @@ async function openWorldDecorModal(worldId){
     modal.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>{
       const k=b.dataset.reset;
       if(k==='style') chosenStyle=getGenreDesignPreset(w.genre).style;
-      if(k==='color') chosenColor=getGenreDesignPreset(w.genre).color;
+      if(k==='color'){ chosenColor=getGenreDesignPreset(w.genre).color; chosenCustomColor=''; }
       if(k==='layout') chosenLayoutColor=getDefaultLayoutColor(w);
       if(k==='font') chosenFont='system';
       if(k==='text') chosenTextColor='default';
@@ -2315,9 +2323,9 @@ async function openWorldDecorModal(worldId){
 
     modal.querySelector('#wdSave').addEventListener('click',async()=>{
       const saveBtn=modal.querySelector('#wdSave'); saveBtn.disabled=true; saveBtn.textContent='저장 중…';
-      const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor,design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape,design_layout_color:chosenLayoutColor}).eq('id',w.id).eq('owner_id',currentUserId);
+      const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor,design_custom_color:(chosenColor==='custom' && /^#[0-9a-fA-F]{6}$/.test(chosenCustomColor))?chosenCustomColor:null,design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape,design_layout_color:chosenLayoutColor}).eq('id',w.id).eq('owner_id',currentUserId);
       if(error){saveBtn.disabled=false;saveBtn.textContent='저장하기';alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
-      w.designStyle=chosenStyle; w.designColor=chosenColor; w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape; w.designLayoutColor=chosenLayoutColor;
+      w.designStyle=chosenStyle; w.designColor=chosenColor; w.designCustomColor=(chosenColor==='custom'?chosenCustomColor:''); w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape; w.designLayoutColor=chosenLayoutColor;
       try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
       // PC에서 저장한 꾸미기 설정이 다른 기기에서도 동일하게 보이도록 DB에 저장합니다.
       try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
