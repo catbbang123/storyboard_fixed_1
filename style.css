@@ -1253,10 +1253,11 @@
   --cyber-blue:#19d9ff;
   position:relative;
   overflow:hidden;
+  /* 바깥 레이아웃 색상은 세계관 꾸미기의 레이아웃 선택값을 그대로 사용합니다. */
   background:
-    radial-gradient(circle at 18% 8%,color-mix(in srgb,var(--cyber-accent) 10%,transparent),transparent 28%),
-    radial-gradient(circle at 82% 20%,rgba(255,43,214,.08),transparent 24%),
-    #070a12;
+    radial-gradient(circle at 18% 8%,color-mix(in srgb,var(--cyber-accent) 12%,transparent),transparent 28%),
+    radial-gradient(circle at 82% 20%,color-mix(in srgb,var(--cyber-pink) 8%,transparent),transparent 24%),
+    var(--wd-layout-bg,#070a12)!important;
 }
 #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{
   position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
@@ -1291,7 +1292,9 @@
   animation:cyberNoise .18s steps(2) infinite;
 }
 #world.world-design[data-design-style="cyberpunk"] .cyber-vignette{
-  position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(0,0,0,.42) 100%);
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 48%,color-mix(in srgb,var(--wd-layout-text) 18%,transparent) 100%);
+  opacity:.75;
 }
 #world.world-design[data-design-style="cyberpunk"] .hero,
 #world.world-design[data-design-style="cyberpunk"] .tabs,
