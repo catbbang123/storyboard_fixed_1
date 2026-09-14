@@ -1144,20 +1144,20 @@
   fill:none;stroke:currentColor;stroke-width:1;opacity:.07;vector-effect:non-scaling-stroke;
 }
 #world.world-design[data-design-style="sf"] .sf-circuit path{
-  fill:none;stroke:url(#sfLineGlow);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.72;vector-effect:non-scaling-stroke;
-  filter:drop-shadow(0 0 4px color-mix(in srgb,var(--sf-accent) 55%,transparent));
+  fill:none;stroke:var(--sf-accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.72;vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 0 4px var(--sf-accent));
 }
 #world.world-design[data-design-style="sf"] .sf-circuit circle{
   fill:var(--sf-accent);stroke:var(--wd-layout-panel);stroke-width:2;opacity:.9;vector-effect:non-scaling-stroke;
-  filter:drop-shadow(0 0 5px color-mix(in srgb,var(--sf-accent) 75%,transparent));
+  filter:drop-shadow(0 0 5px var(--sf-accent));
 }
 #world.world-design[data-design-style="sf"] .sf-corner path{
-  fill:none;stroke:currentColor;stroke-width:2.4;opacity:.62;vector-effect:non-scaling-stroke;
+  fill:none;stroke:var(--sf-accent);stroke-width:2.4;opacity:.62;vector-effect:non-scaling-stroke;
 }
 #world.world-design[data-design-style="sf"] .sf-corner .sf-corner-inner{stroke-width:1;opacity:.28}
 #world.world-design[data-design-style="sf"] .sf-orbit circle{fill:var(--sf-accent);opacity:.8;vector-effect:non-scaling-stroke}
-#world.world-design[data-design-style="sf"] .sf-orbit path{fill:none;stroke:currentColor;stroke-width:1;opacity:.45;vector-effect:non-scaling-stroke}
-#world.world-design[data-design-style="sf"] .sf-dots circle{fill:currentColor;opacity:.48}
+#world.world-design[data-design-style="sf"] .sf-orbit path{fill:none;stroke:var(--sf-accent);stroke-width:1;opacity:.45;vector-effect:non-scaling-stroke}
+#world.world-design[data-design-style="sf"] .sf-dots circle{fill:var(--sf-accent);opacity:.48}
 #world.world-design[data-design-style="sf"] .sf-scanline{
   position:absolute;left:4%;right:4%;top:17%;height:1px;
   background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--sf-accent) 45%,transparent),transparent);
