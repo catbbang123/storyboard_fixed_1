@@ -1215,3 +1215,50 @@
   #world.world-design[data-design-style="sf"] .sf-circuit path{stroke-width:1.7}
   #world.world-design[data-design-style="sf"] .hero::after{font-size:7px;left:12px;bottom:9px}
 }
+
+/* =========================================================
+   SF 레이아웃 통일 — 판타지와 동일한 배치/여백/패널 구조
+   장르별 차이는 장식과 분위기만 유지
+========================================================= */
+#world.world-design[data-design-style="sf"] .hero{
+  margin:14px 14px 0!important;
+  width:calc(100% - 28px)!important;
+  border-radius:17px!important;
+  z-index:1!important;
+}
+#world.world-design[data-design-style="sf"] .tabs,
+#world.world-design[data-design-style="sf"] .content{
+  position:relative!important;
+  z-index:1!important;
+  margin-left:14px!important;
+  margin-right:14px!important;
+}
+#world.world-design[data-design-style="sf"] .tabs{
+  border-radius:14px!important;
+}
+#world.world-design[data-design-style="sf"] .content{
+  border-radius:16px!important;
+}
+
+/* SF 장식은 기존 위치에 남기되, 콘텐츠 배치에는 영향을 주지 않음 */
+#world.world-design[data-design-style="sf"] .sf-frame-art{
+  pointer-events:none!important;
+}
+
+/* 제목 앞의 // 장식 제거 */
+#world.world-design[data-design-style="sf"] .content h2::before{
+  content:none!important;
+  display:none!important;
+}
+
+@media(max-width:700px){
+  #world.world-design[data-design-style="sf"] .hero{
+    margin:9px 9px 0!important;
+    width:calc(100% - 18px)!important;
+  }
+  #world.world-design[data-design-style="sf"] .tabs,
+  #world.world-design[data-design-style="sf"] .content{
+    margin-left:9px!important;
+    margin-right:9px!important;
+  }
+}
