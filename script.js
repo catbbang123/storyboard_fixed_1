@@ -2324,6 +2324,55 @@ async function openWorldDecorModal(worldId){
 }
 
 
+function getSFDecorLayer(){
+  return `
+    <div class="sf-frame-art" aria-hidden="true">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+        <defs>
+          <linearGradient id="sfLineGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="currentColor" stop-opacity=".95"/>
+            <stop offset="1" stop-color="currentColor" stop-opacity=".15"/>
+          </linearGradient>
+          <filter id="sfGlow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="2.2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g class="sf-grid">
+          <path d="M90 0V900M180 0V900M1020 0V900M1110 0V900"/>
+          <path d="M0 110H1200M0 790H1200"/>
+        </g>
+        <g class="sf-circuit sf-left">
+          <path d="M0 118H108V78H190V38H300"/>
+          <path d="M0 166H72V214H154V250H248"/>
+          <path d="M0 720H88V680H174V642H282"/>
+          <circle cx="108" cy="118" r="5"/><circle cx="190" cy="78" r="4"/><circle cx="154" cy="214" r="5"/><circle cx="174" cy="680" r="4"/>
+        </g>
+        <g class="sf-circuit sf-right">
+          <path d="M1200 118H1092V78H1010V38H900"/>
+          <path d="M1200 166H1128V214H1046V250H952"/>
+          <path d="M1200 720H1112V680H1026V642H918"/>
+          <circle cx="1092" cy="118" r="5"/><circle cx="1010" cy="78" r="4"/><circle cx="1046" cy="214" r="5"/><circle cx="1026" cy="680" r="4"/>
+        </g>
+        <g class="sf-corner">
+          <path d="M30 30H145M30 30V145"/><path d="M1170 30H1055M1170 30V145"/>
+          <path d="M30 870H145M30 870V755"/><path d="M1170 870H1055M1170 870V755"/>
+          <path class="sf-corner-inner" d="M54 54H118M54 54V118M1146 54H1082M1146 54V118M54 846H118M54 846V782M1146 846H1082M1146 846V782"/>
+        </g>
+        <g class="sf-orbit" filter="url(#sfGlow)">
+          <circle cx="600" cy="34" r="8"/><circle cx="600" cy="866" r="8"/>
+          <path d="M575 34H625M600 9V59M575 866H625M600 841V891"/>
+        </g>
+        <g class="sf-dots">
+          <circle cx="84" cy="350" r="2.5"/><circle cx="1116" cy="350" r="2.5"/>
+          <circle cx="112" cy="390" r="1.8"/><circle cx="1088" cy="390" r="1.8"/>
+          <circle cx="76" cy="430" r="1.5"/><circle cx="1124" cy="430" r="1.5"/>
+        </g>
+      </svg>
+      <div class="sf-scanline"></div>
+    </div>`;
+}
+
 function getFantasyDecorLayer(){
   return `
     <div class="fantasy-frame-art" aria-hidden="true">
@@ -2449,7 +2498,8 @@ const _savedStyle=w.designStyle||'fantasy';
 const _useGenrePreset=(!w.designStyle || _savedStyle==='fantasy') && _genrePreset.style!=='fantasy';
 const _renderStyleKey=_useGenrePreset ? _genrePreset.style : _savedStyle;
 const _fantasyDecor=_renderStyleKey==='fantasy' ? getFantasyDecorLayer() : '';
-$('world').innerHTML=`${_fantasyDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+const _sfDecor=_renderStyleKey==='sf' ? getSFDecorLayer() : '';
+$('world').innerHTML=`${_fantasyDecor}${_sfDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
