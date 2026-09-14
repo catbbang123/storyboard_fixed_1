@@ -2175,6 +2175,8 @@ function applyWorldDesign(w){
     el.dataset.designColor=colorKey;
     el.dataset.genre=w.genre||'';
     el.style.setProperty('--wd-accent',accent);
+    // SF 장식이 포인트 색상을 확실하게 따라가도록 전용 변수도 직접 지정합니다.
+    el.style.setProperty('--sf-accent',accent);
     el.style.setProperty('--wd-radius',style.radius);
     el.style.setProperty('--wd-shadow',style.shadow);
     el.style.setProperty('--wd-border',style.border);
