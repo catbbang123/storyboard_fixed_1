@@ -902,6 +902,7 @@ if(userIds.length){
         theme: w.theme ?? 'purple',
         designStyle: w.design_style ?? 'fantasy',
         designColor: w.design_color ?? 'purple',
+        designCustomColor: w.design_custom_color ?? '',
         designFont: w.design_font ?? '',
         designTextColor: w.design_text_color ?? '',
         designButtonShape: w.design_button_shape ?? '',
@@ -2218,6 +2219,8 @@ async function openWorldDecorModal(worldId){
     const extras=getWorldDecorExtras(w);
     let chosenStyle=w.designStyle || getGenreDesignPreset(w.genre).style;
     let chosenColor=w.designColor || getGenreDesignPreset(w.genre).color;
+    let chosenCustomColor=(w.designCustomColor || '').trim();
+    if(chosenCustomColor && /^#[0-9a-fA-F]{6}$/.test(chosenCustomColor)) chosenColor='custom';
     let chosenFont=extras.font, chosenTextColor=extras.textColor, chosenButtonShape=extras.buttonShape, chosenLayoutColor=extras.layoutColor;
 
     const modal=document.createElement('div');
@@ -2238,6 +2241,7 @@ async function openWorldDecorModal(worldId){
       <div class="wd-section">
         <div class="wd-section-head"><h3>② 포인트 색상</h3><button type="button" class="wd-reset" data-reset="color">기본 색상</button></div>
         <div class="wd-color-grid">${colors.map(x=>`<button type="button" class="wd-color-option" data-wd-color="${x[0]}" aria-pressed="false"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div>
+        <div class="wd-custom-color"><label for="wdCustomColor">원하는 색 직접 선택</label><div class="wd-custom-color-row"><input id="wdCustomColor" type="color" value="${/^#[0-9a-fA-F]{6}$/.test(chosenCustomColor)?chosenCustomColor:(WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple)}"><span id="wdCustomColorValue">${/^#[0-9a-fA-F]{6}$/.test(chosenCustomColor)?chosenCustomColor.toUpperCase():(WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple).toUpperCase()}</span><button type="button" id="wdUseCustomColor">이 색 사용</button></div><small>사이버펑크의 네온 포인트 색을 원하는 색으로 직접 지정할 수 있습니다.</small></div>
       </div>
 
       <div class="wd-section">
@@ -2272,7 +2276,7 @@ async function openWorldDecorModal(worldId){
       toggle('[data-wd-style]','wdStyle',chosenStyle); toggle('[data-wd-color]','wdColor',chosenColor); toggle('[data-wd-layout]','wdLayout',chosenLayoutColor);
       toggle('[data-wd-font]','wdFont',chosenFont); toggle('[data-wd-text]','wdText',chosenTextColor); toggle('[data-wd-button]','wdButton',chosenButtonShape);
       const st=WORLD_DESIGN_STYLES[chosenStyle]||WORLD_DESIGN_STYLES.fantasy;
-      const accent=WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple;
+      const accent=(chosenColor==='custom' && /^#[0-9a-fA-F]{6}$/.test(chosenCustomColor)) ? chosenCustomColor : (WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple);
       const font=WORLD_FONT_OPTIONS[chosenFont]||WORLD_FONT_OPTIONS.system;
       const txt=WORLD_TEXT_COLORS[chosenTextColor]||WORLD_TEXT_COLORS.default;
       const bs=WORLD_BUTTON_SHAPES[chosenButtonShape]||WORLD_BUTTON_SHAPES.rounded;
@@ -2294,6 +2298,10 @@ async function openWorldDecorModal(worldId){
     refresh();
     modal.querySelectorAll('[data-wd-style]').forEach(b=>b.addEventListener('click',()=>{chosenStyle=b.dataset.wdStyle;refresh();}));
     modal.querySelectorAll('[data-wd-color]').forEach(b=>b.addEventListener('click',()=>{chosenColor=b.dataset.wdColor;refresh();}));
+    const customColorInput=modal.querySelector('#wdCustomColor');
+    const customColorValue=modal.querySelector('#wdCustomColorValue');
+    customColorInput?.addEventListener('input',()=>{if(customColorValue) customColorValue.textContent=customColorInput.value.toUpperCase();});
+    modal.querySelector('#wdUseCustomColor')?.addEventListener('click',()=>{chosenCustomColor=customColorInput.value;chosenColor='custom';refresh();});
     modal.querySelectorAll('[data-wd-layout]').forEach(b=>b.addEventListener('click',()=>{chosenLayoutColor=b.dataset.wdLayout;refresh();}));
     modal.querySelectorAll('[data-wd-font]').forEach(b=>b.addEventListener('click',()=>{chosenFont=b.dataset.wdFont;refresh();}));
     modal.querySelectorAll('[data-wd-text]').forEach(b=>b.addEventListener('click',()=>{chosenTextColor=b.dataset.wdText;refresh();}));
@@ -2301,7 +2309,7 @@ async function openWorldDecorModal(worldId){
     modal.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>{
       const k=b.dataset.reset;
       if(k==='style') chosenStyle=getGenreDesignPreset(w.genre).style;
-      if(k==='color') chosenColor=getGenreDesignPreset(w.genre).color;
+      if(k==='color'){ chosenColor=getGenreDesignPreset(w.genre).color; chosenCustomColor=''; }
       if(k==='layout') chosenLayoutColor=getDefaultLayoutColor(w);
       if(k==='font') chosenFont='system';
       if(k==='text') chosenTextColor='default';
@@ -2315,9 +2323,9 @@ async function openWorldDecorModal(worldId){
 
     modal.querySelector('#wdSave').addEventListener('click',async()=>{
       const saveBtn=modal.querySelector('#wdSave'); saveBtn.disabled=true; saveBtn.textContent='저장 중…';
-      const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor,design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape,design_layout_color:chosenLayoutColor}).eq('id',w.id).eq('owner_id',currentUserId);
+      const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor,design_custom_color:(chosenColor==='custom' && /^#[0-9a-fA-F]{6}$/.test(chosenCustomColor))?chosenCustomColor:null,design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape,design_layout_color:chosenLayoutColor}).eq('id',w.id).eq('owner_id',currentUserId);
       if(error){saveBtn.disabled=false;saveBtn.textContent='저장하기';alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
-      w.designStyle=chosenStyle; w.designColor=chosenColor; w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape; w.designLayoutColor=chosenLayoutColor;
+      w.designStyle=chosenStyle; w.designColor=chosenColor; w.designCustomColor=(chosenColor==='custom'?chosenCustomColor:''); w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape; w.designLayoutColor=chosenLayoutColor;
       try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
       // PC에서 저장한 꾸미기 설정이 다른 기기에서도 동일하게 보이도록 DB에 저장합니다.
       try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
@@ -2372,6 +2380,103 @@ function getSFDecorLayer(){
         </g>
       </svg>
       <div class="sf-scanline"></div>
+    </div>`;
+}
+
+function getCyberpunkDecorLayer(){
+  return `
+    <div class="cyber-frame-art" aria-hidden="true">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+        <defs>
+          <filter id="cyberGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g class="cyber-city">
+          <path d="M0 780V510H70V590H120V430H170V560H230V360H292V600H345V470H405V550H455V400H520V600H580V500H635V585H690V330H752V600H810V445H865V565H925V390H985V600H1040V470H1095V540H1145V420H1200V780Z"/>
+          <path class="cyber-city-window" d="M24 550h22v8H24zm72-62h18v8H96zm130-72h22v8h-22zm74 94h18v8h-18zm160-50h24v8h-24zm230-70h20v8h-20zm120 92h24v8h-24zm120-54h18v8h-18z"/>
+        </g>
+        <g class="cyber-wires" filter="url(#cyberGlow)">
+          <path d="M0 160H110L145 125H300"/><path d="M1200 190H1090L1050 150H900"/>
+          <path d="M0 690H120L155 720H310"/><path d="M1200 665H1080L1040 700H875"/>
+        </g>
+        <g class="cyber-signs">
+          <rect x="38" y="270" width="118" height="32"/><rect x="1040" y="245" width="122" height="36"/>
+          <path d="M48 286h86M1052 263h94"/>
+        </g>
+        <g class="cyber-scan">
+          <path d="M0 108H1200M0 820H1200"/><path d="M90 0V900M1110 0V900"/>
+        </g>
+        <g class="cyber-glitch" filter="url(#cyberGlow)">
+          <path d="M255 95h110l-12 8h-110z"/><path d="M835 100h120l10 7H845z"/>
+          <path d="M470 820h80l-12 7h-80z"/><path d="M650 820h100l12 7H662z"/>
+        </g>
+      </svg>
+      <div class="cyber-noise"></div><div class="cyber-vignette"></div>
+    </div>`;
+}
+
+function getMartialDecorLayer(){
+  return `
+    <div class="martial-frame-art" aria-hidden="true">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+        <!-- 조선 한옥의 기와 지붕 실루엣 -->
+        <g class="mj-roof">
+          <path d="M20 120 Q105 66 210 76 Q285 82 345 125 Q430 66 520 84 Q600 98 680 84 Q770 66 855 125 Q915 82 990 76 Q1095 66 1180 120"/>
+          <path d="M30 136 Q105 92 205 100 Q285 108 348 145 Q430 88 520 105 Q600 118 680 105 Q770 88 852 145 Q915 108 995 100 Q1095 92 1170 136"/>
+        </g>
+        <g class="mj-roof2">
+          <path d="M36 151 Q120 110 205 119 Q292 129 352 163 Q430 112 520 128 Q600 140 680 128 Q770 112 848 163 Q908 129 995 119 Q1080 110 1164 151"/>
+          <path class="mj-roof-tile" d="M78 122l30 25M126 108l28 30M174 108l25 29M1026 108l-25 29M1074 108l-28 30M1122 122l-30 25"/>
+        </g>
+        <!-- 달빛과 수묵 산수 -->
+        <circle class="mj-moon" cx="1010" cy="150" r="38"/>
+        <path class="mj-mountain" d="M0 520 Q105 430 205 505 Q290 565 390 455 Q470 385 545 500 Q620 590 700 470 Q790 350 875 505 Q960 590 1045 465 Q1110 405 1200 480 L1200 900 L0 900Z"/>
+        <!-- 창호 -->
+        <g class="mj-lattice mj-left">
+          <rect x="34" y="250" width="150" height="214"/>
+          <path d="M84 250V464M134 250V464M34 321H184M34 393H184"/>
+        </g>
+        <g class="mj-lattice mj-right">
+          <rect x="1016" y="250" width="150" height="214"/>
+          <path d="M1066 250V464M1116 250V464M1016 321H1166M1016 393H1166"/>
+        </g>
+        <!-- 대나무 -->
+        <g class="mj-bamboo mj-left">
+          <path d="M102 820 C82 690 112 590 92 500 C77 425 91 350 120 270"/>
+          <path d="M96 690L48 655M98 610L145 574M91 526L48 495M97 438L144 405M104 350L66 322"/>
+          <path class="mj-node" d="M84 700H111M88 606H113M84 520H110M89 430H116M100 345H124"/>
+          <path class="mj-leaf" d="M100 420q-48-38-73-28q31 38 72 37zM96 552q48-40 77-30q-31 39-76 40zM105 322q-40-34-68-23q30 34 67 32z"/>
+        </g>
+        <g class="mj-bamboo mj-right">
+          <path d="M1098 820 C1118 690 1088 590 1108 500 C1123 425 1109 350 1080 270"/>
+          <path d="M1104 690L1152 655M1102 610L1055 574M1109 526L1152 495M1103 438L1056 405M1096 350L1134 322"/>
+          <path class="mj-node" d="M1116 700H1089M1112 606H1087M1116 520H1090M1111 430H1084M1100 345H1076"/>
+          <path class="mj-leaf" d="M1100 420q48-38 73-28q-31 38-72 37zM1104 552q-48-40-77-30q31 39 76 40zM1095 322q40-34 68-23q-30 34-67 32z"/>
+        </g>
+        <!-- 매화 -->
+        <g class="mj-plum">
+          <g transform="translate(205 184)"><circle r="7"/><circle cy="-16" r="10"/><circle cx="15" cy="-5" r="10"/><circle cx="9" cy="13" r="10"/><circle cx="-9" cy="13" r="10"/><circle cx="-15" cy="-5" r="10"/></g>
+          <g transform="translate(915 184)"><circle r="7"/><circle cy="-16" r="10"/><circle cx="15" cy="-5" r="10"/><circle cx="9" cy="13" r="10"/><circle cx="-9" cy="13" r="10"/><circle cx="-15" cy="-5" r="10"/></g>
+        </g>
+        <!-- 붓으로 그은 듯한 먹선 -->
+        <g class="mj-ink">
+          <path d="M45 735 Q170 680 270 728 T500 740" stroke-width="10"/>
+          <path d="M700 740 Q840 690 960 730 T1160 705" stroke-width="7"/>
+          <path d="M270 208 Q410 235 560 205 T900 212" stroke-width="5"/>
+        </g>
+        <!-- 검기/바람의 흐름 -->
+        <g class="mj-blade">
+          <path d="M255 760 Q455 620 635 700 Q770 760 958 610"/>
+          <path d="M305 782 Q470 670 630 735 Q790 800 920 670"/>
+          <path d="M365 224 Q520 155 685 215 Q770 246 845 205"/>
+        </g>
+        <!-- 붉은 인장 -->
+        <g transform="translate(600 106)">
+          <rect class="mj-seal" x="-23" y="-23" width="46" height="46" rx="2"/>
+          <text class="mj-seal-text" x="0" y="6" text-anchor="middle">武</text>
+        </g>
+      </svg>
     </div>`;
 }
 
@@ -2501,7 +2606,9 @@ const _useGenrePreset=(!w.designStyle || _savedStyle==='fantasy') && _genrePrese
 const _renderStyleKey=_useGenrePreset ? _genrePreset.style : _savedStyle;
 const _fantasyDecor=_renderStyleKey==='fantasy' ? getFantasyDecorLayer() : '';
 const _sfDecor=_renderStyleKey==='sf' ? getSFDecorLayer() : '';
-$('world').innerHTML=`${_fantasyDecor}${_sfDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+const _martialDecor=_renderStyleKey==='martial' ? getMartialDecorLayer() : '';
+const _cyberDecor=_renderStyleKey==='cyberpunk' ? getCyberpunkDecorLayer() : '';
+$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_martialDecor}${_cyberDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
