@@ -2408,6 +2408,70 @@ function getCyberpunkDecorLayer(){
     </div>`;
 }
 
+function getMartialDecorLayer(){
+  return `
+    <div class="martial-frame-art" aria-hidden="true">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+        <!-- 조선 한옥의 기와 지붕 실루엣 -->
+        <g class="mj-roof">
+          <path d="M20 120 Q105 66 210 76 Q285 82 345 125 Q430 66 520 84 Q600 98 680 84 Q770 66 855 125 Q915 82 990 76 Q1095 66 1180 120"/>
+          <path d="M30 136 Q105 92 205 100 Q285 108 348 145 Q430 88 520 105 Q600 118 680 105 Q770 88 852 145 Q915 108 995 100 Q1095 92 1170 136"/>
+        </g>
+        <g class="mj-roof2">
+          <path d="M36 151 Q120 110 205 119 Q292 129 352 163 Q430 112 520 128 Q600 140 680 128 Q770 112 848 163 Q908 129 995 119 Q1080 110 1164 151"/>
+          <path class="mj-roof-tile" d="M78 122l30 25M126 108l28 30M174 108l25 29M1026 108l-25 29M1074 108l-28 30M1122 122l-30 25"/>
+        </g>
+        <!-- 달빛과 수묵 산수 -->
+        <circle class="mj-moon" cx="1010" cy="150" r="38"/>
+        <path class="mj-mountain" d="M0 520 Q105 430 205 505 Q290 565 390 455 Q470 385 545 500 Q620 590 700 470 Q790 350 875 505 Q960 590 1045 465 Q1110 405 1200 480 L1200 900 L0 900Z"/>
+        <!-- 창호 -->
+        <g class="mj-lattice mj-left">
+          <rect x="34" y="250" width="150" height="214"/>
+          <path d="M84 250V464M134 250V464M34 321H184M34 393H184"/>
+        </g>
+        <g class="mj-lattice mj-right">
+          <rect x="1016" y="250" width="150" height="214"/>
+          <path d="M1066 250V464M1116 250V464M1016 321H1166M1016 393H1166"/>
+        </g>
+        <!-- 대나무 -->
+        <g class="mj-bamboo mj-left">
+          <path d="M102 820 C82 690 112 590 92 500 C77 425 91 350 120 270"/>
+          <path d="M96 690L48 655M98 610L145 574M91 526L48 495M97 438L144 405M104 350L66 322"/>
+          <path class="mj-node" d="M84 700H111M88 606H113M84 520H110M89 430H116M100 345H124"/>
+          <path class="mj-leaf" d="M100 420q-48-38-73-28q31 38 72 37zM96 552q48-40 77-30q-31 39-76 40zM105 322q-40-34-68-23q30 34 67 32z"/>
+        </g>
+        <g class="mj-bamboo mj-right">
+          <path d="M1098 820 C1118 690 1088 590 1108 500 C1123 425 1109 350 1080 270"/>
+          <path d="M1104 690L1152 655M1102 610L1055 574M1109 526L1152 495M1103 438L1056 405M1096 350L1134 322"/>
+          <path class="mj-node" d="M1116 700H1089M1112 606H1087M1116 520H1090M1111 430H1084M1100 345H1076"/>
+          <path class="mj-leaf" d="M1100 420q48-38 73-28q-31 38-72 37zM1104 552q-48-40-77-30q31 39 76 40zM1095 322q40-34 68-23q-30 34-67 32z"/>
+        </g>
+        <!-- 매화 -->
+        <g class="mj-plum">
+          <g transform="translate(205 184)"><circle r="7"/><circle cy="-16" r="10"/><circle cx="15" cy="-5" r="10"/><circle cx="9" cy="13" r="10"/><circle cx="-9" cy="13" r="10"/><circle cx="-15" cy="-5" r="10"/></g>
+          <g transform="translate(915 184)"><circle r="7"/><circle cy="-16" r="10"/><circle cx="15" cy="-5" r="10"/><circle cx="9" cy="13" r="10"/><circle cx="-9" cy="13" r="10"/><circle cx="-15" cy="-5" r="10"/></g>
+        </g>
+        <!-- 붓으로 그은 듯한 먹선 -->
+        <g class="mj-ink">
+          <path d="M45 735 Q170 680 270 728 T500 740" stroke-width="10"/>
+          <path d="M700 740 Q840 690 960 730 T1160 705" stroke-width="7"/>
+          <path d="M270 208 Q410 235 560 205 T900 212" stroke-width="5"/>
+        </g>
+        <!-- 검기/바람의 흐름 -->
+        <g class="mj-blade">
+          <path d="M255 760 Q455 620 635 700 Q770 760 958 610"/>
+          <path d="M305 782 Q470 670 630 735 Q790 800 920 670"/>
+          <path d="M365 224 Q520 155 685 215 Q770 246 845 205"/>
+        </g>
+        <!-- 붉은 인장 -->
+        <g transform="translate(600 106)">
+          <rect class="mj-seal" x="-23" y="-23" width="46" height="46" rx="2"/>
+          <text class="mj-seal-text" x="0" y="6" text-anchor="middle">武</text>
+        </g>
+      </svg>
+    </div>`;
+}
+
 function getFantasyDecorLayer(){
   return `
     <div class="fantasy-frame-art" aria-hidden="true">
@@ -2534,8 +2598,9 @@ const _useGenrePreset=(!w.designStyle || _savedStyle==='fantasy') && _genrePrese
 const _renderStyleKey=_useGenrePreset ? _genrePreset.style : _savedStyle;
 const _fantasyDecor=_renderStyleKey==='fantasy' ? getFantasyDecorLayer() : '';
 const _sfDecor=_renderStyleKey==='sf' ? getSFDecorLayer() : '';
+const _martialDecor=_renderStyleKey==='martial' ? getMartialDecorLayer() : '';
 const _cyberDecor=_renderStyleKey==='cyberpunk' ? getCyberpunkDecorLayer() : '';
-$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_cyberDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_martialDecor}${_cyberDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
