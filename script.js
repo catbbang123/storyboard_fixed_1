@@ -1633,7 +1633,7 @@ const WORLD_DESIGN_STYLES = {
     horror: { label:'공포', font:'"Noto Serif KR", Georgia, serif', radius:'2px', shadow:'0 10px 28px rgba(0,0,0,.30)', border:'1px solid rgba(120,30,35,.38)' },
     romance: { label:'로맨스', font:'"Noto Sans KR", sans-serif', radius:'22px', shadow:'0 10px 28px rgba(190,90,135,.15)', border:'1px solid rgba(220,130,170,.32)' },
     school: { label:'학원물', font:'"Noto Sans KR", sans-serif', radius:'8px', shadow:'0 5px 16px rgba(60,90,120,.12)', border:'1px solid rgba(80,110,145,.24)' },
-    martial: { label:'무협 판타지', font:'"Noto Serif KR", Georgia, serif', radius:'4px', shadow:'0 8px 24px rgba(30,30,30,.16)', border:'1px solid rgba(60,60,60,.30)' },
+    martial: { label:'무협', font:'"Noto Serif KR", Georgia, serif', radius:'4px', shadow:'0 8px 24px rgba(30,30,30,.16)', border:'1px solid rgba(60,60,60,.30)' },
     mystery: { label:'추리물', font:'Georgia, "Noto Serif KR", serif', radius:'2px', shadow:'0 6px 18px rgba(40,40,40,.18)', border:'1px solid rgba(40,40,40,.35)' },
     historical: { label:'역사극', font:'"Noto Serif KR", Georgia, serif', radius:'5px', shadow:'0 8px 22px rgba(100,75,40,.16)', border:'1px solid rgba(115,85,45,.28)' },
     healing: { label:'힐링', font:'system-ui, "Noto Sans KR", sans-serif', radius:'22px', shadow:'0 8px 24px rgba(80,120,90,.12)', border:'1px solid rgba(100,150,110,.22)' },
@@ -1732,7 +1732,7 @@ function getGenreDesignPreset(genre){
     if(/공포|호러|horror|괴담|좀비/.test(g)) return {style:'horror',color:'red'};
     if(/로맨스|romance|연애|순정/.test(g)) return {style:'romance',color:'pink'};
     if(/학원|school|청춘/.test(g)) return {style:'school',color:'blue'};
-    if(/무협판타지|무협|martial|선협|동양/.test(g)) return {style:'martial',color:'gold'};
+    if(/무협|martial|선협|동양/.test(g)) return {style:'martial',color:'gold'};
     if(/추리|미스터리|mystery|탐정|스릴러/.test(g)) return {style:'mystery',color:'black'};
     if(/역사|사극|시대극|historical/.test(g)) return {style:'historical',color:'gold'};
     if(/힐링|healing|일상|slice/.test(g)) return {style:'healing',color:'green'};
@@ -2375,67 +2375,36 @@ function getSFDecorLayer(){
     </div>`;
 }
 
-function getMartialDecorLayer(){
+function getCyberpunkDecorLayer(){
   return `
-    <div class="martial-frame-art" aria-hidden="true">
+    <div class="cyber-frame-art" aria-hidden="true">
       <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
-        <!-- 조선 한옥의 기와 지붕 실루엣 -->
-        <g class="mj-roof">
-          <path d="M20 120 Q105 66 210 76 Q285 82 345 125 Q430 66 520 84 Q600 98 680 84 Q770 66 855 125 Q915 82 990 76 Q1095 66 1180 120"/>
-          <path d="M30 136 Q105 92 205 100 Q285 108 348 145 Q430 88 520 105 Q600 118 680 105 Q770 88 852 145 Q915 108 995 100 Q1095 92 1170 136"/>
+        <defs>
+          <filter id="cyberGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g class="cyber-city">
+          <path d="M0 780V510H70V590H120V430H170V560H230V360H292V600H345V470H405V550H455V400H520V600H580V500H635V585H690V330H752V600H810V445H865V565H925V390H985V600H1040V470H1095V540H1145V420H1200V780Z"/>
+          <path class="cyber-city-window" d="M24 550h22v8H24zm72-62h18v8H96zm130-72h22v8h-22zm74 94h18v8h-18zm160-50h24v8h-24zm230-70h20v8h-20zm120 92h24v8h-24zm120-54h18v8h-18z"/>
         </g>
-        <g class="mj-roof2">
-          <path d="M36 151 Q120 110 205 119 Q292 129 352 163 Q430 112 520 128 Q600 140 680 128 Q770 112 848 163 Q908 129 995 119 Q1080 110 1164 151"/>
-          <path class="mj-roof-tile" d="M78 122l30 25M126 108l28 30M174 108l25 29M1026 108l-25 29M1074 108l-28 30M1122 122l-30 25"/>
+        <g class="cyber-wires" filter="url(#cyberGlow)">
+          <path d="M0 160H110L145 125H300"/><path d="M1200 190H1090L1050 150H900"/>
+          <path d="M0 690H120L155 720H310"/><path d="M1200 665H1080L1040 700H875"/>
         </g>
-        <!-- 달빛과 수묵 산수 -->
-        <circle class="mj-moon" cx="1010" cy="150" r="38"/>
-        <path class="mj-mountain" d="M0 520 Q105 430 205 505 Q290 565 390 455 Q470 385 545 500 Q620 590 700 470 Q790 350 875 505 Q960 590 1045 465 Q1110 405 1200 480 L1200 900 L0 900Z"/>
-        <!-- 창호 -->
-        <g class="mj-lattice mj-left">
-          <rect x="34" y="250" width="150" height="214"/>
-          <path d="M84 250V464M134 250V464M34 321H184M34 393H184"/>
+        <g class="cyber-signs">
+          <rect x="38" y="270" width="118" height="32"/><rect x="1040" y="245" width="122" height="36"/>
+          <path d="M48 286h86M1052 263h94"/>
         </g>
-        <g class="mj-lattice mj-right">
-          <rect x="1016" y="250" width="150" height="214"/>
-          <path d="M1066 250V464M1116 250V464M1016 321H1166M1016 393H1166"/>
+        <g class="cyber-scan">
+          <path d="M0 108H1200M0 820H1200"/><path d="M90 0V900M1110 0V900"/>
         </g>
-        <!-- 대나무 -->
-        <g class="mj-bamboo mj-left">
-          <path d="M102 820 C82 690 112 590 92 500 C77 425 91 350 120 270"/>
-          <path d="M96 690L48 655M98 610L145 574M91 526L48 495M97 438L144 405M104 350L66 322"/>
-          <path class="mj-node" d="M84 700H111M88 606H113M84 520H110M89 430H116M100 345H124"/>
-          <path class="mj-leaf" d="M100 420q-48-38-73-28q31 38 72 37zM96 552q48-40 77-30q-31 39-76 40zM105 322q-40-34-68-23q30 34 67 32z"/>
-        </g>
-        <g class="mj-bamboo mj-right">
-          <path d="M1098 820 C1118 690 1088 590 1108 500 C1123 425 1109 350 1080 270"/>
-          <path d="M1104 690L1152 655M1102 610L1055 574M1109 526L1152 495M1103 438L1056 405M1096 350L1134 322"/>
-          <path class="mj-node" d="M1116 700H1089M1112 606H1087M1116 520H1090M1111 430H1084M1100 345H1076"/>
-          <path class="mj-leaf" d="M1100 420q48-38 73-28q-31 38-72 37zM1104 552q-48-40-77-30q31 39 76 40zM1095 322q40-34 68-23q-30 34-67 32z"/>
-        </g>
-        <!-- 매화 -->
-        <g class="mj-plum">
-          <g transform="translate(205 184)"><circle r="7"/><circle cy="-16" r="10"/><circle cx="15" cy="-5" r="10"/><circle cx="9" cy="13" r="10"/><circle cx="-9" cy="13" r="10"/><circle cx="-15" cy="-5" r="10"/></g>
-          <g transform="translate(915 184)"><circle r="7"/><circle cy="-16" r="10"/><circle cx="15" cy="-5" r="10"/><circle cx="9" cy="13" r="10"/><circle cx="-9" cy="13" r="10"/><circle cx="-15" cy="-5" r="10"/></g>
-        </g>
-        <!-- 붓으로 그은 듯한 먹선 -->
-        <g class="mj-ink">
-          <path d="M45 735 Q170 680 270 728 T500 740" stroke-width="10"/>
-          <path d="M700 740 Q840 690 960 730 T1160 705" stroke-width="7"/>
-          <path d="M270 208 Q410 235 560 205 T900 212" stroke-width="5"/>
-        </g>
-        <!-- 검기/바람의 흐름 -->
-        <g class="mj-blade">
-          <path d="M255 760 Q455 620 635 700 Q770 760 958 610"/>
-          <path d="M305 782 Q470 670 630 735 Q790 800 920 670"/>
-          <path d="M365 224 Q520 155 685 215 Q770 246 845 205"/>
-        </g>
-        <!-- 붉은 인장 -->
-        <g transform="translate(600 106)">
-          <rect class="mj-seal" x="-23" y="-23" width="46" height="46" rx="2"/>
-          <text class="mj-seal-text" x="0" y="6" text-anchor="middle">武</text>
+        <g class="cyber-glitch" filter="url(#cyberGlow)">
+          <path d="M255 95h110l-12 8h-110z"/><path d="M835 100h120l10 7H845z"/>
+          <path d="M470 820h80l-12 7h-80z"/><path d="M650 820h100l12 7H662z"/>
         </g>
       </svg>
+      <div class="cyber-noise"></div><div class="cyber-vignette"></div>
     </div>`;
 }
 
@@ -2565,8 +2534,8 @@ const _useGenrePreset=(!w.designStyle || _savedStyle==='fantasy') && _genrePrese
 const _renderStyleKey=_useGenrePreset ? _genrePreset.style : _savedStyle;
 const _fantasyDecor=_renderStyleKey==='fantasy' ? getFantasyDecorLayer() : '';
 const _sfDecor=_renderStyleKey==='sf' ? getSFDecorLayer() : '';
-const _martialDecor=_renderStyleKey==='martial' ? getMartialDecorLayer() : '';
-$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_martialDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+const _cyberDecor=_renderStyleKey==='cyberpunk' ? getCyberpunkDecorLayer() : '';
+$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_cyberDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
