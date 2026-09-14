@@ -1262,3 +1262,106 @@
     margin-right:9px!important;
   }
 }
+
+/* =========================================================
+   무협 판타지 — 조선 한옥 / 한지 / 수묵 / 무인의 바람
+   기존 판타지와 동일한 레이아웃, 장식과 분위기만 차별화
+========================================================= */
+#world.world-design[data-design-style="martial"]{
+  --martial-accent:var(--wd-accent);
+  --wd-bg:#eee9de;
+  --wd-panel:#faf8f1;
+  --wd-text:#292724;
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb,var(--martial-accent) 5%,transparent), transparent 30%),
+    linear-gradient(135deg,#eee9de,#f7f3e9 52%,#e8e1d4);
+  color:var(--wd-text);
+}
+#world.world-design[data-design-style="martial"]::before{
+  content:"";position:absolute;inset:9px;border:1px solid color-mix(in srgb,var(--martial-accent) 38%,#a99d87);
+  border-radius:24px;pointer-events:none;z-index:0;
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.18),inset 0 0 42px rgba(64,53,37,.08);
+}
+#world.world-design[data-design-style="martial"] .martial-frame-art{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  z-index:0!important;pointer-events:none!important;color:var(--martial-accent);opacity:.82;overflow:hidden!important;
+}
+#world.world-design[data-design-style="martial"] .martial-frame-art svg{display:block;width:100%;height:100%;overflow:visible}
+#world.world-design[data-design-style="martial"] .mj-eave path{
+  fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;opacity:.48;
+}
+#world.world-design[data-design-style="martial"] .mj-lattice rect{
+  fill:color-mix(in srgb,var(--martial-accent) 4%,transparent);stroke:currentColor;stroke-width:1.5;opacity:.38;
+}
+#world.world-design[data-design-style="martial"] .mj-lattice path{
+  fill:none;stroke:currentColor;stroke-width:1.1;opacity:.32;
+}
+#world.world-design[data-design-style="martial"] .mj-bamboo path{
+  fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;opacity:.52;
+}
+#world.world-design[data-design-style="martial"] .mj-bamboo .mj-node{stroke-width:2;opacity:.35}
+#world.world-design[data-design-style="martial"] .mj-plum circle{
+  fill:color-mix(in srgb,var(--martial-accent) 28%,#fff);stroke:currentColor;stroke-width:1;opacity:.55;
+}
+#world.world-design[data-design-style="martial"] .mj-plum circle:first-child{fill:currentColor;opacity:.62}
+#world.world-design[data-design-style="martial"] .mj-blade path{
+  fill:none;stroke:currentColor;stroke-linecap:round;opacity:.28;stroke-width:1.5;
+}
+#world.world-design[data-design-style="martial"] .mj-blade path:first-child{stroke-width:2.3;opacity:.45}
+#world.world-design[data-design-style="martial"] .mj-emblem circle{
+  fill:color-mix(in srgb,var(--martial-accent) 18%,transparent);stroke:currentColor;stroke-width:1.5;opacity:.62;
+}
+#world.world-design[data-design-style="martial"] .mj-emblem path{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.62}
+
+#world.world-design[data-design-style="martial"] .hero{
+  margin:14px 14px 0!important;width:calc(100% - 28px)!important;border-radius:17px!important;
+  border:1px solid color-mix(in srgb,var(--martial-accent) 42%,#c9bda8)!important;
+  box-shadow:0 5px 18px rgba(67,53,33,.10),inset 0 0 0 2px rgba(255,255,255,.18)!important;
+  z-index:1!important;
+}
+#world.world-design[data-design-style="martial"] .tabs,
+#world.world-design[data-design-style="martial"] .content{
+  position:relative!important;z-index:1!important;margin-left:14px!important;margin-right:14px!important;
+}
+#world.world-design[data-design-style="martial"] .tabs{
+  border-radius:14px!important;background:#e5dfd2!important;
+  border-color:color-mix(in srgb,var(--martial-accent) 24%,#cfc4b1)!important;
+}
+#world.world-design[data-design-style="martial"] .tabs button{
+  border-radius:4px!important;background:#faf8f1;color:var(--wd-text);
+}
+#world.world-design[data-design-style="martial"] .tabs button.active{
+  background:var(--martial-accent);color:#fff;border-color:var(--martial-accent);
+}
+#world.world-design[data-design-style="martial"] .content{
+  border-radius:16px!important;background:rgba(250,248,241,.82);
+}
+#world.world-design[data-design-style="martial"] .content .card,
+#world.world-design[data-design-style="martial"] .content .story-card,
+#world.world-design[data-design-style="martial"] .content .item,
+#world.world-design[data-design-style="martial"] .content .setting-card{
+  background:#faf8f1;border-color:color-mix(in srgb,var(--martial-accent) 20%,#d4cabb);
+  box-shadow:inset 3px 0 0 color-mix(in srgb,var(--martial-accent) 52%,transparent);
+}
+#world.world-design[data-design-style="martial"] .content h2{color:color-mix(in srgb,var(--martial-accent) 65%,#292724)}
+
+/* 포인트 색상에 따라 한국풍 장식도 함께 변화 */
+#world.world-design[data-design-style="martial"][data-design-color="purple"]{--martial-accent:#8066b2}
+#world.world-design[data-design-style="martial"][data-design-color="blue"]{--martial-accent:#4c72a8}
+#world.world-design[data-design-style="martial"][data-design-color="sky"]{--martial-accent:#5a9fc1}
+#world.world-design[data-design-style="martial"][data-design-color="green"]{--martial-accent:#648c63}
+#world.world-design[data-design-style="martial"][data-design-color="teal"]{--martial-accent:#4f928a}
+#world.world-design[data-design-style="martial"][data-design-color="gold"]{--martial-accent:#9b7836}
+#world.world-design[data-design-style="martial"][data-design-color="red"]{--martial-accent:#a94f50}
+#world.world-design[data-design-style="martial"][data-design-color="orange"]{--martial-accent:#b46e3f}
+#world.world-design[data-design-style="martial"][data-design-color="pink"]{--martial-accent:#ad7186}
+#world.world-design[data-design-style="martial"][data-design-color="black"]{--martial-accent:#343434}
+#world.world-design[data-design-style="martial"][data-design-color="white"]{--martial-accent:#8d9697}
+
+@media(max-width:700px){
+  #world.world-design[data-design-style="martial"] .hero{margin:9px 9px 0!important;width:calc(100% - 18px)!important}
+  #world.world-design[data-design-style="martial"] .tabs,
+  #world.world-design[data-design-style="martial"] .content{margin-left:9px!important;margin-right:9px!important}
+  #world.world-design[data-design-style="martial"] .martial-frame-art{opacity:.62}
+  #world.world-design[data-design-style="martial"] .mj-lattice{opacity:.7}
+}
