@@ -2462,47 +2462,6 @@ function getFantasyDecorLayer(){
     </div>`;
 }
 
-
-function getReligionDecorLayer(){
-  return `
-  <div class="religion-frame-art" aria-hidden="true">
-    <svg viewBox="0 0 1200 900" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="relGold" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="var(--religion-accent)" stop-opacity=".12"/>
-          <stop offset=".5" stop-color="var(--religion-accent)" stop-opacity=".75"/>
-          <stop offset="1" stop-color="var(--religion-accent)" stop-opacity=".12"/>
-        </linearGradient>
-        <filter id="relGlow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <g class="rel-temple" fill="none" stroke="var(--religion-accent)" stroke-linejoin="round">
-        <path d="M250 760 L600 585 L950 760" stroke-width="5" opacity=".24"/>
-        <path d="M285 752 H915" stroke-width="3" opacity=".22"/>
-        <path d="M320 760 V875 M420 760 V875 M520 760 V875 M680 760 V875 M780 760 V875 M880 760 V875" stroke-width="8" opacity=".18"/>
-        <path d="M300 878 H900" stroke-width="5" opacity=".2"/>
-      </g>
-      <path class="rel-meander" d="M55 92 H220 V122 H90 V152 H250 V182 H55 M1145 92 H980 V122 H1110 V152 H950 V182 H1145" fill="none" stroke="url(#relGold)" stroke-width="4" opacity=".55"/>
-      <path class="rel-meander" d="M55 815 H205 V845 H95 V875 H245 M1145 815 H995 V845 H1105 V875 H955" fill="none" stroke="url(#relGold)" stroke-width="4" opacity=".38"/>
-      <g class="rel-sun" filter="url(#relGlow)" opacity=".5">
-        <circle cx="600" cy="116" r="42" fill="none" stroke="var(--religion-accent)" stroke-width="2"/>
-        <circle cx="600" cy="116" r="7" fill="var(--religion-accent)"/>
-        <path d="M600 56V72 M600 160V176 M540 116H556 M644 116H660 M558 74L570 86 M630 146L642 158 M642 74L630 86 M570 146L558 158" stroke="var(--religion-accent)" stroke-width="3" stroke-linecap="round"/>
-      </g>
-      <g class="rel-laurel" fill="none" stroke="var(--religion-accent)" stroke-linecap="round" opacity=".55">
-        <path d="M85 300 C155 230 225 235 285 305" stroke-width="3"/>
-        <path d="M1115 300 C1045 230 975 235 915 305" stroke-width="3"/>
-        <g stroke-width="2">
-          <path d="M125 274 l-18 -22 M145 260 l-12 -26 M168 251 l-6 -28 M193 250 l4 -28 M219 257 l12 -25 M245 271 l18 -20"/>
-          <path d="M1075 274 l18 -22 M1055 260 l12 -26 M1032 251 l6 -28 M1007 250 l-4 -28 M981 257 l-12 -25 M955 271 l-18 -20"/>
-        </g>
-      </g>
-      <g class="rel-stars" fill="var(--religion-accent)" opacity=".55">
-        <circle cx="150" cy="420" r="3"/><circle cx="1045" cy="430" r="3"/><circle cx="200" cy="680" r="2"/><circle cx="1000" cy="675" r="2"/>
-      </g>
-    </svg>
-  </div>`;
-}
-
 function renderWorld(){
     let w=get(current);
     const isOwner = w.owner_id === currentUserId;
@@ -2536,6 +2495,94 @@ function renderWorld(){
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
 <h2>세계관 소개</h2><p>${escWithBreaks(w.description)}</p>`;
 else body=section(w);
+
+function getReligionDecorLayer(){
+  return `
+  <div class="religion-frame-art" aria-hidden="true">
+    <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+      <defs>
+        <linearGradient id="relGold2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="var(--religion-accent)" stop-opacity=".08"/>
+          <stop offset=".5" stop-color="var(--religion-accent)" stop-opacity=".72"/>
+          <stop offset="1" stop-color="var(--religion-accent)" stop-opacity=".08"/>
+        </linearGradient>
+        <filter id="relSoft2" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="2.2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- 고대 그리스 궁전의 상단 페디먼트 -->
+      <g class="rel-palace" fill="none" stroke="var(--religion-accent)" stroke-linejoin="round">
+        <path d="M220 128 L600 42 L980 128" stroke-width="4" opacity=".46"/>
+        <path d="M255 128 H945" stroke-width="5" opacity=".42"/>
+        <path d="M292 146 H908" stroke-width="2" opacity=".28"/>
+        <path d="M315 146 V282 M400 146 V282 M485 146 V282 M715 146 V282 M800 146 V282 M885 146 V282" stroke-width="11" opacity=".20"/>
+        <path d="M302 282 H898" stroke-width="5" opacity=".30"/>
+        <path d="M324 294 H876" stroke-width="2" opacity=".20"/>
+      </g>
+
+      <!-- 중앙 신전 문 -->
+      <g class="rel-door" fill="none" stroke="var(--religion-accent)" opacity=".32">
+        <path d="M540 282 V395 H660 V282" stroke-width="5"/>
+        <path d="M555 395 V312 Q600 270 645 312 V395" stroke-width="3"/>
+        <circle cx="600" cy="345" r="4" fill="var(--religion-accent)"/>
+      </g>
+
+      <!-- 좌우 대리석 조각상: 흉상 + 받침대 -->
+      <g class="rel-statue" fill="none" stroke="var(--religion-accent)" stroke-linejoin="round" stroke-linecap="round">
+        <g transform="translate(155 515)">
+          <path d="M-42 205 H42 L32 184 H-32Z" stroke-width="3"/>
+          <path d="M-27 184 V168 H27 V184" stroke-width="3"/>
+          <path d="M-20 168 Q-18 128 0 118 Q18 128 20 168" stroke-width="4"/>
+          <circle cx="0" cy="91" r="27" stroke-width="4"/>
+          <path d="M-25 86 Q0 55 25 86 M-15 67 Q0 48 15 67" stroke-width="3"/>
+          <path d="M-20 121 Q0 140 20 121 M-14 126 L-35 154 M14 126 L35 154" stroke-width="4"/>
+          <path d="M-35 154 Q0 172 35 154" stroke-width="4"/>
+        </g>
+        <g transform="translate(1045 515) scale(-1 1)">
+          <path d="M-42 205 H42 L32 184 H-32Z" stroke-width="3"/>
+          <path d="M-27 184 V168 H27 V184" stroke-width="3"/>
+          <path d="M-20 168 Q-18 128 0 118 Q18 128 20 168" stroke-width="4"/>
+          <circle cx="0" cy="91" r="27" stroke-width="4"/>
+          <path d="M-25 86 Q0 55 25 86 M-15 67 Q0 48 15 67" stroke-width="3"/>
+          <path d="M-20 121 Q0 140 20 121 M-14 126 L-35 154 M14 126 L35 154" stroke-width="4"/>
+          <path d="M-35 154 Q0 172 35 154" stroke-width="4"/>
+        </g>
+      </g>
+
+      <!-- 월계수 -->
+      <g class="rel-laurel" fill="none" stroke="var(--religion-accent)" stroke-linecap="round" opacity=".62">
+        <path d="M72 410 C155 325 245 340 300 420" stroke-width="3"/>
+        <path d="M1128 410 C1045 325 955 340 900 420" stroke-width="3"/>
+        <g stroke-width="2.5">
+          <path d="M118 366 l-20 -27 M145 350 l-15 -30 M176 343 l-7 -31 M208 344 l3 -31 M239 354 l14 -28 M267 374 l23 -23"/>
+          <path d="M1082 366 l20 -27 M1055 350 l15 -30 M1024 343 l7 -31 M992 344 l-3 -31 M961 354 l-14 -28 M933 374 l-23 -23"/>
+        </g>
+      </g>
+
+      <!-- 중앙 신성한 태양 -->
+      <g class="rel-sun" filter="url(#relSoft2)" opacity=".52">
+        <circle cx="600" cy="88" r="30" fill="none" stroke="var(--religion-accent)" stroke-width="2"/>
+        <circle cx="600" cy="88" r="7" fill="var(--religion-accent)"/>
+        <path d="M600 44V30 M600 132V146 M556 88H542 M644 88H658 M569 57L559 47 M631 119L641 129 M631 57L641 47 M569 119L559 129" stroke="var(--religion-accent)" stroke-width="2.5" stroke-linecap="round"/>
+      </g>
+
+      <!-- 메안더 문양 -->
+      <path class="rel-meander" d="M42 750 H150 V774 H78 V798 H184 V822 H42 M1158 750 H1050 V774 H1122 V798 H1016 V822 H1158" fill="none" stroke="url(#relGold2)" stroke-width="4" opacity=".52"/>
+      <path class="rel-meander" d="M48 112 H185 V136 H82 V160 H222" fill="none" stroke="url(#relGold2)" stroke-width="3" opacity=".42"/>
+      <path class="rel-meander" d="M1152 112 H1015 V136 H1118 V160 H978" fill="none" stroke="url(#relGold2)" stroke-width="3" opacity=".42"/>
+
+      <!-- 작은 별/꽃 장식 -->
+      <g class="rel-stars" fill="var(--religion-accent)" opacity=".58">
+        <path d="M340 88 l4 11 11 4-11 4-4 11-4-11-11-4 11-4z"/>
+        <path d="M860 88 l4 11 11 4-11 4-4 11-4-11-11-4 11-4z"/>
+        <circle cx="320" cy="410" r="3"/><circle cx="880" cy="410" r="3"/>
+      </g>
+    </svg>
+  </div>`;
+}
+
 const _genrePreset=getGenreDesignPreset(w.genre);
 const _savedStyle=w.designStyle||'fantasy';
 const _useGenrePreset=(!w.designStyle || _savedStyle==='fantasy') && _genrePreset.style!=='fantasy';
