@@ -2496,6 +2496,79 @@ ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #dd
 <h2>세계관 소개</h2><p>${escWithBreaks(w.description)}</p>`;
 else body=section(w);
 
+function getMysteryDecorLayer(){
+  return `
+  <div class="mystery-frame-art" aria-hidden="true">
+    <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+      <defs>
+        <linearGradient id="mysLine" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="var(--mystery-accent)" stop-opacity=".04"/>
+          <stop offset=".5" stop-color="var(--mystery-accent)" stop-opacity=".72"/>
+          <stop offset="1" stop-color="var(--mystery-accent)" stop-opacity=".04"/>
+        </linearGradient>
+        <filter id="mysSoft" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- 사건 기록판 / 오래된 파일 -->
+      <g class="mys-board" fill="none" stroke="var(--mystery-accent)" stroke-linejoin="round">
+        <rect x="80" y="95" width="245" height="155" rx="4" stroke-width="2" opacity=".16"/>
+        <rect x="875" y="95" width="245" height="155" rx="4" stroke-width="2" opacity=".16"/>
+        <path d="M105 130 H285 M105 153 H250 M105 176 H270 M105 199 H230" stroke-width="3" opacity=".14"/>
+        <path d="M895 130 H1075 M895 153 H1040 M895 176 H1060 M895 199 H1020" stroke-width="3" opacity=".14"/>
+        <path d="M102 225 H170 M1030 225 H1098" stroke-width="2" opacity=".28"/>
+      </g>
+
+      <!-- 붉은 실 대신 포인트 색상의 증거 연결선 -->
+      <g class="mys-thread" fill="none" stroke="var(--mystery-accent)" stroke-linecap="round" opacity=".34">
+        <path d="M200 174 C360 300 400 350 520 280 S770 210 930 174" stroke-width="2" stroke-dasharray="7 9"/>
+        <path d="M165 220 C350 410 475 430 600 365 S850 310 1035 220" stroke-width="1.6" stroke-dasharray="5 10"/>
+        <circle cx="200" cy="174" r="7" stroke-width="2"/><circle cx="520" cy="280" r="7" stroke-width="2"/>
+        <circle cx="930" cy="174" r="7" stroke-width="2"/><circle cx="600" cy="365" r="8" stroke-width="2"/>
+      </g>
+
+      <!-- 확대경 -->
+      <g class="mys-loupe" transform="translate(600 205) rotate(-18)" fill="none" stroke="var(--mystery-accent)" stroke-linecap="round" filter="url(#mysSoft)" opacity=".42">
+        <circle cx="0" cy="0" r="48" stroke-width="5"/>
+        <circle cx="0" cy="0" r="37" stroke-width="1.5" opacity=".55"/>
+        <path d="M35 35 L78 78" stroke-width="10"/>
+        <path d="M35 35 L70 70" stroke-width="2"/>
+      </g>
+
+      <!-- 하단 사건 문서 / 신문 느낌 -->
+      <g class="mys-paper" fill="none" stroke="var(--mystery-accent)" stroke-linejoin="round" opacity=".22">
+        <path d="M260 690 H940 L910 825 H290Z" stroke-width="2"/>
+        <path d="M300 718 H900 M300 742 H875 M300 766 H700 M300 790 H820" stroke-width="2"/>
+        <path d="M610 718 V806" stroke-width="1.5"/>
+        <path d="M325 705 H475" stroke-width="4" opacity=".7"/>
+        <path d="M725 705 H875" stroke-width="4" opacity=".7"/>
+      </g>
+
+      <!-- 지문/단서 원 -->
+      <g class="mys-clues" fill="none" stroke="var(--mystery-accent)" opacity=".25">
+        <circle cx="170" cy="520" r="42" stroke-width="2" stroke-dasharray="3 8"/>
+        <circle cx="1030" cy="520" r="42" stroke-width="2" stroke-dasharray="3 8"/>
+        <path d="M145 520 Q170 490 195 520 Q170 550 145 520Z" stroke-width="1.5"/>
+        <path d="M1005 520 Q1030 490 1055 520 Q1030 550 1005 520Z" stroke-width="1.5"/>
+      </g>
+
+      <!-- 상단 장식 -->
+      <path class="mys-rule" d="M390 70 H810 M450 82 H750" stroke="url(#mysLine)" stroke-width="2" fill="none"/>
+      <g fill="var(--mystery-accent)" opacity=".46">
+        <circle cx="360" cy="76" r="3"/><circle cx="840" cy="76" r="3"/>
+        <path d="M600 52 l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
+      </g>
+
+      <!-- 모서리 파일 브래킷 -->
+      <g class="mys-corners" fill="none" stroke="var(--mystery-accent)" stroke-width="3" opacity=".34">
+        <path d="M36 300 V270 H72 M1164 300 V270 H1128 M36 600 V630 H72 M1164 600 V630 H1128"/>
+      </g>
+    </svg>
+  </div>`;
+}
+
 function getReligionDecorLayer(){
   return `
   <div class="religion-frame-art" aria-hidden="true">
@@ -2590,7 +2663,8 @@ const _renderStyleKey=_useGenrePreset ? _genrePreset.style : _savedStyle;
 const _fantasyDecor=_renderStyleKey==='fantasy' ? getFantasyDecorLayer() : '';
 const _sfDecor=_renderStyleKey==='sf' ? getSFDecorLayer() : '';
 const _religionDecor=_renderStyleKey==='religion' ? getReligionDecorLayer() : '';
-$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_religionDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+const _mysteryDecor=_renderStyleKey==='mystery' ? getMysteryDecorLayer() : '';
+$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_religionDecor}${_mysteryDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
