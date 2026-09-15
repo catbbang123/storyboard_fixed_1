@@ -1664,3 +1664,149 @@
   #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{opacity:.78}
   #world.world-design[data-design-style="cyberpunk"] .cyber-noise{opacity:.025}
 }
+
+/* =========================================================
+   CYBERPUNK FINAL FIX — SF와 동일한 레이아웃 + 모바일 가독성
+   기존 UI 구조는 유지하고 사이버펑크 장식만 주변부에 배치
+========================================================= */
+#world.world-design[data-design-style="cyberpunk"]{
+  padding:12px!important;
+  border-radius:24px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  background:var(--wd-layout-bg)!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .hero{
+  margin:14px 14px 0!important;
+  width:calc(100% - 28px)!important;
+  box-sizing:border-box!important;
+  border-radius:17px!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .tabs,
+#world.world-design[data-design-style="cyberpunk"] .content{
+  margin-left:14px!important;
+  margin-right:14px!important;
+  box-sizing:border-box!important;
+  min-width:0!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .tabs{
+  border-radius:14px!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .content{
+  border-radius:16px!important;
+}
+
+/* 긴 한국어 세계관 이름/설명도 화면 밖으로 밀려나가지 않게 */
+#world.world-design[data-design-style="cyberpunk"] .hero > div:last-child{
+  min-width:0!important;
+  max-width:100%!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .hero h1{
+  max-width:100%!important;
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  line-height:1.15!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .hero p{
+  max-width:100%!important;
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .content,
+#world.world-design[data-design-style="cyberpunk"] .content *{
+  max-width:100%;
+}
+#world.world-design[data-design-style="cyberpunk"] .content p,
+#world.world-design[data-design-style="cyberpunk"] .content h1,
+#world.world-design[data-design-style="cyberpunk"] .content h2,
+#world.world-design[data-design-style="cyberpunk"] .content h3,
+#world.world-design[data-design-style="cyberpunk"] .content h4,
+#world.world-design[data-design-style="cyberpunk"] .content span,
+#world.world-design[data-design-style="cyberpunk"] .content li{
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+
+/* 기존 거대한 도시 실루엣은 콘텐츠를 압도하지 않도록 주변 장식으로 낮춤 */
+#world.world-design[data-design-style="cyberpunk"] .cyber-city{
+  opacity:.34!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .cyber-grid{
+  opacity:.22!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .cyber-hud{
+  opacity:.72!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .cyber-signs{
+  opacity:.72!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .cyber-wires{
+  opacity:.72!important;
+}
+
+/* 모바일은 도시 실루엣을 제거하고 HUD/네온 프레임 위주로 보여서
+   작은 화면에서도 세계관 내용과 장식이 충돌하지 않게 합니다. */
+@media(max-width:700px){
+  #world.world-design[data-design-style="cyberpunk"]{
+    padding:12px!important;
+    border-radius:24px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .hero{
+    margin:9px 9px 0!important;
+    width:calc(100% - 18px)!important;
+    border-radius:14px!important;
+    padding:52px 14px 14px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .tabs,
+  #world.world-design[data-design-style="cyberpunk"] .content{
+    margin-left:9px!important;
+    margin-right:9px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .hero h1{
+    font-size:20px!important;
+    line-height:1.2!important;
+    margin-bottom:5px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .hero p{
+    font-size:11px!important;
+    line-height:1.45!important;
+    margin:0!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .hero .back,
+  #world.world-design[data-design-style="cyberpunk"] .hero .actions{
+    top:10px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .hero .back{
+    left:10px!important;
+    padding:7px 8px!important;
+    font-size:12px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .hero .actions{
+    right:10px!important;
+    gap:4px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .hero .actions button{
+    padding:7px 8px!important;
+    font-size:12px!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .cyber-city{
+    opacity:0!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .cyber-grid{
+    opacity:.10!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{
+    opacity:.72!important;
+  }
+  #world.world-design[data-design-style="cyberpunk"] .cyber-noise{
+    opacity:.018!important;
+  }
+}
