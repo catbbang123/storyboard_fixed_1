@@ -1794,3 +1794,223 @@
   #world.world-design .hero .actions{right:10px!important;top:10px!important;max-width:calc(100% - 80px);}
   #world.world-design .hero .actions button{white-space:nowrap!important;}
 }
+
+
+/* RESTORED RICH CYBERPUNK + MARTIAL DECORATIONS */
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{
+  position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  opacity:.9;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-frame-art svg{position:absolute;inset:0;width:100%;height:100%;}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-city-window{
+  fill:var(--cyber-accent);opacity:.7;filter:drop-shadow(0 0 5px var(--cyber-accent));
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-signs rect{
+  fill:rgba(7,10,18,.65);stroke:var(--cyber-pink);stroke-width:1.5;
+  filter:drop-shadow(0 0 6px var(--cyber-pink));
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-noise{
+  position:absolute;inset:0;opacity:.045;mix-blend-mode:screen;
+  background-image:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(255,255,255,.7) 3px,transparent 4px);
+  animation:cyberNoise .18s steps(2) infinite;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-vignette{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 48%,color-mix(in srgb,var(--wd-layout-text) 18%,transparent) 100%);
+  opacity:.75;
+}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="purple"]{--cyber-accent:#9b6cff}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="blue"]{--cyber-accent:#4d7cff}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="sky"]{--cyber-accent:#19d9ff}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="green"]{--cyber-accent:#61e58c}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="teal"]{--cyber-accent:#36e0c4}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="gold"]{--cyber-accent:#ffd15a}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="red"]{--cyber-accent:#ff526e}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="orange"]{--cyber-accent:#ff9650}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="pink"]{--cyber-accent:#ff55d8}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="black"]{--cyber-accent:#b9c6d4}
+
+#world.world-design[data-design-style="cyberpunk"][data-design-color="white"]{--cyber-accent:#eaf7ff}
+
+  #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{opacity:.72}
+
+#world.world-design[data-design-style="martial"]::before{
+  content:"";position:absolute;inset:8px;border:1px solid rgba(69,58,43,.28);
+  border-radius:18px;pointer-events:none;z-index:0;
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.22),inset 0 -70px 110px rgba(62,50,37,.08);
+}
+
+#world.world-design[data-design-style="martial"]::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.34;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 5px,rgba(70,58,43,.018) 6px),
+    radial-gradient(circle at 20% 70%,rgba(80,70,55,.07),transparent 28%),
+    radial-gradient(circle at 85% 60%,rgba(80,70,55,.05),transparent 24%);
+}
+
+#world.world-design[data-design-style="martial"] .martial-frame-art{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  z-index:0!important;pointer-events:none!important;color:var(--martial-accent);opacity:.95;overflow:hidden!important;
+}
+
+#world.world-design[data-design-style="martial"] .martial-frame-art svg{display:block;width:100%;height:100%;overflow:visible}
+
+
+#world.world-design[data-design-style="martial"][data-design-color="purple"]{--martial-accent:#76609d}
+
+#world.world-design[data-design-style="martial"][data-design-color="blue"]{--martial-accent:#4f7196}
+
+#world.world-design[data-design-style="martial"][data-design-color="sky"]{--martial-accent:#5598ae}
+
+#world.world-design[data-design-style="martial"][data-design-color="green"]{--martial-accent:#58775d}
+
+#world.world-design[data-design-style="martial"][data-design-color="teal"]{--martial-accent:#428b82}
+
+#world.world-design[data-design-style="martial"][data-design-color="gold"]{--martial-accent:#9a7740}
+
+#world.world-design[data-design-style="martial"][data-design-color="red"]{--martial-accent:#a4514d}
+
+#world.world-design[data-design-style="martial"][data-design-color="orange"]{--martial-accent:#b36d43}
+
+#world.world-design[data-design-style="martial"][data-design-color="pink"]{--martial-accent:#a56d7d}
+
+#world.world-design[data-design-style="martial"][data-design-color="black"]{--martial-accent:#3d403c}
+
+#world.world-design[data-design-style="martial"][data-design-color="white"]{--martial-accent:#78858a}
+
+  #world.world-design[data-design-style="martial"] .martial-frame-art{opacity:.82}
+
+#world.world-design[data-design-style="cyberpunk"]::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  background:
+    radial-gradient(circle at 16% 8%,color-mix(in srgb,var(--cyber-accent) 13%,transparent),transparent 28%),
+    radial-gradient(circle at 84% 18%,color-mix(in srgb,var(--cyber-pink) 9%,transparent),transparent 24%),
+    linear-gradient(180deg,transparent 0%,color-mix(in srgb,var(--cyber-accent) 4%,transparent) 100%);
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{
+  z-index:0!important;
+  opacity:.98;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-city-window{
+  fill:var(--cyber-accent)!important;
+  opacity:.85;
+  filter:drop-shadow(0 0 6px var(--cyber-accent));
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-city-lines{
+  fill:none;
+  stroke:var(--cyber-blue);
+  stroke-width:1;
+  opacity:.34;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-hud-tick{
+  stroke:var(--cyber-pink)!important;
+  stroke-width:2!important;
+  opacity:.8!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-signs rect{
+  fill:color-mix(in srgb,var(--wd-layout-panel) 74%,transparent)!important;
+  stroke:var(--cyber-pink)!important;
+  stroke-width:1.5;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-signs .cyber-sign-detail{
+  stroke:var(--cyber-accent);
+  stroke-width:1;
+  opacity:.7;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-corners .cyber-corner-small{
+  stroke:var(--cyber-pink);
+  stroke-width:1;
+  opacity:.35;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-glitch .cyber-glitch-thin{
+  fill:none!important;
+  stroke:var(--cyber-blue);
+  stroke-width:2;
+  opacity:.65;
+}
+
+  #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{opacity:.78}
+
+  #world.world-design[data-design-style="cyberpunk"] .cyber-noise{opacity:.025}
+
+
+/* 기존 거대한 도시 실루엣은 콘텐츠를 압도하지 않도록 주변 장식으로 낮춤 */
+#world.world-design[data-design-style="cyberpunk"] .cyber-city{
+  opacity:.34!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-grid{
+  opacity:.22!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-hud{
+  opacity:.72!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-signs{
+  opacity:.72!important;
+}
+
+#world.world-design[data-design-style="cyberpunk"] .cyber-wires{
+  opacity:.72!important;
+}
+
+  #world.world-design[data-design-style="cyberpunk"] .cyber-city{
+    opacity:0!important;
+  }
+
+  #world.world-design[data-design-style="cyberpunk"] .cyber-grid{
+    opacity:.10!important;
+  }
+
+  #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{
+    opacity:.72!important;
+  }
+
+  #world.world-design[data-design-style="cyberpunk"] .cyber-noise{
+    opacity:.018!important;
+  }
+
+/* Shared mobile text safety: prevents genre decorations from squeezing hero copy */
+@media (max-width: 700px){
+  #world.world-design .hero h1,
+  #world.world-design .hero p{
+    max-width:100%!important;
+    min-width:0!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+    white-space:normal!important;
+  }
+  #world.world-design .hero > div:last-child{
+    min-width:0!important;
+    max-width:calc(100% - 18px)!important;
+  }
+}
