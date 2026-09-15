@@ -1378,3 +1378,107 @@
   #world.world-design[data-design-style="religion"] .hero::before{bottom:8px;padding:4px 8px;font-size:6px;letter-spacing:.1em}
   #world.world-design[data-design-style="religion"] .content h2::before{margin-right:6px}
 }
+
+/* =========================================================
+   추리물 · 사건 기록실 / 탐정 미스터리 장식
+   공통 레이아웃은 SF와 동일하게 유지하고 장식만 변경
+========================================================= */
+#world.world-design[data-design-style="mystery"]{
+  --mystery-accent:var(--wd-accent,#222222);
+  background:var(--wd-layout-bg)!important;
+  border:1px solid var(--wd-layout-border)!important;
+  box-shadow:0 8px 28px color-mix(in srgb,var(--wd-layout-border) 24%,transparent)!important;
+  padding:12px!important;
+  border-radius:24px!important;
+  box-sizing:border-box!important;
+}
+#world.world-design[data-design-style="mystery"] .mystery-frame-art{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  z-index:0!important;pointer-events:none!important;overflow:hidden!important;
+  color:var(--mystery-accent);opacity:.95;
+}
+#world.world-design[data-design-style="mystery"] .mystery-frame-art svg{display:block;width:100%;height:100%;overflow:hidden}
+#world.world-design[data-design-style="mystery"] .hero,
+#world.world-design[data-design-style="mystery"] .tabs,
+#world.world-design[data-design-style="mystery"] .content{
+  position:relative!important;z-index:1!important;box-sizing:border-box!important;
+}
+#world.world-design[data-design-style="mystery"] .hero{
+  margin:14px 14px 0!important;width:calc(100% - 28px)!important;
+  border-radius:17px!important;
+  background-color:var(--wd-layout-panel)!important;
+  border:1px solid color-mix(in srgb,var(--mystery-accent) 38%,var(--wd-layout-border))!important;
+  box-shadow:0 8px 28px color-mix(in srgb,var(--wd-layout-border) 20%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--mystery-accent) 9%,transparent)!important;
+}
+#world.world-design[data-design-style="mystery"] .hero.has-photo{
+  background-color:transparent!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;
+}
+#world.world-design[data-design-style="mystery"] .hero.has-photo::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(20,18,14,.03),rgba(20,18,14,.22));
+}
+#world.world-design[data-design-style="mystery"] .hero::before{
+  content:"CASE FILE  ·  MYSTERY RECORD  ·  00:00";
+  position:absolute;left:50%;bottom:10px;transform:translateX(-50%);
+  padding:5px 12px;border-top:1px solid color-mix(in srgb,var(--mystery-accent) 55%,transparent);border-bottom:1px solid color-mix(in srgb,var(--mystery-accent) 55%,transparent);
+  color:var(--mystery-accent);font:600 8px/1 Georgia,"Noto Serif KR",serif;letter-spacing:.14em;white-space:nowrap;opacity:.72;pointer-events:none;z-index:2;
+}
+#world.world-design[data-design-style="mystery"] .tabs,
+#world.world-design[data-design-style="mystery"] .content{margin-left:14px!important;margin-right:14px!important}
+#world.world-design[data-design-style="mystery"] .tabs{
+  background:var(--wd-layout-panel)!important;border-color:color-mix(in srgb,var(--mystery-accent) 22%,var(--wd-layout-border))!important;
+}
+#world.world-design[data-design-style="mystery"] .tabs::before{
+  content:"";display:block;position:absolute;left:14px;right:14px;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--mystery-accent),transparent);opacity:.34;
+}
+#world.world-design[data-design-style="mystery"] .tabs button{
+  font-family:Georgia,"Noto Serif KR",serif;letter-spacing:.015em;
+}
+#world.world-design[data-design-style="mystery"] .tabs button.active{
+  box-shadow:inset 0 -2px 0 var(--mystery-accent)!important;
+}
+#world.world-design[data-design-style="mystery"] .content{
+  background:var(--wd-layout-panel)!important;border-color:color-mix(in srgb,var(--mystery-accent) 18%,var(--wd-layout-border))!important;
+}
+#world.world-design[data-design-style="mystery"] .content h2{
+  font-family:Georgia,"Noto Serif KR",serif;letter-spacing:.015em;
+}
+#world.world-design[data-design-style="mystery"] .content h2::before{
+  content:"⌕";margin-right:8px;color:var(--mystery-accent);font-size:.9em;font-weight:400;
+}
+#world.world-design[data-design-style="mystery"] .content .item,
+#world.world-design[data-design-style="mystery"] .content .card,
+#world.world-design[data-design-style="mystery"] .content .story-card,
+#world.world-design[data-design-style="mystery"] .content .setting-card{
+  border-color:color-mix(in srgb,var(--mystery-accent) 18%,var(--wd-layout-border))!important;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--mystery-accent) 5%,transparent),2px 5px 14px color-mix(in srgb,var(--wd-layout-border) 18%,transparent)!important;
+}
+/* 선택한 포인트 색상이 추리 장식 전체에 반영 */
+#world.world-design[data-design-style="mystery"][data-design-color="purple"]{--mystery-accent:#6652b8}
+#world.world-design[data-design-style="mystery"][data-design-color="blue"]{--mystery-accent:#4d6fa8}
+#world.world-design[data-design-style="mystery"][data-design-color="sky"]{--mystery-accent:#4e9db8}
+#world.world-design[data-design-style="mystery"][data-design-color="green"]{--mystery-accent:#587e5b}
+#world.world-design[data-design-style="mystery"][data-design-color="teal"]{--mystery-accent:#478f86}
+#world.world-design[data-design-style="mystery"][data-design-color="gold"]{--mystery-accent:#a57c31}
+#world.world-design[data-design-style="mystery"][data-design-color="red"]{--mystery-accent:#a34b4b}
+#world.world-design[data-design-style="mystery"][data-design-color="orange"]{--mystery-accent:#b66a35}
+#world.world-design[data-design-style="mystery"][data-design-color="pink"]{--mystery-accent:#a95f7c}
+#world.world-design[data-design-style="mystery"][data-design-color="black"]{--mystery-accent:#242424}
+#world.world-design[data-design-style="mystery"][data-design-color="white"]{--mystery-accent:#cfc9bb}
+
+@media(max-width:700px){
+  #world.world-design[data-design-style="mystery"]{padding:8px!important;border-radius:18px!important}
+  #world.world-design[data-design-style="mystery"] .hero{
+    margin:9px 9px 0!important;width:calc(100% - 18px)!important;border-radius:14px!important;
+  }
+  #world.world-design[data-design-style="mystery"] .tabs,
+  #world.world-design[data-design-style="mystery"] .content{margin-left:9px!important;margin-right:9px!important}
+  #world.world-design[data-design-style="mystery"] .mystery-frame-art{opacity:.58}
+  #world.world-design[data-design-style="mystery"] .mys-thread,
+  #world.world-design[data-design-style="mystery"] .mys-paper{opacity:.12}
+  #world.world-design[data-design-style="mystery"] .mys-board{opacity:.5}
+  #world.world-design[data-design-style="mystery"] .mys-loupe{opacity:.58}
+  #world.world-design[data-design-style="mystery"] .hero::before{bottom:8px;padding:4px 8px;font-size:6px;letter-spacing:.08em}
+  #world.world-design[data-design-style="mystery"] .content h2::before{margin-right:6px}
+}
