@@ -1483,6 +1483,58 @@
   #world.world-design[data-design-style="mystery"] .content h2::before{margin-right:6px}
 }
 
+/* Healing도 SF · 판타지와 동일한 외곽 레이아웃 규칙. 인형 장식만 별도로 유지 */
+#world.world-design[data-design-style="healing"]{
+  padding:12px!important;
+  border-radius:24px!important;
+}
+#world.world-design[data-design-style="healing"] .hero,
+#world.world-design[data-design-style="healing"] .tabs,
+#world.world-design[data-design-style="healing"] .content{
+  box-sizing:border-box!important;
+}
+#world.world-design[data-design-style="healing"] .hero{
+  margin:14px 14px 0!important;
+  width:calc(100% - 28px)!important;
+  border-radius:17px!important;
+  z-index:1!important;
+}
+#world.world-design[data-design-style="healing"] .tabs,
+#world.world-design[data-design-style="healing"] .content{
+  position:relative!important;
+  z-index:1!important;
+  margin-left:14px!important;
+  margin-right:14px!important;
+}
+#world.world-design[data-design-style="healing"] .tabs{
+  border-radius:14px!important;
+}
+#world.world-design[data-design-style="healing"] .content{
+  border-radius:16px!important;
+}
+#world.world-design[data-design-style="healing"] .content .item,
+#world.world-design[data-design-style="healing"] .content .card,
+#world.world-design[data-design-style="healing"] .content .story-card,
+#world.world-design[data-design-style="healing"] .content .setting-card{
+  box-sizing:border-box!important;
+}
+@media(max-width:700px){
+  #world.world-design[data-design-style="healing"]{
+    padding:8px!important;
+    border-radius:18px!important;
+  }
+  #world.world-design[data-design-style="healing"] .hero{
+    margin:9px 9px 0!important;
+    width:calc(100% - 18px)!important;
+    border-radius:14px!important;
+  }
+  #world.world-design[data-design-style="healing"] .tabs,
+  #world.world-design[data-design-style="healing"] .content{
+    margin-left:9px!important;
+    margin-right:9px!important;
+  }
+}
+
 /* Healing plush-room decorations: decorative only, no layout displacement */
 #world.world-design[data-design-style="healing"] .healing-plush-art{overflow:hidden!important;}
 @media(max-width:700px){
