@@ -1483,58 +1483,6 @@
   #world.world-design[data-design-style="mystery"] .content h2::before{margin-right:6px}
 }
 
-/* Healing도 SF · 판타지와 동일한 외곽 레이아웃 규칙. 인형 장식만 별도로 유지 */
-#world.world-design[data-design-style="healing"]{
-  padding:12px!important;
-  border-radius:24px!important;
-}
-#world.world-design[data-design-style="healing"] .hero,
-#world.world-design[data-design-style="healing"] .tabs,
-#world.world-design[data-design-style="healing"] .content{
-  box-sizing:border-box!important;
-}
-#world.world-design[data-design-style="healing"] .hero{
-  margin:14px 14px 0!important;
-  width:calc(100% - 28px)!important;
-  border-radius:17px!important;
-  z-index:1!important;
-}
-#world.world-design[data-design-style="healing"] .tabs,
-#world.world-design[data-design-style="healing"] .content{
-  position:relative!important;
-  z-index:1!important;
-  margin-left:14px!important;
-  margin-right:14px!important;
-}
-#world.world-design[data-design-style="healing"] .tabs{
-  border-radius:14px!important;
-}
-#world.world-design[data-design-style="healing"] .content{
-  border-radius:16px!important;
-}
-#world.world-design[data-design-style="healing"] .content .item,
-#world.world-design[data-design-style="healing"] .content .card,
-#world.world-design[data-design-style="healing"] .content .story-card,
-#world.world-design[data-design-style="healing"] .content .setting-card{
-  box-sizing:border-box!important;
-}
-@media(max-width:700px){
-  #world.world-design[data-design-style="healing"]{
-    padding:8px!important;
-    border-radius:18px!important;
-  }
-  #world.world-design[data-design-style="healing"] .hero{
-    margin:9px 9px 0!important;
-    width:calc(100% - 18px)!important;
-    border-radius:14px!important;
-  }
-  #world.world-design[data-design-style="healing"] .tabs,
-  #world.world-design[data-design-style="healing"] .content{
-    margin-left:9px!important;
-    margin-right:9px!important;
-  }
-}
-
 /* Healing plush-room decorations: decorative only, no layout displacement */
 #world.world-design[data-design-style="healing"] .healing-plush-art{overflow:hidden!important;}
 @media(max-width:700px){
@@ -1545,4 +1493,304 @@
   #world.world-design[data-design-style="healing"] .healing-plush-art .plush-chick{display:none;}
   #world.world-design[data-design-style="healing"] .healing-plush-art .heal-shelf{transform:translateY(30px) scale(.72);transform-origin:center bottom;}
   #world.world-design[data-design-style="healing"] .hero::after{right:10px;bottom:8px;font-size:7px;padding:4px 7px;}
+}
+
+/* =========================================================
+   SF · 판타지 레이아웃 통일 최종 보정
+   장식/버튼/카드 구조는 건드리지 않고 바깥 배치만 동일하게 맞춤
+========================================================= */
+#world.world-design[data-design-style="sf"],
+#world.world-design[data-design-style="fantasy"]{
+  padding:12px!important;
+  border-radius:24px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+
+#world.world-design[data-design-style="sf"] .hero,
+#world.world-design[data-design-style="fantasy"] .hero{
+  margin:14px 14px 0!important;
+  width:calc(100% - 28px)!important;
+  box-sizing:border-box!important;
+  border-radius:17px!important;
+}
+
+#world.world-design[data-design-style="sf"] .tabs,
+#world.world-design[data-design-style="sf"] .content,
+#world.world-design[data-design-style="fantasy"] .tabs,
+#world.world-design[data-design-style="fantasy"] .content{
+  margin-left:14px!important;
+  margin-right:14px!important;
+  box-sizing:border-box!important;
+}
+
+#world.world-design[data-design-style="sf"] .tabs,
+#world.world-design[data-design-style="fantasy"] .tabs{
+  border-radius:14px!important;
+}
+
+#world.world-design[data-design-style="sf"] .content,
+#world.world-design[data-design-style="fantasy"] .content{
+  border-radius:16px!important;
+}
+
+@media(max-width:700px){
+  #world.world-design[data-design-style="sf"],
+  #world.world-design[data-design-style="fantasy"]{
+    padding:8px!important;
+    border-radius:20px!important;
+  }
+
+  #world.world-design[data-design-style="sf"] .hero,
+  #world.world-design[data-design-style="fantasy"] .hero{
+    margin:9px 9px 0!important;
+    width:calc(100% - 18px)!important;
+    border-radius:15px!important;
+  }
+
+  #world.world-design[data-design-style="sf"] .tabs,
+  #world.world-design[data-design-style="sf"] .content,
+  #world.world-design[data-design-style="fantasy"] .tabs,
+  #world.world-design[data-design-style="fantasy"] .content{
+    margin-left:9px!important;
+    margin-right:9px!important;
+  }
+
+  #world.world-design[data-design-style="sf"] .tabs,
+  #world.world-design[data-design-style="fantasy"] .tabs{
+    border-radius:12px!important;
+  }
+
+  #world.world-design[data-design-style="sf"] .content,
+  #world.world-design[data-design-style="fantasy"] .content{
+    border-radius:14px!important;
+  }
+}
+
+/* =========================================================
+   ALL GENRES — SF / FANTASY 공통 레이아웃 기준
+   장르 장식/색상은 유지하고, 세계관 화면의 바깥 배치만 통일
+   ========================================================= */
+#world.world-design[data-design-style="sf"],
+#world.world-design[data-design-style="fantasy"],
+#world.world-design[data-design-style="cyberpunk"],
+#world.world-design[data-design-style="darkfantasy"],
+#world.world-design[data-design-style="horror"],
+#world.world-design[data-design-style="romance"],
+#world.world-design[data-design-style="school"],
+#world.world-design[data-design-style="martial"],
+#world.world-design[data-design-style="mystery"],
+#world.world-design[data-design-style="historical"],
+#world.world-design[data-design-style="healing"],
+#world.world-design[data-design-style="religion"]{
+  padding:12px!important;
+  border-radius:24px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+
+#world.world-design[data-design-style="sf"] .hero,
+#world.world-design[data-design-style="fantasy"] .hero,
+#world.world-design[data-design-style="cyberpunk"] .hero,
+#world.world-design[data-design-style="darkfantasy"] .hero,
+#world.world-design[data-design-style="horror"] .hero,
+#world.world-design[data-design-style="romance"] .hero,
+#world.world-design[data-design-style="school"] .hero,
+#world.world-design[data-design-style="martial"] .hero,
+#world.world-design[data-design-style="mystery"] .hero,
+#world.world-design[data-design-style="historical"] .hero,
+#world.world-design[data-design-style="healing"] .hero,
+#world.world-design[data-design-style="religion"] .hero{
+  margin:14px 14px 0!important;
+  width:calc(100% - 28px)!important;
+  max-width:none!important;
+  box-sizing:border-box!important;
+  border-radius:17px!important;
+  min-width:0!important;
+}
+
+#world.world-design[data-design-style="sf"] .tabs,
+#world.world-design[data-design-style="sf"] .content,
+#world.world-design[data-design-style="fantasy"] .tabs,
+#world.world-design[data-design-style="fantasy"] .content,
+#world.world-design[data-design-style="cyberpunk"] .tabs,
+#world.world-design[data-design-style="cyberpunk"] .content,
+#world.world-design[data-design-style="darkfantasy"] .tabs,
+#world.world-design[data-design-style="darkfantasy"] .content,
+#world.world-design[data-design-style="horror"] .tabs,
+#world.world-design[data-design-style="horror"] .content,
+#world.world-design[data-design-style="romance"] .tabs,
+#world.world-design[data-design-style="romance"] .content,
+#world.world-design[data-design-style="school"] .tabs,
+#world.world-design[data-design-style="school"] .content,
+#world.world-design[data-design-style="martial"] .tabs,
+#world.world-design[data-design-style="martial"] .content,
+#world.world-design[data-design-style="mystery"] .tabs,
+#world.world-design[data-design-style="mystery"] .content,
+#world.world-design[data-design-style="historical"] .tabs,
+#world.world-design[data-design-style="historical"] .content,
+#world.world-design[data-design-style="healing"] .tabs,
+#world.world-design[data-design-style="healing"] .content,
+#world.world-design[data-design-style="religion"] .tabs,
+#world.world-design[data-design-style="religion"] .content{
+  margin-left:14px!important;
+  margin-right:14px!important;
+  box-sizing:border-box!important;
+  min-width:0!important;
+  max-width:none!important;
+}
+
+#world.world-design[data-design-style="sf"] .tabs,
+#world.world-design[data-design-style="fantasy"] .tabs,
+#world.world-design[data-design-style="cyberpunk"] .tabs,
+#world.world-design[data-design-style="darkfantasy"] .tabs,
+#world.world-design[data-design-style="horror"] .tabs,
+#world.world-design[data-design-style="romance"] .tabs,
+#world.world-design[data-design-style="school"] .tabs,
+#world.world-design[data-design-style="martial"] .tabs,
+#world.world-design[data-design-style="mystery"] .tabs,
+#world.world-design[data-design-style="historical"] .tabs,
+#world.world-design[data-design-style="healing"] .tabs,
+#world.world-design[data-design-style="religion"] .tabs{
+  border-radius:14px!important;
+  min-width:0!important;
+}
+
+#world.world-design[data-design-style="sf"] .content,
+#world.world-design[data-design-style="fantasy"] .content,
+#world.world-design[data-design-style="cyberpunk"] .content,
+#world.world-design[data-design-style="darkfantasy"] .content,
+#world.world-design[data-design-style="horror"] .content,
+#world.world-design[data-design-style="romance"] .content,
+#world.world-design[data-design-style="school"] .content,
+#world.world-design[data-design-style="martial"] .content,
+#world.world-design[data-design-style="mystery"] .content,
+#world.world-design[data-design-style="historical"] .content,
+#world.world-design[data-design-style="healing"] .content,
+#world.world-design[data-design-style="religion"] .content{
+  border-radius:16px!important;
+}
+
+/* 제목/설명은 장르와 관계없이 항상 영역 안에서 줄바꿈 */
+#world.world-design .hero > div:not(.actions),
+#world.world-design .hero h1,
+#world.world-design .hero p{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+#world.world-design .hero > div:not(.actions){width:100%;}
+#world.world-design .hero h1{line-height:1.2!important;}
+#world.world-design .hero p{white-space:normal!important;}
+
+@media(max-width:700px){
+  #world.world-design[data-design-style="sf"],
+  #world.world-design[data-design-style="fantasy"],
+  #world.world-design[data-design-style="cyberpunk"],
+  #world.world-design[data-design-style="darkfantasy"],
+  #world.world-design[data-design-style="horror"],
+  #world.world-design[data-design-style="romance"],
+  #world.world-design[data-design-style="school"],
+  #world.world-design[data-design-style="martial"],
+  #world.world-design[data-design-style="mystery"],
+  #world.world-design[data-design-style="historical"],
+  #world.world-design[data-design-style="healing"],
+  #world.world-design[data-design-style="religion"]{
+    padding:8px!important;
+    border-radius:20px!important;
+  }
+
+  #world.world-design[data-design-style="sf"] .hero,
+  #world.world-design[data-design-style="fantasy"] .hero,
+  #world.world-design[data-design-style="cyberpunk"] .hero,
+  #world.world-design[data-design-style="darkfantasy"] .hero,
+  #world.world-design[data-design-style="horror"] .hero,
+  #world.world-design[data-design-style="romance"] .hero,
+  #world.world-design[data-design-style="school"] .hero,
+  #world.world-design[data-design-style="martial"] .hero,
+  #world.world-design[data-design-style="mystery"] .hero,
+  #world.world-design[data-design-style="historical"] .hero,
+  #world.world-design[data-design-style="healing"] .hero,
+  #world.world-design[data-design-style="religion"] .hero{
+    margin:9px 9px 0!important;
+    width:calc(100% - 18px)!important;
+    border-radius:15px!important;
+  }
+
+  #world.world-design[data-design-style="sf"] .tabs,
+  #world.world-design[data-design-style="sf"] .content,
+  #world.world-design[data-design-style="fantasy"] .tabs,
+  #world.world-design[data-design-style="fantasy"] .content,
+  #world.world-design[data-design-style="cyberpunk"] .tabs,
+  #world.world-design[data-design-style="cyberpunk"] .content,
+  #world.world-design[data-design-style="darkfantasy"] .tabs,
+  #world.world-design[data-design-style="darkfantasy"] .content,
+  #world.world-design[data-design-style="horror"] .tabs,
+  #world.world-design[data-design-style="horror"] .content,
+  #world.world-design[data-design-style="romance"] .tabs,
+  #world.world-design[data-design-style="romance"] .content,
+  #world.world-design[data-design-style="school"] .tabs,
+  #world.world-design[data-design-style="school"] .content,
+  #world.world-design[data-design-style="martial"] .tabs,
+  #world.world-design[data-design-style="martial"] .content,
+  #world.world-design[data-design-style="mystery"] .tabs,
+  #world.world-design[data-design-style="mystery"] .content,
+  #world.world-design[data-design-style="historical"] .tabs,
+  #world.world-design[data-design-style="historical"] .content,
+  #world.world-design[data-design-style="healing"] .tabs,
+  #world.world-design[data-design-style="healing"] .content,
+  #world.world-design[data-design-style="religion"] .tabs,
+  #world.world-design[data-design-style="religion"] .content{
+    margin-left:9px!important;
+    margin-right:9px!important;
+  }
+
+  #world.world-design[data-design-style="sf"] .tabs,
+  #world.world-design[data-design-style="fantasy"] .tabs,
+  #world.world-design[data-design-style="cyberpunk"] .tabs,
+  #world.world-design[data-design-style="darkfantasy"] .tabs,
+  #world.world-design[data-design-style="horror"] .tabs,
+  #world.world-design[data-design-style="romance"] .tabs,
+  #world.world-design[data-design-style="school"] .tabs,
+  #world.world-design[data-design-style="martial"] .tabs,
+  #world.world-design[data-design-style="mystery"] .tabs,
+  #world.world-design[data-design-style="historical"] .tabs,
+  #world.world-design[data-design-style="healing"] .tabs,
+  #world.world-design[data-design-style="religion"] .tabs{
+    border-radius:12px!important;
+  }
+
+  #world.world-design[data-design-style="sf"] .content,
+  #world.world-design[data-design-style="fantasy"] .content,
+  #world.world-design[data-design-style="cyberpunk"] .content,
+  #world.world-design[data-design-style="darkfantasy"] .content,
+  #world.world-design[data-design-style="horror"] .content,
+  #world.world-design[data-design-style="romance"] .content,
+  #world.world-design[data-design-style="school"] .content,
+  #world.world-design[data-design-style="martial"] .content,
+  #world.world-design[data-design-style="mystery"] .content,
+  #world.world-design[data-design-style="historical"] .content,
+  #world.world-design[data-design-style="healing"] .content,
+  #world.world-design[data-design-style="religion"] .content{
+    border-radius:14px!important;
+  }
+
+  /* 모바일 영웅 영역: 제목/설명이 좁은 장식 영역에 끼이지 않도록 */
+  #world.world-design .hero{
+    padding:56px 16px 18px!important;
+    align-items:flex-end!important;
+  }
+  #world.world-design .hero h1{
+    font-size:clamp(20px,6vw,27px)!important;
+    margin:0 0 7px!important;
+  }
+  #world.world-design .hero p{
+    font-size:clamp(11px,3.3vw,14px)!important;
+    line-height:1.55!important;
+    margin:0!important;
+  }
+  #world.world-design .hero .back{left:10px!important;top:10px!important;}
+  #world.world-design .hero .actions{right:10px!important;top:10px!important;max-width:calc(100% - 80px);}
+  #world.world-design .hero .actions button{white-space:nowrap!important;}
 }
