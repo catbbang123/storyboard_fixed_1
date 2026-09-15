@@ -1287,8 +1287,8 @@
 }
 
 /* =========================================================
-   종교 / 신화 — 그리스 신전 스타일
-   공통 레이아웃은 SF와 동일하게 유지하고, 장식만 고전 신전 분위기로 변경
+   종교 / 그리스 신전 · 궁전 장식
+   레이아웃은 SF 공통 규칙을 그대로 사용하고 장식만 변경
 ========================================================= */
 #world.world-design[data-design-style="religion"]{
   --religion-accent:var(--wd-accent,#c59b45);
@@ -1299,173 +1299,82 @@
   border-radius:24px!important;
   box-sizing:border-box!important;
 }
-
 #world.world-design[data-design-style="religion"] .religion-frame-art{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  z-index:0!important;
-  pointer-events:none!important;
-  overflow:hidden!important;
-  color:var(--religion-accent);
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  z-index:0!important;pointer-events:none!important;overflow:hidden!important;
+  color:var(--religion-accent);opacity:.92;
 }
-#world.world-design[data-design-style="religion"] .religion-frame-art svg{
-  display:block;width:100%;height:100%;overflow:hidden;
-}
-#world.world-design[data-design-style="religion"] .rel-temple,
-#world.world-design[data-design-style="religion"] .rel-meander,
-#world.world-design[data-design-style="religion"] .rel-sun,
-#world.world-design[data-design-style="religion"] .rel-laurel,
-#world.world-design[data-design-style="religion"] .rel-stars{
-  vector-effect:non-scaling-stroke;
-}
-
-/* 신전 장식은 콘텐츠보다 뒤에 위치 */
+#world.world-design[data-design-style="religion"] .religion-frame-art svg{display:block;width:100%;height:100%;overflow:hidden}
 #world.world-design[data-design-style="religion"] .hero,
 #world.world-design[data-design-style="religion"] .tabs,
-#world.world-design[data-design-style="religion"] .content{
-  position:relative!important;
-  z-index:1!important;
-  box-sizing:border-box!important;
-}
-
-/* SF와 완전히 같은 바깥 배치 */
+#world.world-design[data-design-style="religion"] .content{position:relative!important;z-index:1!important;box-sizing:border-box!important}
 #world.world-design[data-design-style="religion"] .hero{
-  margin:14px 14px 0!important;
-  width:calc(100% - 28px)!important;
+  margin:14px 14px 0!important;width:calc(100% - 28px)!important;
   border-radius:17px!important;
   background-color:var(--wd-layout-panel)!important;
   border:1px solid color-mix(in srgb,var(--religion-accent) 42%,var(--wd-layout-border))!important;
   box-shadow:0 8px 28px color-mix(in srgb,var(--wd-layout-border) 22%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--religion-accent) 12%,transparent)!important;
 }
-
-/* 테마 사진이 있는 경우 사진을 절대 덮어쓰지 않음 */
 #world.world-design[data-design-style="religion"] .hero.has-photo{
-  background-color:transparent!important;
-  background-size:cover!important;
-  background-position:center!important;
-  background-repeat:no-repeat!important;
+  background-color:transparent!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;
 }
 #world.world-design[data-design-style="religion"] .hero.has-photo::after{
-  content:"";
-  position:absolute;inset:0;
-  background:linear-gradient(to bottom,rgba(40,28,14,.08),rgba(40,28,14,.32));
-  pointer-events:none;
-  border-radius:inherit;
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(48,35,18,.05),rgba(48,35,18,.28));
 }
-
-/* 신전식 영웅 영역 하단의 고전 문양 */
 #world.world-design[data-design-style="religion"] .hero::before{
-  content:"✦  OLYMPUS  ·  SACRED WORLD  ✦";
-  position:absolute;
-  left:50%;bottom:11px;
-  transform:translateX(-50%);
-  padding:5px 13px;
-  border-top:1px solid color-mix(in srgb,var(--religion-accent) 65%,transparent);
-  border-bottom:1px solid color-mix(in srgb,var(--religion-accent) 65%,transparent);
-  color:var(--religion-accent);
-  font:600 8px/1 Georgia,"Noto Serif KR",serif;
-  letter-spacing:.18em;
-  white-space:nowrap;
-  opacity:.8;
-  pointer-events:none;
-  z-index:2;
+  content:"✦  OLYMPUS  ·  SACRED PALACE  ✦";
+  position:absolute;left:50%;bottom:11px;transform:translateX(-50%);
+  padding:5px 13px;border-top:1px solid color-mix(in srgb,var(--religion-accent) 65%,transparent);border-bottom:1px solid color-mix(in srgb,var(--religion-accent) 65%,transparent);
+  color:var(--religion-accent);font:600 8px/1 Georgia,"Noto Serif KR",serif;letter-spacing:.18em;white-space:nowrap;opacity:.82;pointer-events:none;z-index:2;
 }
-
 #world.world-design[data-design-style="religion"] .tabs,
-#world.world-design[data-design-style="religion"] .content{
-  margin-left:14px!important;
-  margin-right:14px!important;
-}
+#world.world-design[data-design-style="religion"] .content{margin-left:14px!important;margin-right:14px!important}
 #world.world-design[data-design-style="religion"] .tabs{
-  background:var(--wd-layout-panel)!important;
-  border-color:color-mix(in srgb,var(--religion-accent) 28%,var(--wd-layout-border))!important;
-  border-radius:14px!important;
-  padding:14px 18px!important;
+  background:var(--wd-layout-panel)!important;border-color:color-mix(in srgb,var(--religion-accent) 28%,var(--wd-layout-border))!important;
 }
 #world.world-design[data-design-style="religion"] .tabs::before{
-  content:"";
-  display:block;
-  position:absolute;
-  left:18px;right:18px;top:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--religion-accent),transparent);
-  opacity:.42;
+  content:"";display:block;position:absolute;left:14px;right:14px;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--religion-accent),transparent);opacity:.42;
 }
-#world.world-design[data-design-style="religion"] .tabs button{
-  font-family:Georgia,"Noto Serif KR",serif;
-  letter-spacing:.02em;
-  color:var(--wd-layout-text);
-}
-#world.world-design[data-design-style="religion"] .tabs button.active{
-  color:var(--religion-accent)!important;
-  background:color-mix(in srgb,var(--religion-accent) 12%,var(--wd-layout-panel))!important;
-  box-shadow:inset 0 -2px 0 var(--religion-accent);
-}
-
+#world.world-design[data-design-style="religion"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;letter-spacing:.02em}
+#world.world-design[data-design-style="religion"] .tabs button.active{box-shadow:inset 0 -2px 0 var(--religion-accent)!important}
 #world.world-design[data-design-style="religion"] .content{
-  background:var(--wd-layout-panel)!important;
-  border-color:color-mix(in srgb,var(--religion-accent) 24%,var(--wd-layout-border))!important;
-  border-radius:16px!important;
-  box-shadow:0 8px 26px rgba(90,65,30,.07),inset 0 0 0 1px color-mix(in srgb,var(--religion-accent) 7%,transparent);
+  background:var(--wd-layout-panel)!important;border-color:color-mix(in srgb,var(--religion-accent) 22%,var(--wd-layout-border))!important;
 }
-#world.world-design[data-design-style="religion"] .content h2,
-#world.world-design[data-design-style="religion"] .content-head h2{
-  font-family:Georgia,"Noto Serif KR",serif;
-}
-#world.world-design[data-design-style="religion"] .content h2::before{
-  content:"❖";
-  color:var(--religion-accent);
-  font-size:.65em;
-  margin-right:9px;
-  vertical-align:.12em;
-}
+#world.world-design[data-design-style="religion"] .content h2{font-family:Georgia,"Noto Serif KR",serif;letter-spacing:.02em}
+#world.world-design[data-design-style="religion"] .content h2::before{content:"❖";margin-right:8px;color:var(--religion-accent);font-size:.68em}
 #world.world-design[data-design-style="religion"] .content .item,
 #world.world-design[data-design-style="religion"] .content .card,
 #world.world-design[data-design-style="religion"] .content .story-card,
 #world.world-design[data-design-style="religion"] .content .setting-card{
-  background:var(--wd-layout-panel)!important;
   border-color:color-mix(in srgb,var(--religion-accent) 22%,var(--wd-layout-border))!important;
-  box-shadow:0 8px 22px rgba(90,65,30,.07),inset 0 0 0 1px color-mix(in srgb,var(--religion-accent) 6%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--religion-accent) 7%,transparent),0 10px 24px color-mix(in srgb,var(--wd-layout-border) 18%,transparent)!important;
 }
-#world.world-design[data-design-style="religion"] .content .item h3,
-#world.world-design[data-design-style="religion"] .content .card h3,
-#world.world-design[data-design-style="religion"] .content .story-card h3,
-#world.world-design[data-design-style="religion"] .content .setting-card h3{
-  font-family:Georgia,"Noto Serif KR",serif;
-}
+/* 선택한 포인트 색상이 신전 장식 전체에 반영 */
+#world.world-design[data-design-style="religion"][data-design-color="purple"]{--religion-accent:#8b70d8}
+#world.world-design[data-design-style="religion"][data-design-color="blue"]{--religion-accent:#587dbb}
+#world.world-design[data-design-style="religion"][data-design-color="sky"]{--religion-accent:#61a9c9}
+#world.world-design[data-design-style="religion"][data-design-color="green"]{--religion-accent:#6f9b68}
+#world.world-design[data-design-style="religion"][data-design-color="teal"]{--religion-accent:#55a59a}
+#world.world-design[data-design-style="religion"][data-design-color="gold"]{--religion-accent:#c59b45}
+#world.world-design[data-design-style="religion"][data-design-color="red"]{--religion-accent:#b86b5e}
+#world.world-design[data-design-style="religion"][data-design-color="orange"]{--religion-accent:#c9864b}
+#world.world-design[data-design-style="religion"][data-design-color="pink"]{--religion-accent:#b87891}
+#world.world-design[data-design-style="religion"][data-design-color="black"]{--religion-accent:#8d8a82}
+#world.world-design[data-design-style="religion"][data-design-color="white"]{--religion-accent:#ded8c7}
 
 @media(max-width:700px){
-  #world.world-design[data-design-style="religion"]{
-    padding:8px!important;
-    border-radius:18px!important;
-  }
+  #world.world-design[data-design-style="religion"]{padding:8px!important;border-radius:18px!important}
   #world.world-design[data-design-style="religion"] .hero{
-    margin:9px 9px 0!important;
-    width:calc(100% - 18px)!important;
-    border-radius:14px!important;
+    margin:9px 9px 0!important;width:calc(100% - 18px)!important;border-radius:14px!important;
   }
   #world.world-design[data-design-style="religion"] .tabs,
-  #world.world-design[data-design-style="religion"] .content{
-    margin-left:9px!important;
-    margin-right:9px!important;
-  }
-  #world.world-design[data-design-style="religion"] .tabs{
-    padding:10px 12px!important;
-  }
-  #world.world-design[data-design-style="religion"] .hero::before{
-    bottom:8px;
-    padding:4px 9px;
-    font-size:6px;
-    letter-spacing:.12em;
-  }
-  #world.world-design[data-design-style="religion"] .religion-frame-art{
-    opacity:.72;
-  }
-  #world.world-design[data-design-style="religion"] .rel-temple{
-    opacity:.65;
-  }
-  #world.world-design[data-design-style="religion"] .rel-sun{
-    opacity:.36;
-  }
+  #world.world-design[data-design-style="religion"] .content{margin-left:9px!important;margin-right:9px!important}
+  #world.world-design[data-design-style="religion"] .religion-frame-art{opacity:.68}
+  #world.world-design[data-design-style="religion"] .rel-statue{opacity:.72}
+  #world.world-design[data-design-style="religion"] .rel-palace{opacity:.64}
+  #world.world-design[data-design-style="religion"] .rel-laurel{opacity:.48}
+  #world.world-design[data-design-style="religion"] .hero::before{bottom:8px;padding:4px 8px;font-size:6px;letter-spacing:.1em}
+  #world.world-design[data-design-style="religion"] .content h2::before{margin-right:6px}
 }
