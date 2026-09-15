@@ -1122,11 +1122,10 @@
 ========================================================= */
 #world.world-design[data-design-style="sf"]{
   --sf-accent:var(--wd-accent,#57b7e6);
-  background:
-    radial-gradient(circle at 50% 0%, color-mix(in srgb,var(--sf-accent) 13%,transparent), transparent 34%),
-    linear-gradient(180deg,var(--wd-layout-bg),color-mix(in srgb,var(--wd-layout-bg) 88%,#07131d));
-  border:1px solid color-mix(in srgb,var(--sf-accent) 35%,var(--wd-layout-border));
-  box-shadow:inset 0 0 70px color-mix(in srgb,var(--sf-accent) 7%,transparent);
+  /* 판타지·무협·사이버펑크와 동일하게 선택한 바깥 레이아웃 색상을 그대로 사용 */
+  background:var(--wd-layout-bg)!important;
+  border:1px solid var(--wd-layout-border)!important;
+  box-shadow:0 8px 28px color-mix(in srgb,var(--wd-layout-border) 24%,transparent)!important;
 }
 #world.world-design[data-design-style="sf"] .sf-frame-art{
   position:absolute!important;
@@ -1167,9 +1166,16 @@
 #world.world-design[data-design-style="sf"] .tabs,
 #world.world-design[data-design-style="sf"] .content{position:relative;z-index:1}
 #world.world-design[data-design-style="sf"] .hero{
-  background-color:color-mix(in srgb,var(--wd-layout-panel) 92%,#07131d)!important;
+  /* background shorthand는 inline cover 이미지까지 지워버리므로 사용하지 않음 */
+  background-color:var(--wd-layout-panel)!important;
   border:1px solid color-mix(in srgb,var(--sf-accent) 42%,var(--wd-layout-border))!important;
-  box-shadow:0 8px 28px color-mix(in srgb,var(--sf-accent) 10%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--sf-accent) 10%,transparent)!important;
+  box-shadow:0 8px 28px color-mix(in srgb,var(--wd-layout-border) 22%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--sf-accent) 10%,transparent)!important;
+}
+#world.world-design[data-design-style="sf"] .hero.has-photo{
+  background-color:transparent!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
 }
 #world.world-design[data-design-style="sf"] .hero::after{
   content:"SYSTEM ONLINE  //  WORLD NODE";
@@ -1179,7 +1185,7 @@
   pointer-events:none;
 }
 #world.world-design[data-design-style="sf"] .tabs{
-  background:color-mix(in srgb,var(--wd-layout-panel) 94%,#07131d)!important;
+  background:var(--wd-layout-panel)!important;
   border-color:color-mix(in srgb,var(--sf-accent) 26%,var(--wd-layout-border))!important;
 }
 #world.world-design[data-design-style="sf"] .tabs::before{
@@ -1187,7 +1193,7 @@
   background:linear-gradient(90deg,transparent,var(--sf-accent),transparent);opacity:.38;
 }
 #world.world-design[data-design-style="sf"] .content{
-  background:color-mix(in srgb,var(--wd-layout-panel) 96%,#07131d)!important;
+  background:var(--wd-layout-panel)!important;
   border-color:color-mix(in srgb,var(--sf-accent) 22%,var(--wd-layout-border))!important;
 }
 #world.world-design[data-design-style="sf"] .content h2::before{
@@ -1216,597 +1222,250 @@
   #world.world-design[data-design-style="sf"] .hero::after{font-size:7px;left:12px;bottom:9px}
 }
 
-/* Cyberpunk layout: keep exactly the same outer layout spacing as Fantasy / SF / Martial. */
-#world.world-design[data-design-style="cyberpunk"]{
-  padding:12px!important;
-  border-radius:24px!important;
-  box-sizing:border-box!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .hero{
+/* =========================================================
+   SF 레이아웃 통일 — 판타지와 동일한 배치/여백/패널 구조
+   장르별 차이는 장식과 분위기만 유지
+========================================================= */
+#world.world-design[data-design-style="sf"] .hero{
   margin:14px 14px 0!important;
   width:calc(100% - 28px)!important;
   border-radius:17px!important;
   z-index:1!important;
 }
-#world.world-design[data-design-style="cyberpunk"] .tabs,
-#world.world-design[data-design-style="cyberpunk"] .content{
+#world.world-design[data-design-style="sf"] .tabs,
+#world.world-design[data-design-style="sf"] .content{
   position:relative!important;
   z-index:1!important;
   margin-left:14px!important;
   margin-right:14px!important;
 }
+#world.world-design[data-design-style="sf"] .tabs{
+  border-radius:14px!important;
+}
+#world.world-design[data-design-style="sf"] .content{
+  border-radius:16px!important;
+}
+/* SF도 판타지·무협·사이버펑크와 동일한 외곽 레이아웃 규칙 */
+#world.world-design[data-design-style="sf"]{
+  padding:12px!important;
+  border-radius:24px!important;
+}
+#world.world-design[data-design-style="sf"] .hero,
+#world.world-design[data-design-style="sf"] .tabs,
+#world.world-design[data-design-style="sf"] .content{
+  box-sizing:border-box!important;
+}
+#world.world-design[data-design-style="sf"] .content .item,
+#world.world-design[data-design-style="sf"] .content .card,
+#world.world-design[data-design-style="sf"] .content .story-card,
+#world.world-design[data-design-style="sf"] .content .setting-card{
+  background:var(--wd-layout-panel)!important;
+  border-color:var(--wd-layout-border)!important;
+}
+
+/* SF 장식은 기존 위치에 남기되, 콘텐츠 배치에는 영향을 주지 않음 */
+#world.world-design[data-design-style="sf"] .sf-frame-art{
+  pointer-events:none!important;
+}
+
+/* 제목 앞의 // 장식 제거 */
+#world.world-design[data-design-style="sf"] .content h2::before{
+  content:none!important;
+  display:none!important;
+}
+
 @media(max-width:700px){
-  #world.world-design[data-design-style="cyberpunk"]{
-    padding:8px!important;
-    border-radius:18px!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .hero{
+  #world.world-design[data-design-style="sf"] .hero{
     margin:9px 9px 0!important;
     width:calc(100% - 18px)!important;
-    border-radius:14px!important;
   }
-  #world.world-design[data-design-style="cyberpunk"] .tabs,
-  #world.world-design[data-design-style="cyberpunk"] .content{
+  #world.world-design[data-design-style="sf"] .tabs,
+  #world.world-design[data-design-style="sf"] .content{
     margin-left:9px!important;
     margin-right:9px!important;
   }
 }
 
 /* =========================================================
-   CYBERPUNK — neon city / hacker / glitch atmosphere
-   Existing World Platform layout remains unchanged.
-   ========================================================= */
-#world.world-design[data-design-style="cyberpunk"]{
-  --cyber-accent:var(--wd-accent,#36d6c0);
-  --cyber-pink:#ff2bd6;
-  --cyber-blue:#19d9ff;
-  position:relative;
-  overflow:hidden;
-  /* 바깥 레이아웃 색상은 세계관 꾸미기의 레이아웃 선택값을 그대로 사용합니다. */
-  background:
-    radial-gradient(circle at 18% 8%,color-mix(in srgb,var(--cyber-accent) 12%,transparent),transparent 28%),
-    radial-gradient(circle at 82% 20%,color-mix(in srgb,var(--cyber-pink) 8%,transparent),transparent 24%),
-    var(--wd-layout-bg,#070a12)!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{
-  position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
-  opacity:.9;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-frame-art svg{position:absolute;inset:0;width:100%;height:100%;}
-#world.world-design[data-design-style="cyberpunk"] .cyber-city path:first-child{
-  fill:color-mix(in srgb,var(--cyber-accent) 5%,#070a12);
-  stroke:color-mix(in srgb,var(--cyber-accent) 38%,transparent);stroke-width:1;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-city-window{
-  fill:var(--cyber-accent);opacity:.7;filter:drop-shadow(0 0 5px var(--cyber-accent));
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-wires path{
-  fill:none;stroke:var(--cyber-accent);stroke-width:1.5;opacity:.78;
-  stroke-dasharray:10 7;animation:cyberWire 5s linear infinite;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-wires path:nth-child(2){stroke:var(--cyber-pink);animation-delay:-2.2s}
-#world.world-design[data-design-style="cyberpunk"] .cyber-signs rect{
-  fill:rgba(7,10,18,.65);stroke:var(--cyber-pink);stroke-width:1.5;
-  filter:drop-shadow(0 0 6px var(--cyber-pink));
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-signs path{stroke:var(--cyber-blue);stroke-width:2;filter:drop-shadow(0 0 5px var(--cyber-blue));}
-#world.world-design[data-design-style="cyberpunk"] .cyber-scan path{
-  stroke:var(--cyber-accent);stroke-width:1;opacity:.14;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-glitch path{fill:var(--cyber-pink);opacity:.7}
-#world.world-design[data-design-style="cyberpunk"] .cyber-glitch path:nth-child(2){fill:var(--cyber-blue)}
-#world.world-design[data-design-style="cyberpunk"] .cyber-noise{
-  position:absolute;inset:0;opacity:.045;mix-blend-mode:screen;
-  background-image:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(255,255,255,.7) 3px,transparent 4px);
-  animation:cyberNoise .18s steps(2) infinite;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-vignette{
-  position:absolute;inset:0;
-  background:radial-gradient(ellipse at center,transparent 48%,color-mix(in srgb,var(--wd-layout-text) 18%,transparent) 100%);
-  opacity:.75;
-}
-#world.world-design[data-design-style="cyberpunk"] .hero,
-#world.world-design[data-design-style="cyberpunk"] .tabs,
-#world.world-design[data-design-style="cyberpunk"] .content{position:relative;z-index:1;}
-#world.world-design[data-design-style="cyberpunk"] .hero{
-  background-color:var(--wd-layout-panel)!important;
-  border-color:color-mix(in srgb,var(--cyber-accent) 32%,var(--wd-layout-border))!important;
-  box-shadow:0 0 35px color-mix(in srgb,var(--cyber-accent) 12%,transparent),inset 0 -1px 0 rgba(255,43,214,.35)!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .hero h1{
-  text-shadow:2px 0 0 rgba(255,43,214,.45),-2px 0 0 rgba(25,217,255,.42);
-}
-#world.world-design[data-design-style="cyberpunk"] .hero::after{
-  content:"NEON DISTRICT  //  ACCESS NODE";
-  position:absolute;left:18px;bottom:13px;
-  font:600 8px/1 "DM Mono","Noto Sans Mono",monospace;letter-spacing:.14em;
-  color:var(--cyber-accent);opacity:.78;pointer-events:none;
-}
-#world.world-design[data-design-style="cyberpunk"] .tabs{
-  background:var(--wd-layout-panel)!important;
-  border-color:color-mix(in srgb,var(--cyber-accent) 28%,var(--wd-layout-border))!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .tabs::before{
-  content:"";display:block;position:absolute;left:0;right:0;top:0;height:2px;
-  background:linear-gradient(90deg,var(--cyber-pink),var(--cyber-accent),var(--cyber-blue),var(--cyber-pink));
-  opacity:.65;box-shadow:0 0 10px rgba(25,217,255,.45);
-}
-#world.world-design[data-design-style="cyberpunk"] .tabs button{
-  transition:box-shadow .18s,transform .18s;text-shadow:0 0 7px color-mix(in srgb,var(--cyber-accent) 45%,transparent);
-}
-#world.world-design[data-design-style="cyberpunk"] .tabs button:hover{
-  box-shadow:inset 0 -2px 0 var(--cyber-pink),0 0 13px rgba(255,43,214,.18);
-}
-#world.world-design[data-design-style="cyberpunk"] .tabs button.active{
-  box-shadow:inset 0 -2px 0 var(--cyber-accent),0 0 14px color-mix(in srgb,var(--cyber-accent) 16%,transparent);
-}
-#world.world-design[data-design-style="cyberpunk"] .content{
-  background:rgba(8,11,19,.92)!important;
-  border-color:color-mix(in srgb,var(--cyber-accent) 20%,var(--wd-layout-border))!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .content .item,
-#world.world-design[data-design-style="cyberpunk"] .content .card,
-#world.world-design[data-design-style="cyberpunk"] .content .story-card,
-#world.world-design[data-design-style="cyberpunk"] .content .setting-card{
-  border-left:2px solid var(--cyber-accent)!important;
-  box-shadow:inset 0 0 18px rgba(25,217,255,.035),0 0 18px rgba(0,0,0,.18)!important;
-}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="purple"]{--cyber-accent:#9b6cff}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="blue"]{--cyber-accent:#4d7cff}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="sky"]{--cyber-accent:#19d9ff}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="green"]{--cyber-accent:#61e58c}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="teal"]{--cyber-accent:#36e0c4}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="gold"]{--cyber-accent:#ffd15a}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="red"]{--cyber-accent:#ff526e}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="orange"]{--cyber-accent:#ff9650}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="pink"]{--cyber-accent:#ff55d8}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="black"]{--cyber-accent:#b9c6d4}
-#world.world-design[data-design-style="cyberpunk"][data-design-color="white"]{--cyber-accent:#eaf7ff}
-@keyframes cyberWire{to{stroke-dashoffset:-68}}
-@keyframes cyberNoise{0%{transform:translate(0)}50%{transform:translate(-1px,1px)}100%{transform:translate(1px,-1px)}}
-@media(max-width:700px){
-  #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{opacity:.72}
-  #world.world-design[data-design-style="cyberpunk"] .hero::after{font-size:7px;left:12px;bottom:9px}
-}
-
-
-/* =========================================================
-   무협 판타지 — 조선풍 무인 세계
-   레이아웃은 기존 판타지/SF와 동일하게 유지하고,
-   장식·배경·선·색감만 한국 조선시대 분위기로 차별화
+   종교 / 신화 — 그리스 신전 스타일
+   공통 레이아웃은 SF와 동일하게 유지하고, 장식만 고전 신전 분위기로 변경
 ========================================================= */
-#world.world-design[data-design-style="martial"]{
-  --martial-accent:var(--wd-accent);
-  --wd-bg:#e8e1d4;
-  --wd-panel:#f6f0e4;
-  --wd-text:#282722;
-  background:
-    radial-gradient(circle at 78% 16%, rgba(255,255,255,.58), transparent 18%),
-    linear-gradient(180deg,#e9e2d6 0%,#f4eee3 42%,#ddd4c5 100%);
-  color:var(--wd-text);
-  overflow:hidden;
-}
-#world.world-design[data-design-style="martial"]::before{
-  content:"";position:absolute;inset:8px;border:1px solid rgba(69,58,43,.28);
-  border-radius:18px;pointer-events:none;z-index:0;
-  box-shadow:inset 0 0 0 5px rgba(255,255,255,.22),inset 0 -70px 110px rgba(62,50,37,.08);
-}
-#world.world-design[data-design-style="martial"]::after{
-  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.34;
-  background:
-    repeating-linear-gradient(0deg,transparent 0 5px,rgba(70,58,43,.018) 6px),
-    radial-gradient(circle at 20% 70%,rgba(80,70,55,.07),transparent 28%),
-    radial-gradient(circle at 85% 60%,rgba(80,70,55,.05),transparent 24%);
-}
-#world.world-design[data-design-style="martial"] .martial-frame-art{
-  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
-  z-index:0!important;pointer-events:none!important;color:var(--martial-accent);opacity:.95;overflow:hidden!important;
-}
-#world.world-design[data-design-style="martial"] .martial-frame-art svg{display:block;width:100%;height:100%;overflow:visible}
-/* 한옥 지붕선 */
-#world.world-design[data-design-style="martial"] .mj-roof{fill:none;stroke:#3c342a;stroke-width:3;opacity:.48}
-#world.world-design[data-design-style="martial"] .mj-roof2{fill:none;stroke:#6b5c49;stroke-width:1.3;opacity:.55}
-#world.world-design[data-design-style="martial"] .mj-roof-tile{fill:none;stroke:#5a4b3a;stroke-width:1.2;opacity:.35}
-/* 전통 창호 */
-#world.world-design[data-design-style="martial"] .mj-lattice rect{fill:rgba(248,242,230,.20);stroke:#514535;stroke-width:2;opacity:.58}
-#world.world-design[data-design-style="martial"] .mj-lattice path{fill:none;stroke:#514535;stroke-width:1.35;opacity:.48}
-/* 대나무/난초 */
-#world.world-design[data-design-style="martial"] .mj-bamboo path{fill:none;stroke:#3f5849;stroke-width:3;stroke-linecap:round;opacity:.65}
-#world.world-design[data-design-style="martial"] .mj-bamboo .mj-node{stroke:#304638;stroke-width:2;opacity:.55}
-#world.world-design[data-design-style="martial"] .mj-leaf{fill:#49624e;opacity:.55}
-/* 매화 */
-#world.world-design[data-design-style="martial"] .mj-plum circle{fill:color-mix(in srgb,var(--martial-accent) 55%,#fff);stroke:#704b49;stroke-width:1;opacity:.78}
-#world.world-design[data-design-style="martial"] .mj-plum circle:first-child{fill:#7b504d;opacity:.72}
-/* 먹선과 검기 */
-#world.world-design[data-design-style="martial"] .mj-ink{fill:none;stroke:#403a32;stroke-linecap:round;opacity:.24}
-#world.world-design[data-design-style="martial"] .mj-blade path{fill:none;stroke:var(--martial-accent);stroke-linecap:round;opacity:.40;stroke-width:1.6}
-#world.world-design[data-design-style="martial"] .mj-blade path:first-child{stroke-width:3;opacity:.62}
-/* 달과 산수화 */
-#world.world-design[data-design-style="martial"] .mj-moon{fill:rgba(255,249,226,.72);stroke:#806f58;stroke-width:1.4;opacity:.72}
-#world.world-design[data-design-style="martial"] .mj-mountain{fill:#4b4940;opacity:.12}
-/* 작은 인장 느낌의 장식 */
-#world.world-design[data-design-style="martial"] .mj-seal{fill:none;stroke:#8d4e49;stroke-width:2;opacity:.52}
-#world.world-design[data-design-style="martial"] .mj-seal-text{fill:#8d4e49;font-size:16px;font-family:"Noto Serif KR",serif;opacity:.55}
-
-#world.world-design[data-design-style="martial"] .hero{
-  margin:14px 14px 0!important;width:calc(100% - 28px)!important;border-radius:17px!important;
-  border:1px solid rgba(72,59,45,.28)!important;
-  box-shadow:0 7px 20px rgba(58,47,35,.13),inset 0 0 0 2px rgba(255,255,255,.18)!important;
-  z-index:1!important;
-}
-#world.world-design[data-design-style="martial"] .tabs,
-#world.world-design[data-design-style="martial"] .content{
-  position:relative!important;z-index:1!important;margin-left:14px!important;margin-right:14px!important;
-}
-#world.world-design[data-design-style="martial"] .tabs{
-  border-radius:14px!important;background:rgba(231,223,210,.92)!important;
-  border-color:rgba(79,66,50,.24)!important;
-}
-#world.world-design[data-design-style="martial"] .tabs button{
-  border-radius:4px!important;background:rgba(249,244,235,.82);color:#332f29;
-  font-family:"Noto Serif KR",Georgia,serif;
-}
-#world.world-design[data-design-style="martial"] .tabs button.active{
-  background:var(--martial-accent);color:#fff;border-color:var(--martial-accent);
-  box-shadow:0 2px 8px color-mix(in srgb,var(--martial-accent) 28%,transparent);
-}
-#world.world-design[data-design-style="martial"] .content{
-  border-radius:16px!important;background:rgba(248,243,234,.78);
-}
-#world.world-design[data-design-style="martial"] .content .card,
-#world.world-design[data-design-style="martial"] .content .story-card,
-#world.world-design[data-design-style="martial"] .content .item,
-#world.world-design[data-design-style="martial"] .content .setting-card{
-  background:rgba(250,247,240,.94);border-color:rgba(80,68,53,.16);
-  box-shadow:inset 3px 0 0 color-mix(in srgb,var(--martial-accent) 58%,transparent),0 5px 14px rgba(70,55,40,.06);
-}
-#world.world-design[data-design-style="martial"] .content h2{color:#41382e;font-family:"Noto Serif KR",Georgia,serif}
-#world.world-design[data-design-style="martial"] .hero h1{font-family:"Noto Serif KR",Georgia,serif;letter-spacing:-.03em}
-
-#world.world-design[data-design-style="martial"][data-design-color="purple"]{--martial-accent:#76609d}
-#world.world-design[data-design-style="martial"][data-design-color="blue"]{--martial-accent:#4f7196}
-#world.world-design[data-design-style="martial"][data-design-color="sky"]{--martial-accent:#5598ae}
-#world.world-design[data-design-style="martial"][data-design-color="green"]{--martial-accent:#58775d}
-#world.world-design[data-design-style="martial"][data-design-color="teal"]{--martial-accent:#428b82}
-#world.world-design[data-design-style="martial"][data-design-color="gold"]{--martial-accent:#9a7740}
-#world.world-design[data-design-style="martial"][data-design-color="red"]{--martial-accent:#a4514d}
-#world.world-design[data-design-style="martial"][data-design-color="orange"]{--martial-accent:#b36d43}
-#world.world-design[data-design-style="martial"][data-design-color="pink"]{--martial-accent:#a56d7d}
-#world.world-design[data-design-style="martial"][data-design-color="black"]{--martial-accent:#3d403c}
-#world.world-design[data-design-style="martial"][data-design-color="white"]{--martial-accent:#78858a}
-
-@media(max-width:700px){
-  #world.world-design[data-design-style="martial"] .hero{margin:9px 9px 0!important;width:calc(100% - 18px)!important}
-  #world.world-design[data-design-style="martial"] .tabs,
-  #world.world-design[data-design-style="martial"] .content{margin-left:9px!important;margin-right:9px!important}
-  #world.world-design[data-design-style="martial"] .martial-frame-art{opacity:.82}
-  #world.world-design[data-design-style="martial"] .mj-lattice{opacity:.72}
-}
-
-
-/* Cyberpunk custom point color picker */
-.wd-custom-color{margin-top:12px;padding:12px 14px;border:1px dashed rgba(120,130,150,.35);border-radius:12px;background:rgba(255,255,255,.035)}
-.wd-custom-color label{display:block;font-weight:700;margin-bottom:8px}
-.wd-custom-color-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.wd-custom-color input[type="color"]{width:48px;height:38px;padding:2px;border:1px solid rgba(140,150,170,.45);border-radius:8px;background:transparent;cursor:pointer}
-.wd-custom-color-value{font-family:monospace}
-#wdCustomColorValue{font:700 12px/1 monospace;min-width:72px}
-#wdUseCustomColor{border:1px solid #5a6678;background:#151b27;color:#eef6ff;border-radius:8px;padding:9px 12px;cursor:pointer}
-#wdUseCustomColor:hover{box-shadow:0 0 12px rgba(25,217,255,.22)}
-
-/* =========================================================
-   CYBERPUNK 2차 정리 — SF/판타지와 완전히 같은 레이아웃
-   장르 차이는 장식과 분위기에서만 발생하도록 분리
-========================================================= */
-#world.world-design[data-design-style="cyberpunk"]{
+#world.world-design[data-design-style="religion"]{
+  --religion-accent:var(--wd-accent,#c59b45);
+  background:var(--wd-layout-bg)!important;
+  border:1px solid var(--wd-layout-border)!important;
+  box-shadow:0 8px 28px color-mix(in srgb,var(--wd-layout-border) 24%,transparent)!important;
   padding:12px!important;
   border-radius:24px!important;
   box-sizing:border-box!important;
-  background:var(--wd-layout-bg)!important;
 }
-#world.world-design[data-design-style="cyberpunk"]::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  z-index:0;
-  background:
-    radial-gradient(circle at 16% 8%,color-mix(in srgb,var(--cyber-accent) 13%,transparent),transparent 28%),
-    radial-gradient(circle at 84% 18%,color-mix(in srgb,var(--cyber-pink) 9%,transparent),transparent 24%),
-    linear-gradient(180deg,transparent 0%,color-mix(in srgb,var(--cyber-accent) 4%,transparent) 100%);
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{
+
+#world.world-design[data-design-style="religion"] .religion-frame-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
   z-index:0!important;
-  opacity:.98;
+  pointer-events:none!important;
+  overflow:hidden!important;
+  color:var(--religion-accent);
 }
-#world.world-design[data-design-style="cyberpunk"] .hero{
+#world.world-design[data-design-style="religion"] .religion-frame-art svg{
+  display:block;width:100%;height:100%;overflow:hidden;
+}
+#world.world-design[data-design-style="religion"] .rel-temple,
+#world.world-design[data-design-style="religion"] .rel-meander,
+#world.world-design[data-design-style="religion"] .rel-sun,
+#world.world-design[data-design-style="religion"] .rel-laurel,
+#world.world-design[data-design-style="religion"] .rel-stars{
+  vector-effect:non-scaling-stroke;
+}
+
+/* 신전 장식은 콘텐츠보다 뒤에 위치 */
+#world.world-design[data-design-style="religion"] .hero,
+#world.world-design[data-design-style="religion"] .tabs,
+#world.world-design[data-design-style="religion"] .content{
+  position:relative!important;
+  z-index:1!important;
+  box-sizing:border-box!important;
+}
+
+/* SF와 완전히 같은 바깥 배치 */
+#world.world-design[data-design-style="religion"] .hero{
   margin:14px 14px 0!important;
   width:calc(100% - 28px)!important;
   border-radius:17px!important;
-  box-sizing:border-box!important;
-  z-index:2!important;
+  background-color:var(--wd-layout-panel)!important;
+  border:1px solid color-mix(in srgb,var(--religion-accent) 42%,var(--wd-layout-border))!important;
+  box-shadow:0 8px 28px color-mix(in srgb,var(--wd-layout-border) 22%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--religion-accent) 12%,transparent)!important;
 }
-#world.world-design[data-design-style="cyberpunk"] .hero.has-photo{
+
+/* 테마 사진이 있는 경우 사진을 절대 덮어쓰지 않음 */
+#world.world-design[data-design-style="religion"] .hero.has-photo{
   background-color:transparent!important;
   background-size:cover!important;
   background-position:center!important;
   background-repeat:no-repeat!important;
 }
-#world.world-design[data-design-style="cyberpunk"] .tabs{
+#world.world-design[data-design-style="religion"] .hero.has-photo::after{
+  content:"";
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(40,28,14,.08),rgba(40,28,14,.32));
+  pointer-events:none;
+  border-radius:inherit;
+}
+
+/* 신전식 영웅 영역 하단의 고전 문양 */
+#world.world-design[data-design-style="religion"] .hero::before{
+  content:"✦  OLYMPUS  ·  SACRED WORLD  ✦";
+  position:absolute;
+  left:50%;bottom:11px;
+  transform:translateX(-50%);
+  padding:5px 13px;
+  border-top:1px solid color-mix(in srgb,var(--religion-accent) 65%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--religion-accent) 65%,transparent);
+  color:var(--religion-accent);
+  font:600 8px/1 Georgia,"Noto Serif KR",serif;
+  letter-spacing:.18em;
+  white-space:nowrap;
+  opacity:.8;
+  pointer-events:none;
+  z-index:2;
+}
+
+#world.world-design[data-design-style="religion"] .tabs,
+#world.world-design[data-design-style="religion"] .content{
   margin-left:14px!important;
   margin-right:14px!important;
+}
+#world.world-design[data-design-style="religion"] .tabs{
+  background:var(--wd-layout-panel)!important;
+  border-color:color-mix(in srgb,var(--religion-accent) 28%,var(--wd-layout-border))!important;
   border-radius:14px!important;
-  box-sizing:border-box!important;
-  z-index:2!important;
+  padding:14px 18px!important;
 }
-#world.world-design[data-design-style="cyberpunk"] .content{
-  margin-left:14px!important;
-  margin-right:14px!important;
+#world.world-design[data-design-style="religion"] .tabs::before{
+  content:"";
+  display:block;
+  position:absolute;
+  left:18px;right:18px;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--religion-accent),transparent);
+  opacity:.42;
+}
+#world.world-design[data-design-style="religion"] .tabs button{
+  font-family:Georgia,"Noto Serif KR",serif;
+  letter-spacing:.02em;
+  color:var(--wd-layout-text);
+}
+#world.world-design[data-design-style="religion"] .tabs button.active{
+  color:var(--religion-accent)!important;
+  background:color-mix(in srgb,var(--religion-accent) 12%,var(--wd-layout-panel))!important;
+  box-shadow:inset 0 -2px 0 var(--religion-accent);
+}
+
+#world.world-design[data-design-style="religion"] .content{
+  background:var(--wd-layout-panel)!important;
+  border-color:color-mix(in srgb,var(--religion-accent) 24%,var(--wd-layout-border))!important;
   border-radius:16px!important;
-  box-sizing:border-box!important;
+  box-shadow:0 8px 26px rgba(90,65,30,.07),inset 0 0 0 1px color-mix(in srgb,var(--religion-accent) 7%,transparent);
+}
+#world.world-design[data-design-style="religion"] .content h2,
+#world.world-design[data-design-style="religion"] .content-head h2{
+  font-family:Georgia,"Noto Serif KR",serif;
+}
+#world.world-design[data-design-style="religion"] .content h2::before{
+  content:"❖";
+  color:var(--religion-accent);
+  font-size:.65em;
+  margin-right:9px;
+  vertical-align:.12em;
+}
+#world.world-design[data-design-style="religion"] .content .item,
+#world.world-design[data-design-style="religion"] .content .card,
+#world.world-design[data-design-style="religion"] .content .story-card,
+#world.world-design[data-design-style="religion"] .content .setting-card{
   background:var(--wd-layout-panel)!important;
-  border-color:var(--wd-layout-border)!important;
-  z-index:2!important;
+  border-color:color-mix(in srgb,var(--religion-accent) 22%,var(--wd-layout-border))!important;
+  box-shadow:0 8px 22px rgba(90,65,30,.07),inset 0 0 0 1px color-mix(in srgb,var(--religion-accent) 6%,transparent);
 }
-#world.world-design[data-design-style="cyberpunk"] .content .item,
-#world.world-design[data-design-style="cyberpunk"] .content .card,
-#world.world-design[data-design-style="cyberpunk"] .content .story-card,
-#world.world-design[data-design-style="cyberpunk"] .content .setting-card{
-  background:var(--wd-layout-panel)!important;
-  border-color:var(--wd-layout-border)!important;
-}
-
-/* 네온 도시가 단순한 선 몇 개가 아니라 화면 전체에 층을 이루도록 강화 */
-#world.world-design[data-design-style="cyberpunk"] .cyber-city path:first-child{
-  fill:color-mix(in srgb,var(--cyber-accent) 8%,var(--wd-layout-panel));
-  stroke:color-mix(in srgb,var(--cyber-accent) 55%,transparent);
-  stroke-width:1.2;
-  filter:drop-shadow(0 0 5px color-mix(in srgb,var(--cyber-accent) 22%,transparent));
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-city-window{
-  fill:var(--cyber-accent)!important;
-  opacity:.85;
-  filter:drop-shadow(0 0 6px var(--cyber-accent));
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-city-lines{
-  fill:none;
-  stroke:var(--cyber-blue);
-  stroke-width:1;
-  opacity:.34;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-hud circle,
-#world.world-design[data-design-style="cyberpunk"] .cyber-hud path{
-  fill:none;
-  stroke:var(--cyber-accent);
-  stroke-width:1.2;
-  opacity:.48;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-hud-tick{
-  stroke:var(--cyber-pink)!important;
-  stroke-width:2!important;
-  opacity:.8!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-grid path{
-  fill:none;
-  stroke:url(#cyberSky);
-  stroke-width:1;
-  opacity:.3;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-signs rect{
-  fill:color-mix(in srgb,var(--wd-layout-panel) 74%,transparent)!important;
-  stroke:var(--cyber-pink)!important;
-  stroke-width:1.5;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-signs path{
-  stroke:var(--cyber-blue);
-  stroke-width:2;
-  opacity:.9;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-signs .cyber-sign-detail{
-  stroke:var(--cyber-accent);
-  stroke-width:1;
-  opacity:.7;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-corners path{
-  fill:none;
-  stroke:var(--cyber-accent);
-  stroke-width:2;
-  opacity:.56;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-corners .cyber-corner-small{
-  stroke:var(--cyber-pink);
-  stroke-width:1;
-  opacity:.35;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-glitch .cyber-glitch-thin{
-  fill:none!important;
-  stroke:var(--cyber-blue);
-  stroke-width:2;
-  opacity:.65;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-scan path{
-  stroke:var(--cyber-accent);
-  stroke-width:1;
-  opacity:.18;
-}
-
-/* 사이버펑크의 패널 자체도 기존 카드 구조는 유지하면서 네온 가장자리만 추가 */
-#world.world-design[data-design-style="cyberpunk"] .hero{
-  border:1px solid color-mix(in srgb,var(--cyber-accent) 42%,var(--wd-layout-border))!important;
-  box-shadow:
-    0 0 28px color-mix(in srgb,var(--cyber-accent) 12%,transparent),
-    inset 0 0 0 1px color-mix(in srgb,var(--cyber-pink) 12%,transparent)!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .tabs{
-  background:var(--wd-layout-panel)!important;
-  border-color:color-mix(in srgb,var(--cyber-accent) 32%,var(--wd-layout-border))!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .content{
-  box-shadow:0 10px 28px color-mix(in srgb,var(--wd-layout-border) 22%,transparent)!important;
+#world.world-design[data-design-style="religion"] .content .item h3,
+#world.world-design[data-design-style="religion"] .content .card h3,
+#world.world-design[data-design-style="religion"] .content .story-card h3,
+#world.world-design[data-design-style="religion"] .content .setting-card h3{
+  font-family:Georgia,"Noto Serif KR",serif;
 }
 
 @media(max-width:700px){
-  /* SF와 동일: 모바일에서도 바깥 12px / 24px 규칙을 유지 */
-  #world.world-design[data-design-style="cyberpunk"]{
-    padding:12px!important;
-    border-radius:24px!important;
+  #world.world-design[data-design-style="religion"]{
+    padding:8px!important;
+    border-radius:18px!important;
   }
-  #world.world-design[data-design-style="cyberpunk"] .hero{
+  #world.world-design[data-design-style="religion"] .hero{
     margin:9px 9px 0!important;
     width:calc(100% - 18px)!important;
     border-radius:14px!important;
   }
-  #world.world-design[data-design-style="cyberpunk"] .tabs,
-  #world.world-design[data-design-style="cyberpunk"] .content{
+  #world.world-design[data-design-style="religion"] .tabs,
+  #world.world-design[data-design-style="religion"] .content{
     margin-left:9px!important;
     margin-right:9px!important;
   }
-  #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{opacity:.78}
-  #world.world-design[data-design-style="cyberpunk"] .cyber-noise{opacity:.025}
-}
-
-/* =========================================================
-   CYBERPUNK FINAL FIX — SF와 동일한 레이아웃 + 모바일 가독성
-   기존 UI 구조는 유지하고 사이버펑크 장식만 주변부에 배치
-========================================================= */
-#world.world-design[data-design-style="cyberpunk"]{
-  padding:12px!important;
-  border-radius:24px!important;
-  box-sizing:border-box!important;
-  overflow:hidden!important;
-  background:var(--wd-layout-bg)!important;
-}
-
-#world.world-design[data-design-style="cyberpunk"] .hero{
-  margin:14px 14px 0!important;
-  width:calc(100% - 28px)!important;
-  box-sizing:border-box!important;
-  border-radius:17px!important;
-  min-width:0!important;
-  overflow:hidden!important;
-}
-
-#world.world-design[data-design-style="cyberpunk"] .tabs,
-#world.world-design[data-design-style="cyberpunk"] .content{
-  margin-left:14px!important;
-  margin-right:14px!important;
-  box-sizing:border-box!important;
-  min-width:0!important;
-}
-
-#world.world-design[data-design-style="cyberpunk"] .tabs{
-  border-radius:14px!important;
-}
-
-#world.world-design[data-design-style="cyberpunk"] .content{
-  border-radius:16px!important;
-}
-
-/* 긴 한국어 세계관 이름/설명도 화면 밖으로 밀려나가지 않게 */
-#world.world-design[data-design-style="cyberpunk"] .hero > div:last-child{
-  min-width:0!important;
-  max-width:100%!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .hero h1{
-  max-width:100%!important;
-  min-width:0!important;
-  overflow-wrap:anywhere!important;
-  word-break:break-word!important;
-  line-height:1.15!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .hero p{
-  max-width:100%!important;
-  min-width:0!important;
-  overflow-wrap:anywhere!important;
-  word-break:break-word!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .content,
-#world.world-design[data-design-style="cyberpunk"] .content *{
-  max-width:100%;
-}
-#world.world-design[data-design-style="cyberpunk"] .content p,
-#world.world-design[data-design-style="cyberpunk"] .content h1,
-#world.world-design[data-design-style="cyberpunk"] .content h2,
-#world.world-design[data-design-style="cyberpunk"] .content h3,
-#world.world-design[data-design-style="cyberpunk"] .content h4,
-#world.world-design[data-design-style="cyberpunk"] .content span,
-#world.world-design[data-design-style="cyberpunk"] .content li{
-  overflow-wrap:anywhere!important;
-  word-break:break-word!important;
-}
-
-/* 기존 거대한 도시 실루엣은 콘텐츠를 압도하지 않도록 주변 장식으로 낮춤 */
-#world.world-design[data-design-style="cyberpunk"] .cyber-city{
-  opacity:.34!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-grid{
-  opacity:.22!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-hud{
-  opacity:.72!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-signs{
-  opacity:.72!important;
-}
-#world.world-design[data-design-style="cyberpunk"] .cyber-wires{
-  opacity:.72!important;
-}
-
-/* 모바일은 도시 실루엣을 제거하고 HUD/네온 프레임 위주로 보여서
-   작은 화면에서도 세계관 내용과 장식이 충돌하지 않게 합니다. */
-@media(max-width:700px){
-  #world.world-design[data-design-style="cyberpunk"]{
-    padding:12px!important;
-    border-radius:24px!important;
+  #world.world-design[data-design-style="religion"] .tabs{
+    padding:10px 12px!important;
   }
-  #world.world-design[data-design-style="cyberpunk"] .hero{
-    margin:9px 9px 0!important;
-    width:calc(100% - 18px)!important;
-    border-radius:14px!important;
-    padding:52px 14px 14px!important;
+  #world.world-design[data-design-style="religion"] .hero::before{
+    bottom:8px;
+    padding:4px 9px;
+    font-size:6px;
+    letter-spacing:.12em;
   }
-  #world.world-design[data-design-style="cyberpunk"] .tabs,
-  #world.world-design[data-design-style="cyberpunk"] .content{
-    margin-left:9px!important;
-    margin-right:9px!important;
+  #world.world-design[data-design-style="religion"] .religion-frame-art{
+    opacity:.72;
   }
-  #world.world-design[data-design-style="cyberpunk"] .hero h1{
-    font-size:20px!important;
-    line-height:1.2!important;
-    margin-bottom:5px!important;
+  #world.world-design[data-design-style="religion"] .rel-temple{
+    opacity:.65;
   }
-  #world.world-design[data-design-style="cyberpunk"] .hero p{
-    font-size:11px!important;
-    line-height:1.45!important;
-    margin:0!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .hero .back,
-  #world.world-design[data-design-style="cyberpunk"] .hero .actions{
-    top:10px!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .hero .back{
-    left:10px!important;
-    padding:7px 8px!important;
-    font-size:12px!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .hero .actions{
-    right:10px!important;
-    gap:4px!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .hero .actions button{
-    padding:7px 8px!important;
-    font-size:12px!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .cyber-city{
-    opacity:0!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .cyber-grid{
-    opacity:.10!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .cyber-frame-art{
-    opacity:.72!important;
-  }
-  #world.world-design[data-design-style="cyberpunk"] .cyber-noise{
-    opacity:.018!important;
+  #world.world-design[data-design-style="religion"] .rel-sun{
+    opacity:.36;
   }
 }
