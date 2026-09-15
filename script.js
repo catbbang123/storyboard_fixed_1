@@ -1971,6 +1971,32 @@ function ensureWorldDesignStyles(){
         background:#e7f3e9;
       }
 
+
+      /* 힐링 — 포근한 인형방 / 봉제인형 가득한 쉼터 */
+      #world.world-design[data-design-style="healing"]{
+        --healing-accent:var(--wd-accent);
+      }
+      #world.world-design[data-design-style="healing"] .healing-plush-art{
+        position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;color:var(--healing-accent);
+      }
+      #world.world-design[data-design-style="healing"] .healing-plush-art svg{width:100%;height:100%;display:block;}
+      #world.world-design[data-design-style="healing"] .plush{filter:drop-shadow(0 8px 8px rgba(95,80,90,.10));}
+      #world.world-design[data-design-style="healing"] .heal-garland{filter:drop-shadow(0 2px 3px rgba(80,120,90,.08));}
+      #world.world-design[data-design-style="healing"] .heal-shelf{filter:drop-shadow(0 5px 7px rgba(80,90,80,.08));}
+      #world.world-design[data-design-style="healing"] .hero,
+      #world.world-design[data-design-style="healing"] .tabs,
+      #world.world-design[data-design-style="healing"] .content{position:relative;z-index:2;}
+      #world.world-design[data-design-style="healing"] .tabs button{border-radius:999px;}
+      #world.world-design[data-design-style="healing"] .content .card,
+      #world.world-design[data-design-style="healing"] .content .story-card,
+      #world.world-design[data-design-style="healing"] .content .item,
+      #world.world-design[data-design-style="healing"] .content .setting-card{border-radius:18px;}
+      #world.world-design[data-design-style="healing"] .hero::after{
+        content:"♡  cuddle corner  ♡";position:absolute;right:18px;bottom:12px;padding:5px 10px;border-radius:999px;
+        background:rgba(255,255,255,.72);color:var(--healing-accent);font-size:10px;font-weight:700;letter-spacing:.08em;
+        box-shadow:0 4px 12px rgba(80,120,90,.08);
+      }
+
       /* 종교 / 신화 — 성전 / 고전 */
       #world.world-design[data-design-style="religion"]{
         --wd-bg:#f4f0e7;--wd-panel:#fffdf6;--wd-text:#3c3326;
@@ -2569,6 +2595,106 @@ function getMysteryDecorLayer(){
   </div>`;
 }
 
+
+function getHealingDecorLayer(){
+  return `
+    <div class="healing-plush-art" aria-hidden="true">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+        <defs>
+          <filter id="healSoft" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="1.2"/>
+          </filter>
+          <linearGradient id="healBlanket" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#fff6e8"/><stop offset="1" stop-color="#f7d9e8"/>
+          </linearGradient>
+        </defs>
+        <g class="heal-garland" fill="none" stroke="var(--healing-accent)" stroke-width="2" opacity=".26">
+          <path d="M45 72 Q210 150 380 76 T720 82 T1155 72"/>
+          <path d="M70 72 q12 25 24 0 M135 96 q12 25 24 0 M1050 96 q12 25 24 0 M1115 72 q12 25 24 0"/>
+        </g>
+
+        <!-- left bear -->
+        <g class="plush plush-bear" transform="translate(58 138)">
+          <circle cx="38" cy="22" r="15" fill="#e9b9a8"/><circle cx="92" cy="22" r="15" fill="#e9b9a8"/>
+          <circle cx="65" cy="55" r="43" fill="#f1c9b8"/>
+          <ellipse cx="65" cy="115" rx="48" ry="58" fill="#f1c9b8"/>
+          <ellipse cx="28" cy="110" rx="14" ry="40" fill="#e9b9a8"/><ellipse cx="102" cy="110" rx="14" ry="40" fill="#e9b9a8"/>
+          <circle cx="50" cy="51" r="4" fill="#55454a"/><circle cx="80" cy="51" r="4" fill="#55454a"/>
+          <ellipse cx="65" cy="67" rx="12" ry="9" fill="#fff0e8"/><circle cx="65" cy="66" r="4" fill="#55454a"/>
+          <path d="M58 76 Q65 83 72 76" fill="none" stroke="#8b5960" stroke-width="2" stroke-linecap="round"/>
+          <path d="M43 105 Q65 94 87 105 L82 132 Q65 142 48 132Z" fill="var(--healing-accent)" opacity=".78"/>
+          <circle cx="65" cy="118" r="5" fill="#fff" opacity=".9"/>
+          <ellipse cx="48" cy="166" rx="20" ry="10" fill="#dfaa9e"/><ellipse cx="82" cy="166" rx="20" ry="10" fill="#dfaa9e"/>
+        </g>
+
+        <!-- right bunny -->
+        <g class="plush plush-bunny" transform="translate(1035 132)">
+          <ellipse cx="38" cy="10" rx="13" ry="38" fill="#e7d7ed" transform="rotate(-12 38 10)"/>
+          <ellipse cx="86" cy="10" rx="13" ry="38" fill="#e7d7ed" transform="rotate(12 86 10)"/>
+          <ellipse cx="62" cy="65" rx="45" ry="42" fill="#f2e4f4"/>
+          <ellipse cx="62" cy="125" rx="48" ry="58" fill="#f2e4f4"/>
+          <circle cx="47" cy="61" r="4" fill="#514653"/><circle cx="77" cy="61" r="4" fill="#514653"/>
+          <ellipse cx="62" cy="76" rx="10" ry="8" fill="#f4b8c8"/>
+          <path d="M56 85 Q62 91 68 85" fill="none" stroke="#866b7f" stroke-width="2" stroke-linecap="round"/>
+          <path d="M43 112 Q62 99 81 112 L76 137 Q62 145 48 137Z" fill="#b9dcbf" opacity=".9"/>
+          <path d="M57 121 h10 M62 116 v10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <ellipse cx="42" cy="174" rx="20" ry="10" fill="#dfc9e5"/><ellipse cx="82" cy="174" rx="20" ry="10" fill="#dfc9e5"/>
+        </g>
+
+        <!-- small cat -->
+        <g class="plush plush-cat" transform="translate(38 650)">
+          <path d="M18 50 L28 8 L55 32 L82 8 L92 50Z" fill="#f6d9a8"/>
+          <ellipse cx="55" cy="68" rx="42" ry="38" fill="#f8dfb5"/>
+          <ellipse cx="55" cy="119" rx="46" ry="49" fill="#f8dfb5"/>
+          <circle cx="41" cy="67" r="4" fill="#514b43"/><circle cx="69" cy="67" r="4" fill="#514b43"/>
+          <path d="M51 78 Q55 82 59 78" fill="none" stroke="#8c6b55" stroke-width="2" stroke-linecap="round"/>
+          <path d="M37 104 Q55 94 73 104 L69 127 Q55 136 41 127Z" fill="#c5dff0"/>
+          <circle cx="55" cy="115" r="5" fill="#fff"/>
+          <ellipse cx="39" cy="163" rx="18" ry="9" fill="#e6c894"/><ellipse cx="71" cy="163" rx="18" ry="9" fill="#e6c894"/>
+        </g>
+
+        <!-- small chick -->
+        <g class="plush plush-chick" transform="translate(1050 655)">
+          <circle cx="50" cy="38" r="34" fill="#ffe59c"/>
+          <ellipse cx="50" cy="88" rx="43" ry="47" fill="#ffe59c"/>
+          <circle cx="38" cy="37" r="4" fill="#5a5142"/><circle cx="62" cy="37" r="4" fill="#5a5142"/>
+          <path d="M44 48 L56 48 L50 56Z" fill="#e9a65a"/>
+          <path d="M29 79 Q50 67 71 79 L67 103 Q50 112 33 103Z" fill="#f6b6c9"/>
+          <ellipse cx="35" cy="133" rx="17" ry="8" fill="#f1cd76"/><ellipse cx="65" cy="133" rx="17" ry="8" fill="#f1cd76"/>
+        </g>
+
+        <!-- center shelf of tiny plushies -->
+        <g class="heal-shelf" opacity=".96">
+          <rect x="385" y="790" width="430" height="8" rx="4" fill="var(--healing-accent)" opacity=".3"/>
+          <g transform="translate(425 716)">
+            <circle cx="25" cy="18" r="11" fill="#f3c2c8"/><circle cx="55" cy="18" r="11" fill="#f3c2c8"/><circle cx="40" cy="42" r="25" fill="#ffd8de"/>
+            <circle cx="32" cy="39" r="3"/><circle cx="48" cy="39" r="3"/><path d="M37 47q3 4 6 0" fill="none" stroke="#8a6570" stroke-width="1.5"/>
+          </g>
+          <g transform="translate(535 710)">
+            <ellipse cx="28" cy="14" rx="9" ry="22" fill="#cce5f2"/><ellipse cx="55" cy="14" rx="9" ry="22" fill="#cce5f2"/><ellipse cx="42" cy="43" rx="27" ry="25" fill="#dceefa"/>
+            <circle cx="34" cy="41" r="3"/><circle cx="50" cy="41" r="3"/><path d="M38 49q4 3 8 0" fill="none" stroke="#6d8190" stroke-width="1.5"/>
+          </g>
+          <g transform="translate(645 715)">
+            <path d="M10 32L18 7L35 24L52 7L60 32Z" fill="#d8c8ee"/><ellipse cx="35" cy="47" rx="27" ry="24" fill="#eadff7"/>
+            <circle cx="28" cy="45" r="3"/><circle cx="42" cy="45" r="3"/><path d="M31 53q4 3 8 0" fill="none" stroke="#776581" stroke-width="1.5"/>
+          </g>
+          <g transform="translate(750 716)">
+            <circle cx="25" cy="19" r="11" fill="#c6dfc8"/><circle cx="55" cy="19" r="11" fill="#c6dfc8"/><ellipse cx="40" cy="45" rx="26" ry="24" fill="#d9efd9"/>
+            <circle cx="33" cy="42" r="3"/><circle cx="47" cy="42" r="3"/><path d="M36 50q4 3 8 0" fill="none" stroke="#617561" stroke-width="1.5"/>
+          </g>
+        </g>
+
+        <!-- floating hearts and stars -->
+        <g fill="var(--healing-accent)" opacity=".42">
+          <path d="M180 290 C168 274 140 292 180 324 C220 292 192 274 180 290Z"/>
+          <path d="M1005 340 C995 326 972 340 1005 368 C1038 340 1015 326 1005 340Z"/>
+          <path d="M300 520 l6 14 15 2-11 10 3 15-13-8-13 8 3-15-11-10 15-2Z"/>
+          <path d="M905 560 l6 14 15 2-11 10 3 15-13-8-13 8 3-15-11-10 15-2Z"/>
+        </g>
+      </svg>
+    </div>`;
+}
+
 function getReligionDecorLayer(){
   return `
   <div class="religion-frame-art" aria-hidden="true">
@@ -2664,7 +2790,8 @@ const _fantasyDecor=_renderStyleKey==='fantasy' ? getFantasyDecorLayer() : '';
 const _sfDecor=_renderStyleKey==='sf' ? getSFDecorLayer() : '';
 const _religionDecor=_renderStyleKey==='religion' ? getReligionDecorLayer() : '';
 const _mysteryDecor=_renderStyleKey==='mystery' ? getMysteryDecorLayer() : '';
-$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_religionDecor}${_mysteryDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+const _healingDecor=_renderStyleKey==='healing' ? getHealingDecorLayer() : '';
+$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_religionDecor}${_mysteryDecor}${_healingDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
