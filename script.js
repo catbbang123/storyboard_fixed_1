@@ -1058,7 +1058,32 @@ function restoreStoryView(){
     }
 }
 
+function clearWorldDesign(){
+    const el = $('world');
+    if(!el) return;
+
+    // 세계관 상세 화면에서만 적용되는 디자인 상태를 목록 화면으로 가져가지 않도록 초기화합니다.
+    el.classList.remove('world-design');
+    delete el.dataset.designStyle;
+    delete el.dataset.designColor;
+    delete el.dataset.genre;
+    delete el.dataset.designFont;
+    delete el.dataset.designTextColor;
+    delete el.dataset.designButtonShape;
+    delete el.dataset.designLayoutColor;
+
+    [
+        '--wd-accent','--sf-accent','--wd-radius','--wd-shadow','--wd-border',
+        '--wd-font','--wd-text-color','--wd-button-radius','--wd-button-transform',
+        '--wd-layout-bg','--wd-layout-panel','--wd-layout-soft',
+        '--wd-layout-border','--wd-layout-text'
+    ].forEach(name => el.style.removeProperty(name));
+
+    el.style.fontFamily = '';
+}
+
 function showJoinedWorlds(){
+    clearWorldDesign();
     current = null;
 
     $('home').classList.add('hidden');
@@ -1126,6 +1151,7 @@ $('world').innerHTML = `
 }
 
 function home(){
+    clearWorldDesign();
     current=null;
     sessionStorage.removeItem('storyboard_current_reader');
     sessionStorage.removeItem('storyboard_current_story');
@@ -1140,6 +1166,7 @@ function home(){
 }
 
 function showMyWorlds(){
+    clearWorldDesign();
     current = null;
 
     $('home').classList.add('hidden');
@@ -1171,6 +1198,7 @@ function showMyWorlds(){
 }
 
 function renderHome(q=''){
+    clearWorldDesign();
     let k=q.toLowerCase().trim();
 
     // 로그아웃 상태에서는 비공개 세계관을 목록에서 숨김
@@ -4834,6 +4862,7 @@ renderWorld();
 $('search').oninput=e=>renderHome(e.target.value);
 
 async function showMyCreation(){
+    clearWorldDesign();
     current = null;
 
     $('home').classList.add('hidden');
