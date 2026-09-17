@@ -2987,7 +2987,7 @@ const _martialDecor=['martial','mystery','darkfantasy','horror','romance','schoo
 const _cyberDecor=_renderStyleKey==='cyberpunk' ? getCyberpunkDecorLayer() : '';
 const _religionDecor=_renderStyleKey==='religion' ? getReligionDecorLayer() : '';
 const _healingDecor=_renderStyleKey==='healing' ? getHealingDecorLayer() : '';
-$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_martialDecor}${_cyberDecor}${_religionDecor}${_mysteryDecor}${_healingDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_martialDecor}${_cyberDecor}${_religionDecor}${_healingDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
