@@ -3140,21 +3140,21 @@ function section(w){
                                </button>`
                             : ''}
 
-                        ${canAddContent
+                        ${canWriteStoryChapter(s, w, currentUserId)
                             ? `<button class="story-chapter-btn"
                                 data-story-chapters="${s.id}">
                                 ✍️ 회차 쓰기
                                </button>`
                             : ''}
 
-                        ${canAddContent
+                        ${canManageStory(s, w, currentUserId)
                             ? `<button class="story-edit-btn"
                                 data-story-edit="${s.id}">
                                 ⚙️ 설정
                                </button>`
                             : ''}
 
-                        ${canAddContent
+                        ${canManageStory(s, w, currentUserId)
                             ? `<button class="story-delete-btn"
                                 data-story-delete="${s.id}">
                                 🗑️ 삭제
@@ -3378,28 +3378,67 @@ function processStoryCover(file){
  });
 }
 
+function canManageStory(story, world, userId=currentUserId){
+    if(!story || !world || !userId) return false;
+    return world.owner_id === userId || story.created_by === userId;
+}
+
+function canWriteStoryChapter(story, world, userId=currentUserId){
+    if(!story || !world || !userId) return false;
+    const isOwner = world.owner_id === userId;
+    if(isOwner) return true;
+    if(story.storyType !== 'relay') return false;
+    return myWorldMemberships.some(member =>
+        member.world_id === world.id &&
+        member.user_id === userId &&
+        member.status === 'approved'
+    );
+}
+
 async function saveStoryToSupabase(story){
-    const row={
-        id:story.id,
-        world_id:current,
-        name:story.name,
-        description:story.description || '',
-        visibility:story.visibility || 'public',
-        cover_image:story.coverImage || '',
-        story_type:story.storyType || 'normal',
-        created_by:story.created_by || currentUserId || null,
-        updated_at:new Date().toISOString()
-    };
-
-    const { data: { session } } =
-        await supabaseClient.auth.getSession();
-
+    const { data: { session } } = await supabaseClient.auth.getSession();
     const user = session?.user;
 
     if(!user){
         alert('로그인 후 저장할 수 있습니다.');
         return false;
     }
+
+    const world = get(current);
+    if(!world){
+        alert('세계관을 찾을 수 없습니다.');
+        return false;
+    }
+
+    const isEditing = !!story.id;
+    if(isEditing && !canManageStory(story, world, user.id)){
+        alert('자신이 만든 소설 또는 세계관 소유자의 소설만 수정할 수 있습니다.');
+        return false;
+    }
+
+    if(!isEditing && !(
+        world.owner_id === user.id ||
+        myWorldMemberships.some(member =>
+            member.world_id === world.id &&
+            member.user_id === user.id &&
+            member.status === 'approved'
+        )
+    )){
+        alert('이 세계관의 승인된 멤버만 소설을 만들 수 있습니다.');
+        return false;
+    }
+
+    const row={
+        world_id:current,
+        name:story.name,
+        description:story.description || '',
+        visibility:story.visibility || 'public',
+        cover_image:story.coverImage || '',
+        story_type:story.storyType || 'normal',
+        created_by:story.created_by || user.id,
+        updated_at:new Date().toISOString()
+    };
+    if(story.id) row.id = story.id;
 
     const {data,error}=await supabaseClient
         .from('stories')
@@ -3413,14 +3452,39 @@ async function saveStoryToSupabase(story){
         return false;
     }
 
- story.createdAt=data?.created_at ? new Date(data.created_at).getTime() : (story.createdAt || Date.now());
- story.updatedAt=data?.updated_at ? new Date(data.updated_at).getTime() : Date.now();
- return true;
+    story.created_by = data?.created_by || story.created_by || user.id;
+    story.createdAt=data?.created_at ? new Date(data.created_at).getTime() : (story.createdAt || Date.now());
+    story.updatedAt=data?.updated_at ? new Date(data.updated_at).getTime() : Date.now();
+    return true;
 }
 
 function openStoryModal(id=null){
+ const w=get(current);
+ const s=id?w?.stories.find(x=>x.id===id):null;
+
+ if(!w){
+   alert('세계관을 찾을 수 없습니다.');
+   return;
+ }
+
+ if(id && !canManageStory(s,w,currentUserId)){
+   alert('자신이 만든 소설 또는 세계관 소유자의 소설만 수정할 수 있습니다.');
+   return;
+ }
+
+ if(!id && !(
+   w.owner_id===currentUserId ||
+   myWorldMemberships.some(member =>
+     member.world_id===w.id &&
+     member.user_id===currentUserId &&
+     member.status==='approved'
+   )
+ )){
+   alert('이 세계관의 승인된 멤버만 소설을 만들 수 있습니다.');
+   return;
+ }
+
  editingStoryId=id;
- const w=get(current),s=id?w?.stories.find(x=>x.id===id):null;
  itemType='stories';
  $('ititle').textContent=id?'스토리 설정':'새 스토리 만들기';
  $('iname').value=s?.name||'';
@@ -3436,27 +3500,27 @@ function openStoryModal(id=null){
 
  $('itemModal').classList.add('show');
 }
+
 async function deleteStory(id){
- const w=get(current),s=w?.stories.find(x=>x.id===id);if(!s)return;
- if(!confirm(`"${s.name}" 스토리를 삭제하시겠습니까?\\n스토리와 모든 회차가 삭제됩니다.`))return;
+ const w=get(current),s=w?.stories.find(x=>x.id===id);
+ if(!s)return;
 
-const { data: { session } } =
-    await supabaseClient.auth.getSession();
+ const { data: { session } } = await supabaseClient.auth.getSession();
+ const user = session?.user;
 
-const user = session?.user;
+ if(!user){
+   alert('로그인 후 소설을 삭제할 수 있습니다.');
+   return false;
+ }
 
-if(!user){
-    alert('로그인 후 소설을 삭제할 수 있습니다.');
-    return false;
-}
+ if(!canManageStory(s,w,user.id)){
+   alert('자신이 만든 소설 또는 세계관 소유자의 소설만 삭제할 수 있습니다.');
+   return false;
+ }
 
-const world = get(current);
+ if(!confirm(`"${s.name}" 스토리를 삭제하시겠습니까?\n스토리와 모든 회차가 삭제됩니다.
+릴레이 소설이라면 다른 사용자가 작성한 회차도 함께 삭제됩니다.`))return;
 
-if(!world || world.owner_id !== user.id){
-    alert('이 세계관의 소유자만 소설을 삭제할 수 있습니다.');
-    return false;
-}
-    
  const {data,error}=await supabaseClient
    .from('stories')
    .delete()
@@ -3465,12 +3529,12 @@ if(!world || world.owner_id !== user.id){
 
  if(error){
    console.error('Supabase 소설 삭제 실패:',error);
-   alert('소설 삭제에 실패했습니다.\\n'+error.message);
+   alert('소설 삭제에 실패했습니다.\n'+error.message);
    return;
  }
 
  if(!data || data.length===0){
-   alert('Supabase에서 소설 삭제를 확인하지 못했습니다.');
+   alert('Supabase에서 소설 삭제를 확인하지 못했습니다.\nRLS 삭제 정책을 확인해주세요.');
    return;
  }
 
@@ -3566,25 +3630,28 @@ async function saveChapter(){
         }
     }
 
-    const chapterId = editingChapterId
-        || ('chapter-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
+    const existingChapter = editingChapterId
+        ? s.chapters.find(x => x.id === editingChapterId)
+        : null;
 
-    // Supabase chapters 테이블에 저장할 데이터
     const chapterRow = {
-        id: chapterId,
         story_id: chapterStoryId,
         chapter_number: editingChapterId
             ? (s.chapters.findIndex(x => x.id === editingChapterId) + 1)
             : (s.chapters.length + 1),
         name: name,
         body: body,
-        author_id: editingChapterId ? (s.chapters.find(x=>x.id===editingChapterId)?.author_id || user.id) : user.id,
+        author_id: existingChapter?.author_id || user.id,
         updated_at: new Date().toISOString()
     };
 
-    const { error } = await supabaseClient
-        .from('chapters')
-        .upsert(chapterRow);
+    if(editingChapterId) chapterRow.id = editingChapterId;
+
+    const result = editingChapterId
+        ? await supabaseClient.from('chapters').update(chapterRow).eq('id', editingChapterId).select().single()
+        : await supabaseClient.from('chapters').insert(chapterRow).select().single();
+    const error = result.error;
+    const savedChapter = result.data;
 
     if(error){
         console.error('Supabase 회차 저장 실패:', error);
@@ -3598,11 +3665,11 @@ async function saveChapter(){
 
  }else{
    s.chapters.push({
-     id: chapterId,
-     name,
-     body,
-     author_id: user.id,
-     createdAt: Date.now()
+     id: savedChapter?.id,
+     name: savedChapter?.name || name,
+     body: savedChapter?.body || body,
+     author_id: savedChapter?.author_id || user.id,
+     createdAt: savedChapter?.created_at ? new Date(savedChapter.created_at).getTime() : Date.now()
    });
  }
 
@@ -3620,6 +3687,10 @@ function renderStorySettings(storyId){
     const s = w?.stories.find(x => x.id === storyId);
 
     if(!s) return;
+
+    const isStoryOwner = w.owner_id === currentUserId;
+    const canManage = canManageStory(s, w, currentUserId);
+    const canWriteChapter = canWriteStoryChapter(s, w, currentUserId);
 
     // 새로고침 시 현재 위치 기억
     sessionStorage.setItem('storyboard_current_world', current);
@@ -3653,9 +3724,9 @@ function renderStorySettings(storyId){
                     </small>
                 </div>
 
-                <button id="storySettingsEdit">
+                ${canManage ? `<button id="storySettingsEdit">
                     ⚙️ 스토리 설정 수정
-                </button>
+                </button>` : ''}
 
             </div>
 
@@ -3684,9 +3755,9 @@ function renderStorySettings(storyId){
 
                     <h2>회차</h2>
 
-                    <button id="writeChapter">
+                    ${canWriteChapter ? `<button id="writeChapter">
                         ${s.storyType==='relay'?'＋ 다음 화 쓰기':'＋ 회차 쓰기'}
-                    </button>
+                    </button>` : ''}
 
                 </div>
 
@@ -3734,22 +3805,22 @@ function renderStorySettings(storyId){
                                 </button>
 
 
-                                <button
+                                ${(isStoryOwner || c.author_id === currentUserId) ? `<button
                                     type="button"
                                     data-edit-chapter="${esc(c.id)}"
                                 >
                                     ✏️ 수정
-                                </button>
+                                </button>` : ''}
 
 
-                                <button
+                                ${(isStoryOwner || c.author_id === currentUserId) ? `<button
                                     type="button"
                                     class="chapter-delete-btn"
                                     data-story-id="${esc(s.id)}"
                                     data-delete-chapter="${esc(c.id)}"
                                 >
                                     🗑️ 삭제
-                                </button>
+                                </button>` : ''}
 
                             </div>
 
@@ -3806,10 +3877,8 @@ function renderStorySettings(storyId){
     // 스토리 설정 수정
     // ============================
 
-    $('storySettingsEdit').onclick = () => {
-
+    if($('storySettingsEdit')) $('storySettingsEdit').onclick = () => {
         openStoryModal(storyId);
-
     };
 
 
@@ -3817,10 +3886,8 @@ function renderStorySettings(storyId){
     // 회차 쓰기
     // ============================
 
-    $('writeChapter').onclick = () => {
-
+    if($('writeChapter')) $('writeChapter').onclick = () => {
         openChapterModal(storyId);
-
     };
 
 
@@ -4033,8 +4100,8 @@ async function deleteChapter(storyId,chapterId){
         return;
     }
 
-    if(w.owner_id !== user.id){
-        alert('이 세계관의 소유자만 회차를 삭제할 수 있습니다.');
+    if(w.owner_id !== user.id && c.author_id !== user.id){
+        alert('자신이 작성한 회차 또는 세계관 소유자의 회차만 삭제할 수 있습니다.');
         return;
     }
 
