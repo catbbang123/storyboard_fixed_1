@@ -2931,50 +2931,76 @@ function getReligionDecorLayer(){
 function getUnifiedRemainingDecorLayer(styleKey){
   const motif = {
     darkfantasy: `
-      <path d="M120 190 Q600 70 1080 190"/><path d="M170 215 Q600 125 1030 215"/>
-      <path d="M190 780 Q600 850 1010 780"/>
-      <path d="M210 720 C130 650 145 560 215 515 C165 470 175 390 245 350"/>
-      <path d="M990 720 C1070 650 1055 560 985 515 C1035 470 1025 390 955 350"/>
-      <path d="M600 115 C570 155 570 190 600 220 C630 190 630 155 600 115Z"/>
-      <circle cx="600" cy="168" r="18"/><path d="M592 168h16 M600 160v16"/>`,
+      <defs><linearGradient id="dfGlow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="currentColor" stop-opacity=".8"/><stop offset="1" stop-color="currentColor" stop-opacity=".08"/></linearGradient></defs>
+      <path class="ug-arch" d="M150 760 V300 Q150 125 300 125 H900 Q1050 125 1050 300 V760"/>
+      <path class="ug-arch2" d="M185 760 V325 Q185 165 320 165 H880 Q1015 165 1015 325 V760"/>
+      <path d="M120 180 Q220 105 330 165 T600 135 T870 165 T1080 180"/>
+      <path d="M135 760 Q240 690 345 735 T600 710 T855 735 T1065 760"/>
+      <path class="ug-thorn" d="M70 690 C155 630 115 555 205 505 C135 455 175 365 260 330"/>
+      <path class="ug-thorn" d="M1130 690 C1045 630 1085 555 995 505 C1065 455 1025 365 940 330"/>
+      <path d="M600 80 l18 42 45 4-34 29 10 45-39-24-39 24 10-45-34-29 45-4z"/>
+      <circle cx="600" cy="198" r="30"/><path d="M570 198h60 M600 168v60"/>
+      <path d="M210 280 q-38 42 0 84 q38-42 0-84z M990 280 q38 42 0 84 q-38-42 0-84z"/>
+      <path d="M230 620 q-25-28-50 0 q25 42 50 68 q25-26 50-68 q-25-28-50 0z"/>
+      <path d="M970 620 q-25-28-50 0 q25 42 50 68 q25-26 50-68 q-25-28-50 0z"/>`,
     horror: `
-      <path d="M90 170 L170 115 L250 155 L330 105 L410 145 L500 95 L600 130 L700 95 L790 145 L870 105 L950 155 L1030 115 L1110 170"/>
-      <path d="M95 730 L170 785 L255 745 L340 795 L430 750 L520 805 L600 770 L680 805 L770 750 L860 795 L945 745 L1030 785 L1105 730"/>
-      <circle cx="600" cy="450" r="78"/><ellipse cx="600" cy="450" rx="42" ry="22"/><circle cx="600" cy="450" r="9"/>
-      <path d="M180 330 Q150 390 185 440 M1020 330 Q1050 390 1015 440"/>`,
+      <path class="ug-crack" d="M70 125 L180 185 145 250 250 300 205 380 300 420 250 520 345 570 300 690 410 735"/>
+      <path class="ug-crack" d="M1130 125 L1020 185 1055 250 950 300 995 380 900 420 950 520 855 570 900 690 790 735"/>
+      <path d="M80 170 L170 115 L250 155 L330 105 L410 145 L500 95 L600 130 L700 95 L790 145 L870 105 L950 155 L1030 115 L1120 170"/>
+      <path d="M85 735 L175 790 L255 750 L345 805 L430 755 L520 815 L600 775 L680 815 L770 755 L855 805 L945 750 L1025 790 L1115 735"/>
+      <circle cx="600" cy="430" r="105"/><ellipse cx="600" cy="430" rx="62" ry="31"/><circle cx="600" cy="430" r="13"/>
+      <path d="M505 430 H430 M695 430 H770"/>
+      <path d="M180 340 Q145 395 180 455 M1020 340 Q1055 395 1020 455"/>
+      <path d="M290 150 q-30 42 0 82 M910 150 q30 42 0 82"/>`,
     romance: `
-      <path d="M100 205 C210 105 320 145 395 225 C465 300 520 250 600 165 C680 250 735 300 805 225 C880 145 990 105 1100 205"/>
-      <path d="M105 710 C220 800 315 760 395 690 C475 620 520 690 600 760 C680 690 725 620 805 690 C885 760 980 800 1095 710"/>
-      <path d="M600 300 C565 250 500 285 600 380 C700 285 635 250 600 300Z"/>
-      <path d="M250 470 C225 435 180 455 250 520 C320 455 275 435 250 470Z"/>
-      <path d="M950 470 C925 435 880 455 950 520 C1020 455 975 435 950 470Z"/>`,
+      <path class="ug-ribbon" d="M80 180 C190 80 300 120 390 215 C470 300 520 245 600 155 C680 245 730 300 810 215 C900 120 1010 80 1120 180"/>
+      <path d="M90 720 C200 810 315 770 395 700 C480 625 520 690 600 765 C680 690 720 625 805 700 C885 770 1000 810 1110 720"/>
+      <path d="M600 275 C560 215 475 250 600 390 C725 250 640 215 600 275Z"/>
+      <path d="M250 440 C220 400 165 425 250 510 C335 425 280 400 250 440Z"/>
+      <path d="M950 440 C920 400 865 425 950 510 C1035 425 980 400 950 440Z"/>
+      <g class="ug-rose"><path d="M165 300 q-50 45-28 100 q45-25 70-75"/><circle cx="205" cy="285" r="20"/><path d="M1035 300 q50 45 28 100 q-45-25-70-75"/><circle cx="995" cy="285" r="20"/></g>
+      <path d="M120 600 C190 555 230 560 285 600 M1080 600 C1010 555 970 560 915 600"/>`,
     school: `
-      <rect x="145" y="150" width="180" height="125" rx="8"/><path d="M175 185h120 M175 215h90 M175 245h110"/>
-      <rect x="875" y="150" width="180" height="125" rx="8"/><path d="M905 185h120 M905 215h90 M905 245h110"/>
-      <path d="M205 690 L310 585 L350 625 L245 730 Z"/><path d="M310 585l28-28 40 40-28 28"/>
-      <path d="M890 690 L995 585 L1035 625 L930 730 Z"/><path d="M995 585l28-28 40 40-28 28"/>
-      <path d="M540 170h120 M600 110v120 M560 140l80 80 M640 140l-80 80"/>`,
+      <path d="M105 145 H1095 V745 H105Z"/>
+      <path d="M155 205 H1045 M155 255 H1045 M155 695 H1045"/>
+      <g class="ug-window"><rect x="185" y="300" width="210" height="150" rx="6"/><path d="M290 300V450 M185 375H395"/><rect x="805" y="300" width="210" height="150" rx="6"/><path d="M910 300V450 M805 375H1015"/></g>
+      <path d="M540 165h120 M600 105v120 M560 125l80 80 M640 125l-80 80"/>
+      <path d="M185 560 L300 500 L370 570 L255 635 Z M830 570 L900 500 L1015 560 L945 635 Z"/>
+      <path d="M255 635v55 M945 635v55"/>
+      <path d="M475 690 H725 M505 665 H695"/>
+      <circle cx="600" cy="600" r="42"/><path d="M570 600h60 M600 570v60"/>`,
     martial: `
-      <path d="M600 92 L620 145 L680 150 L635 188 L650 245 L600 215 L550 245 L565 188 L520 150 L580 145Z"/>
-      <path d="M165 690 Q250 560 355 500 Q300 590 270 710"/>
-      <path d="M1035 690 Q950 560 845 500 Q900 590 930 710"/>
-      <path d="M250 330 Q315 250 390 300 Q330 340 270 390 M950 330 Q885 250 810 300 Q870 340 930 390"/>
-      <path d="M460 760 L740 480 M740 760 L460 480"/>`,
+      <path class="ug-roof" d="M80 190 Q180 105 300 150 Q430 75 600 140 Q770 75 900 150 Q1020 105 1120 190"/>
+      <path d="M105 215 Q200 145 300 180 Q435 110 600 170 Q765 110 900 180 Q1000 145 1095 215"/>
+      <path d="M175 245 V470 M260 215 V490 M940 245 V470 M855 215 V490"/>
+      <path d="M145 470 H305 M895 470 H1055"/>
+      <path d="M600 78 L620 132 L680 138 L635 176 L650 235 L600 205 L550 235 L565 176 L520 138 L580 132Z"/>
+      <path d="M120 690 Q230 545 360 490 Q300 590 270 725 M1080 690 Q970 545 840 490 Q900 590 930 725"/>
+      <path d="M270 360 q-75 45-110 110 M930 360 q75 45 110 110"/>
+      <path d="M455 745 L745 455 M745 745 L455 455"/>
+      <circle cx="600" cy="600" r="48"/><path d="M600 552v96 M552 600h96"/>`,
     mystery: `
-      <rect x="165" y="170" width="230" height="150" rx="4"/><path d="M190 205h175 M190 235h140 M190 265h160"/>
-      <rect x="805" y="170" width="230" height="150" rx="4"/><path d="M830 205h175 M830 235h140 M830 265h160"/>
-      <circle cx="600" cy="455" r="68"/><circle cx="600" cy="455" r="31"/><path d="M620 475l70 70"/>
-      <path d="M395 320 L520 405 M680 405 L805 320 M520 505 L395 600 M680 505 L805 600"/>`,
+      <path d="M105 155 H1095 M130 185 H1070"/>
+      <g class="ug-file"><rect x="145" y="225" width="255" height="170" rx="5"/><path d="M175 265h195 M175 300h155 M175 335h175"/><circle cx="340" cy="355" r="20"/></g>
+      <g class="ug-file"><rect x="800" y="225" width="255" height="170" rx="5"/><path d="M830 265h195 M830 300h155 M830 335h175"/><circle cx="995" cy="355" r="20"/></g>
+      <circle cx="600" cy="455" r="86"/><circle cx="600" cy="455" r="42"/><path d="M630 485l82 82"/>
+      <path d="M400 395 L520 425 M680 425 L800 395 M520 500 L400 575 M680 500 L800 575"/>
+      <circle cx="400" cy="395" r="8"/><circle cx="800" cy="395" r="8"/><circle cx="400" cy="575" r="8"/><circle cx="800" cy="575" r="8"/>
+      <path d="M185 690 H410 M790 690 H1015 M515 710 H685"/>
+      <circle cx="600" cy="710" r="16"/>`,
     historical: `
-      <path d="M145 205 H1055 M175 245 H1025"/>
-      <path d="M210 245 V690 M300 245 V690 M390 245 V690 M810 245 V690 M900 245 V690 M990 245 V690"/>
-      <path d="M190 690 H1010 M160 720 H1040"/>
-      <path d="M470 185 Q600 105 730 185"/>
-      <path d="M500 160 Q600 100 700 160"/>
-      <path d="M530 430 H670 M600 350 V510"/>`
+      <path d="M120 185 H1080 M150 220 H1050"/>
+      <path d="M190 220 V650 M285 220 V650 M380 220 V650 M820 220 V650 M915 220 V650 M1010 220 V650"/>
+      <path d="M165 650 H1035 M135 685 H1065"/>
+      <path d="M430 190 Q600 75 770 190 M465 165 Q600 90 735 165"/>
+      <path d="M500 445 H700 M600 345 V545"/>
+      <path d="M530 420 Q600 365 670 420 V505 Q600 555 530 505Z"/>
+      <path d="M165 735 Q235 680 305 735 T445 735 M1035 735 Q965 680 895 735 T755 735"/>
+      <rect x="560" y="80" width="80" height="80" rx="2" transform="rotate(45 600 120)"/>
+      <path d="M580 110h40 M600 90v60"/>`
   }[styleKey] || '';
-  const labels={darkfantasy:'DARK FANTASY',horror:'CASE OF SHADOWS',romance:'LOVE LETTER',school:'ACADEMY NOTES',martial:'EASTERN CHRONICLE',mystery:'CASE ARCHIVE',historical:'ARCHIVE RECORD'};
-  return `<div class="unified-genre-frame" aria-hidden="true"><svg viewBox="0 0 1200 900" preserveAspectRatio="none"><g class="ug-frame"><rect x="24" y="24" width="1152" height="852" rx="22"/><rect x="44" y="44" width="1112" height="812" rx="17"/></g><g class="ug-motif">${motif}</g><g class="ug-dots"><circle cx="92" cy="95" r="4"/><circle cx="1108" cy="95" r="4"/><circle cx="92" cy="805" r="4"/><circle cx="1108" cy="805" r="4"/></g></svg><span class="ug-label">${labels[styleKey]||''}</span></div>`;
+  const labels={darkfantasy:'DARK FANTASY · ARCANE',horror:'HORROR · NIGHT CASE',romance:'ROMANCE · LOVE LETTER',school:'ACADEMY · SCHOOL LIFE',martial:'MARTIAL · EASTERN CHRONICLE',mystery:'MYSTERY · CASE ARCHIVE',historical:'HISTORICAL · GRAND ARCHIVE'};
+  return `<div class="unified-genre-frame" aria-hidden="true"><svg viewBox="0 0 1200 900" preserveAspectRatio="none"><defs><filter id="ugGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="ug-frame"><rect x="20" y="20" width="1160" height="860" rx="26"/><rect x="42" y="42" width="1116" height="816" rx="20"/><rect x="62" y="62" width="1076" height="776" rx="16"/></g><g class="ug-motif" filter="url(#ugGlow)">${motif}</g><g class="ug-stars"><circle cx="95" cy="95" r="4"/><circle cx="1105" cy="95" r="4"/><circle cx="95" cy="805" r="4"/><circle cx="1105" cy="805" r="4"/><path d="M95 112v18 M86 121h18 M1105 112v18 M1096 121h18 M95 770v18 M86 779h18 M1105 770v18 M1096 779h18"/></g></svg><span class="ug-label">${labels[styleKey]||''}</span><span class="ug-badge ug-badge-left">WORLD DESIGN</span><span class="ug-badge ug-badge-right">${String(styleKey||'').toUpperCase()}</span></div>`;
 }
 
 const _genrePreset=getGenreDesignPreset(w.genre);
