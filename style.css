@@ -2014,3 +2014,177 @@
     max-width:calc(100% - 18px)!important;
   }
 }
+
+/* =========================================================
+   장르 7종 재디자인 — SF / 사이버펑크 / 판타지 / 종교·신화 / 힐링과
+   동일한 레이아웃 문법 + 장르별 장식만 교체
+   ========================================================= */
+#world.world-design[data-design-style="darkfantasy"],
+#world.world-design[data-design-style="horror"],
+#world.world-design[data-design-style="romance"],
+#world.world-design[data-design-style="school"],
+#world.world-design[data-design-style="martial"],
+#world.world-design[data-design-style="mystery"],
+#world.world-design[data-design-style="historical"]{
+  padding:12px!important;
+  border-radius:24px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  position:relative!important;
+}
+#world.world-design[data-design-style="darkfantasy"] .hero,
+#world.world-design[data-design-style="horror"] .hero,
+#world.world-design[data-design-style="romance"] .hero,
+#world.world-design[data-design-style="school"] .hero,
+#world.world-design[data-design-style="martial"] .hero,
+#world.world-design[data-design-style="mystery"] .hero,
+#world.world-design[data-design-style="historical"] .hero{
+  margin:14px 14px 0!important;
+  width:calc(100% - 28px)!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  border-radius:17px!important;
+  position:relative!important;
+  z-index:2!important;
+}
+#world.world-design[data-design-style="darkfantasy"] .tabs,
+#world.world-design[data-design-style="darkfantasy"] .content,
+#world.world-design[data-design-style="horror"] .tabs,
+#world.world-design[data-design-style="horror"] .content,
+#world.world-design[data-design-style="romance"] .tabs,
+#world.world-design[data-design-style="romance"] .content,
+#world.world-design[data-design-style="school"] .tabs,
+#world.world-design[data-design-style="school"] .content,
+#world.world-design[data-design-style="martial"] .tabs,
+#world.world-design[data-design-style="martial"] .content,
+#world.world-design[data-design-style="mystery"] .tabs,
+#world.world-design[data-design-style="mystery"] .content,
+#world.world-design[data-design-style="historical"] .tabs,
+#world.world-design[data-design-style="historical"] .content{
+  margin-left:14px!important;
+  margin-right:14px!important;
+  min-width:0!important;
+  max-width:none!important;
+  box-sizing:border-box!important;
+  position:relative!important;
+  z-index:2!important;
+}
+#world.world-design[data-design-style="darkfantasy"] .tabs,
+#world.world-design[data-design-style="horror"] .tabs,
+#world.world-design[data-design-style="romance"] .tabs,
+#world.world-design[data-design-style="school"] .tabs,
+#world.world-design[data-design-style="martial"] .tabs,
+#world.world-design[data-design-style="mystery"] .tabs,
+#world.world-design[data-design-style="historical"] .tabs{border-radius:14px!important}
+#world.world-design[data-design-style="darkfantasy"] .content,
+#world.world-design[data-design-style="horror"] .content,
+#world.world-design[data-design-style="romance"] .content,
+#world.world-design[data-design-style="school"] .content,
+#world.world-design[data-design-style="martial"] .content,
+#world.world-design[data-design-style="mystery"] .content,
+#world.world-design[data-design-style="historical"] .content{border-radius:16px!important}
+
+/* 공통 장르 장식 레이어 */
+#world.world-design .unified-genre-frame{
+  position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;
+  color:var(--wd-accent,#7c5cff);opacity:.82;overflow:hidden!important;
+}
+#world.world-design .unified-genre-frame svg{width:100%;height:100%;display:block;overflow:visible}
+#world.world-design .ug-frame rect{fill:none;stroke:currentColor;vector-effect:non-scaling-stroke}
+#world.world-design .ug-frame rect:first-child{stroke-width:2.2;opacity:.25}
+#world.world-design .ug-frame rect:last-child{stroke-width:1;opacity:.14}
+#world.world-design .ug-motif{fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.62;vector-effect:non-scaling-stroke}
+#world.world-design .ug-dots{fill:currentColor;opacity:.55}
+#world.world-design .ug-label{position:absolute;top:31px;left:50%;transform:translateX(-50%);font:600 8px/1 monospace;letter-spacing:.22em;opacity:.58;white-space:nowrap}
+
+/* 각 장르의 소재감 */
+#world.world-design[data-design-style="darkfantasy"] .unified-genre-frame{opacity:.76}
+#world.world-design[data-design-style="darkfantasy"] .ug-motif{filter:drop-shadow(0 0 3px currentColor)}
+#world.world-design[data-design-style="horror"] .ug-motif{stroke-width:2.1;opacity:.48}
+#world.world-design[data-design-style="horror"] .ug-frame{opacity:.7}
+#world.world-design[data-design-style="romance"] .ug-motif{stroke-width:2.2;opacity:.52}
+#world.world-design[data-design-style="school"] .ug-motif{stroke-width:2;opacity:.46}
+#world.world-design[data-design-style="martial"] .ug-motif{stroke-width:2.6;opacity:.60}
+#world.world-design[data-design-style="mystery"] .ug-motif{stroke-width:2.3;opacity:.58}
+#world.world-design[data-design-style="historical"] .ug-motif{stroke-width:2.8;opacity:.48}
+
+/* 장식이 제목/설명을 압박하지 않도록 콘텐츠는 항상 위에 */
+#world.world-design[data-design-style="darkfantasy"] .hero>div,
+#world.world-design[data-design-style="horror"] .hero>div,
+#world.world-design[data-design-style="romance"] .hero>div,
+#world.world-design[data-design-style="school"] .hero>div,
+#world.world-design[data-design-style="martial"] .hero>div,
+#world.world-design[data-design-style="mystery"] .hero>div,
+#world.world-design[data-design-style="historical"] .hero>div{position:relative;z-index:3;min-width:0}
+#world.world-design[data-design-style="darkfantasy"] .hero h1,
+#world.world-design[data-design-style="horror"] .hero h1,
+#world.world-design[data-design-style="romance"] .hero h1,
+#world.world-design[data-design-style="school"] .hero h1,
+#world.world-design[data-design-style="martial"] .hero h1,
+#world.world-design[data-design-style="mystery"] .hero h1,
+#world.world-design[data-design-style="historical"] .hero h1,
+#world.world-design[data-design-style="darkfantasy"] .hero p,
+#world.world-design[data-design-style="horror"] .hero p,
+#world.world-design[data-design-style="romance"] .hero p,
+#world.world-design[data-design-style="school"] .hero p,
+#world.world-design[data-design-style="martial"] .hero p,
+#world.world-design[data-design-style="mystery"] .hero p,
+#world.world-design[data-design-style="historical"] .hero p{
+  max-width:100%!important;min-width:0!important;overflow-wrap:anywhere!important;word-break:break-word!important;
+}
+#world.world-design[data-design-style="darkfantasy"] .hero p,
+#world.world-design[data-design-style="horror"] .hero p,
+#world.world-design[data-design-style="romance"] .hero p,
+#world.world-design[data-design-style="school"] .hero p,
+#world.world-design[data-design-style="martial"] .hero p,
+#world.world-design[data-design-style="mystery"] .hero p,
+#world.world-design[data-design-style="historical"] .hero p{white-space:normal!important}
+
+@media(max-width:700px){
+  #world.world-design[data-design-style="darkfantasy"],
+  #world.world-design[data-design-style="horror"],
+  #world.world-design[data-design-style="romance"],
+  #world.world-design[data-design-style="school"],
+  #world.world-design[data-design-style="martial"],
+  #world.world-design[data-design-style="mystery"],
+  #world.world-design[data-design-style="historical"]{padding:8px!important;border-radius:20px!important}
+  #world.world-design[data-design-style="darkfantasy"] .hero,
+  #world.world-design[data-design-style="horror"] .hero,
+  #world.world-design[data-design-style="romance"] .hero,
+  #world.world-design[data-design-style="school"] .hero,
+  #world.world-design[data-design-style="martial"] .hero,
+  #world.world-design[data-design-style="mystery"] .hero,
+  #world.world-design[data-design-style="historical"] .hero{margin:9px 9px 0!important;width:calc(100% - 18px)!important;border-radius:15px!important}
+  #world.world-design[data-design-style="darkfantasy"] .tabs,
+  #world.world-design[data-design-style="darkfantasy"] .content,
+  #world.world-design[data-design-style="horror"] .tabs,
+  #world.world-design[data-design-style="horror"] .content,
+  #world.world-design[data-design-style="romance"] .tabs,
+  #world.world-design[data-design-style="romance"] .content,
+  #world.world-design[data-design-style="school"] .tabs,
+  #world.world-design[data-design-style="school"] .content,
+  #world.world-design[data-design-style="martial"] .tabs,
+  #world.world-design[data-design-style="martial"] .content,
+  #world.world-design[data-design-style="mystery"] .tabs,
+  #world.world-design[data-design-style="mystery"] .content,
+  #world.world-design[data-design-style="historical"] .tabs,
+  #world.world-design[data-design-style="historical"] .content{margin-left:9px!important;margin-right:9px!important}
+  #world.world-design[data-design-style="darkfantasy"] .tabs,
+  #world.world-design[data-design-style="horror"] .tabs,
+  #world.world-design[data-design-style="romance"] .tabs,
+  #world.world-design[data-design-style="school"] .tabs,
+  #world.world-design[data-design-style="martial"] .tabs,
+  #world.world-design[data-design-style="mystery"] .tabs,
+  #world.world-design[data-design-style="historical"] .tabs{border-radius:12px!important}
+  #world.world-design[data-design-style="darkfantasy"] .content,
+  #world.world-design[data-design-style="horror"] .content,
+  #world.world-design[data-design-style="romance"] .content,
+  #world.world-design[data-design-style="school"] .content,
+  #world.world-design[data-design-style="martial"] .content,
+  #world.world-design[data-design-style="mystery"] .content,
+  #world.world-design[data-design-style="historical"] .content{border-radius:14px!important}
+  #world.world-design .unified-genre-frame{opacity:.48}
+  #world.world-design .ug-label{top:22px;font-size:6px;letter-spacing:.15em}
+  #world.world-design .ug-motif{stroke-width:2!important}
+}
