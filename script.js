@@ -2927,16 +2927,65 @@ function getReligionDecorLayer(){
   </div>`;
 }
 
+
+function getUnifiedRemainingDecorLayer(styleKey){
+  const motif = {
+    darkfantasy: `
+      <path d="M120 190 Q600 70 1080 190"/><path d="M170 215 Q600 125 1030 215"/>
+      <path d="M190 780 Q600 850 1010 780"/>
+      <path d="M210 720 C130 650 145 560 215 515 C165 470 175 390 245 350"/>
+      <path d="M990 720 C1070 650 1055 560 985 515 C1035 470 1025 390 955 350"/>
+      <path d="M600 115 C570 155 570 190 600 220 C630 190 630 155 600 115Z"/>
+      <circle cx="600" cy="168" r="18"/><path d="M592 168h16 M600 160v16"/>`,
+    horror: `
+      <path d="M90 170 L170 115 L250 155 L330 105 L410 145 L500 95 L600 130 L700 95 L790 145 L870 105 L950 155 L1030 115 L1110 170"/>
+      <path d="M95 730 L170 785 L255 745 L340 795 L430 750 L520 805 L600 770 L680 805 L770 750 L860 795 L945 745 L1030 785 L1105 730"/>
+      <circle cx="600" cy="450" r="78"/><ellipse cx="600" cy="450" rx="42" ry="22"/><circle cx="600" cy="450" r="9"/>
+      <path d="M180 330 Q150 390 185 440 M1020 330 Q1050 390 1015 440"/>`,
+    romance: `
+      <path d="M100 205 C210 105 320 145 395 225 C465 300 520 250 600 165 C680 250 735 300 805 225 C880 145 990 105 1100 205"/>
+      <path d="M105 710 C220 800 315 760 395 690 C475 620 520 690 600 760 C680 690 725 620 805 690 C885 760 980 800 1095 710"/>
+      <path d="M600 300 C565 250 500 285 600 380 C700 285 635 250 600 300Z"/>
+      <path d="M250 470 C225 435 180 455 250 520 C320 455 275 435 250 470Z"/>
+      <path d="M950 470 C925 435 880 455 950 520 C1020 455 975 435 950 470Z"/>`,
+    school: `
+      <rect x="145" y="150" width="180" height="125" rx="8"/><path d="M175 185h120 M175 215h90 M175 245h110"/>
+      <rect x="875" y="150" width="180" height="125" rx="8"/><path d="M905 185h120 M905 215h90 M905 245h110"/>
+      <path d="M205 690 L310 585 L350 625 L245 730 Z"/><path d="M310 585l28-28 40 40-28 28"/>
+      <path d="M890 690 L995 585 L1035 625 L930 730 Z"/><path d="M995 585l28-28 40 40-28 28"/>
+      <path d="M540 170h120 M600 110v120 M560 140l80 80 M640 140l-80 80"/>`,
+    martial: `
+      <path d="M600 92 L620 145 L680 150 L635 188 L650 245 L600 215 L550 245 L565 188 L520 150 L580 145Z"/>
+      <path d="M165 690 Q250 560 355 500 Q300 590 270 710"/>
+      <path d="M1035 690 Q950 560 845 500 Q900 590 930 710"/>
+      <path d="M250 330 Q315 250 390 300 Q330 340 270 390 M950 330 Q885 250 810 300 Q870 340 930 390"/>
+      <path d="M460 760 L740 480 M740 760 L460 480"/>`,
+    mystery: `
+      <rect x="165" y="170" width="230" height="150" rx="4"/><path d="M190 205h175 M190 235h140 M190 265h160"/>
+      <rect x="805" y="170" width="230" height="150" rx="4"/><path d="M830 205h175 M830 235h140 M830 265h160"/>
+      <circle cx="600" cy="455" r="68"/><circle cx="600" cy="455" r="31"/><path d="M620 475l70 70"/>
+      <path d="M395 320 L520 405 M680 405 L805 320 M520 505 L395 600 M680 505 L805 600"/>`,
+    historical: `
+      <path d="M145 205 H1055 M175 245 H1025"/>
+      <path d="M210 245 V690 M300 245 V690 M390 245 V690 M810 245 V690 M900 245 V690 M990 245 V690"/>
+      <path d="M190 690 H1010 M160 720 H1040"/>
+      <path d="M470 185 Q600 105 730 185"/>
+      <path d="M500 160 Q600 100 700 160"/>
+      <path d="M530 430 H670 M600 350 V510"/>`
+  }[styleKey] || '';
+  const labels={darkfantasy:'DARK FANTASY',horror:'CASE OF SHADOWS',romance:'LOVE LETTER',school:'ACADEMY NOTES',martial:'EASTERN CHRONICLE',mystery:'CASE ARCHIVE',historical:'ARCHIVE RECORD'};
+  return `<div class="unified-genre-frame" aria-hidden="true"><svg viewBox="0 0 1200 900" preserveAspectRatio="none"><g class="ug-frame"><rect x="24" y="24" width="1152" height="852" rx="22"/><rect x="44" y="44" width="1112" height="812" rx="17"/></g><g class="ug-motif">${motif}</g><g class="ug-dots"><circle cx="92" cy="95" r="4"/><circle cx="1108" cy="95" r="4"/><circle cx="92" cy="805" r="4"/><circle cx="1108" cy="805" r="4"/></g></svg><span class="ug-label">${labels[styleKey]||''}</span></div>`;
+}
+
 const _genrePreset=getGenreDesignPreset(w.genre);
 const _savedStyle=w.designStyle||'fantasy';
 const _useGenrePreset=(!w.designStyle || _savedStyle==='fantasy') && _genrePreset.style!=='fantasy';
 const _renderStyleKey=_useGenrePreset ? _genrePreset.style : _savedStyle;
 const _fantasyDecor=_renderStyleKey==='fantasy' ? getFantasyDecorLayer() : '';
 const _sfDecor=_renderStyleKey==='sf' ? getSFDecorLayer() : '';
-const _martialDecor=_renderStyleKey==='martial' ? getMartialDecorLayer() : '';
+const _martialDecor=['martial','mystery','darkfantasy','horror','romance','school','historical'].includes(_renderStyleKey) ? getUnifiedRemainingDecorLayer(_renderStyleKey) : '';
 const _cyberDecor=_renderStyleKey==='cyberpunk' ? getCyberpunkDecorLayer() : '';
 const _religionDecor=_renderStyleKey==='religion' ? getReligionDecorLayer() : '';
-const _mysteryDecor=_renderStyleKey==='mystery' ? getMysteryDecorLayer() : '';
 const _healingDecor=_renderStyleKey==='healing' ? getHealingDecorLayer() : '';
 $('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_martialDecor}${_cyberDecor}${_religionDecor}${_mysteryDecor}${_healingDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
