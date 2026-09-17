@@ -2188,3 +2188,78 @@
   #world.world-design .ug-label{top:22px;font-size:6px;letter-spacing:.15em}
   #world.world-design .ug-motif{stroke-width:2!important}
 }
+
+
+/* =========================================================
+   2026-09-17 장르 장식 강화
+   - 기존 버튼/카드/레이아웃은 유지
+   - 테마 사진이 큰 화면에서도 장르 디자인이 분명하게 보이도록
+     프레임·문양·패턴·글로우를 한 겹 더 추가
+   - Uiverse에서 사용하는 CSS/SVG 중심의 장식 원칙을 참고하되,
+     World Platform 전용 장식으로 구성
+========================================================= */
+#world.world-design .unified-genre-frame{opacity:.92!important;z-index:0!important}
+#world.world-design .unified-genre-frame svg{filter:drop-shadow(0 2px 5px color-mix(in srgb,var(--wd-accent) 12%,transparent))}
+#world.world-design .ug-frame rect:first-child{stroke-width:3!important;opacity:.42!important}
+#world.world-design .ug-frame rect:nth-child(2){stroke-width:1.5!important;opacity:.28!important}
+#world.world-design .ug-frame rect:nth-child(3){stroke-width:1!important;opacity:.18!important}
+#world.world-design .ug-motif{stroke-width:3!important;opacity:.78!important}
+#world.world-design .ug-stars{fill:var(--wd-accent);stroke:var(--wd-accent);stroke-width:1.5;opacity:.72}
+#world.world-design .ug-label{top:28px!important;font-size:8px!important;letter-spacing:.24em!important;font-weight:800!important;text-shadow:0 1px 5px color-mix(in srgb,var(--wd-accent) 30%,transparent)}
+#world.world-design .ug-badge{position:absolute;top:58px;padding:5px 8px;border:1px solid color-mix(in srgb,var(--wd-accent) 45%,transparent);background:color-mix(in srgb,var(--wd-layout-panel) 76%,transparent);color:var(--wd-accent);font:800 7px/1 "DM Mono","Noto Sans Mono",monospace;letter-spacing:.12em;box-shadow:0 4px 12px rgba(0,0,0,.06);opacity:.72}
+#world.world-design .ug-badge-left{left:31px;border-radius:7px 2px 7px 2px}
+#world.world-design .ug-badge-right{right:31px;border-radius:2px 7px 2px 7px}
+#world.world-design .hero{box-shadow:0 10px 30px color-mix(in srgb,var(--wd-accent) 13%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--wd-accent) 16%,transparent)!important}
+#world.world-design .hero::before{content:"";position:absolute;inset:7px;border:1px solid color-mix(in srgb,var(--wd-accent) 32%,transparent);border-radius:13px;pointer-events:none;z-index:2;opacity:.7}
+#world.world-design .hero::after{pointer-events:none!important}
+#world.world-design .tabs,
+#world.world-design .content{box-shadow:0 7px 22px color-mix(in srgb,var(--wd-accent) 9%,transparent)!important}
+
+/* 남은 장르별 소재감 */
+#world.world-design[data-design-style="darkfantasy"] .unified-genre-frame{color:var(--wd-accent);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--wd-accent) 28%,transparent))}
+#world.world-design[data-design-style="darkfantasy"] .content{background-image:radial-gradient(circle at 15% 10%,color-mix(in srgb,var(--wd-accent) 9%,transparent),transparent 28%),radial-gradient(circle at 85% 90%,color-mix(in srgb,var(--wd-accent) 7%,transparent),transparent 30%)}
+#world.world-design[data-design-style="horror"] .unified-genre-frame{color:var(--wd-accent);filter:drop-shadow(0 0 7px color-mix(in srgb,var(--wd-accent) 22%,transparent))}
+#world.world-design[data-design-style="horror"] .content{background-image:repeating-linear-gradient(135deg,transparent 0 28px,color-mix(in srgb,var(--wd-accent) 3%,transparent) 29px 30px)}
+#world.world-design[data-design-style="romance"] .unified-genre-frame{color:var(--wd-accent);filter:drop-shadow(0 2px 5px color-mix(in srgb,var(--wd-accent) 18%,transparent))}
+#world.world-design[data-design-style="romance"] .content{background-image:radial-gradient(circle at 8% 12%,color-mix(in srgb,var(--wd-accent) 10%,transparent) 0 3px,transparent 4px),radial-gradient(circle at 92% 85%,color-mix(in srgb,var(--wd-accent) 9%,transparent) 0 3px,transparent 4px)}
+#world.world-design[data-design-style="school"] .unified-genre-frame{color:var(--wd-accent)}
+#world.world-design[data-design-style="school"] .content{background-image:linear-gradient(color-mix(in srgb,var(--wd-accent) 5%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--wd-accent) 5%,transparent) 1px,transparent 1px);background-size:24px 24px}
+#world.world-design[data-design-style="martial"] .unified-genre-frame{color:var(--wd-accent);filter:drop-shadow(0 2px 4px color-mix(in srgb,var(--wd-accent) 16%,transparent))}
+#world.world-design[data-design-style="martial"] .content{background-image:radial-gradient(ellipse at 10% 20%,color-mix(in srgb,var(--wd-accent) 7%,transparent),transparent 25%),radial-gradient(ellipse at 90% 80%,color-mix(in srgb,var(--wd-accent) 7%,transparent),transparent 25%)}
+#world.world-design[data-design-style="mystery"] .unified-genre-frame{color:var(--wd-accent);filter:drop-shadow(0 0 4px color-mix(in srgb,var(--wd-accent) 20%,transparent))}
+#world.world-design[data-design-style="mystery"] .content{background-image:linear-gradient(transparent 95%,color-mix(in srgb,var(--wd-accent) 8%,transparent) 96%),linear-gradient(90deg,transparent 95%,color-mix(in srgb,var(--wd-accent) 8%,transparent) 96%);background-size:28px 28px}
+#world.world-design[data-design-style="historical"] .unified-genre-frame{color:var(--wd-accent);filter:drop-shadow(0 2px 5px color-mix(in srgb,var(--wd-accent) 15%,transparent))}
+#world.world-design[data-design-style="historical"] .content{background-image:repeating-linear-gradient(0deg,transparent 0 31px,color-mix(in srgb,var(--wd-accent) 4%,transparent) 32px)}
+
+/* 사진 위에서도 장식이 살아 보이는 공통 프레임 */
+#world.world-design[data-design-style="darkfantasy"] .hero.has-photo,
+#world.world-design[data-design-style="horror"] .hero.has-photo,
+#world.world-design[data-design-style="romance"] .hero.has-photo,
+#world.world-design[data-design-style="school"] .hero.has-photo,
+#world.world-design[data-design-style="martial"] .hero.has-photo,
+#world.world-design[data-design-style="mystery"] .hero.has-photo,
+#world.world-design[data-design-style="historical"] .hero.has-photo{isolation:isolate}
+#world.world-design[data-design-style="darkfantasy"] .hero.has-photo::after,
+#world.world-design[data-design-style="horror"] .hero.has-photo::after,
+#world.world-design[data-design-style="romance"] .hero.has-photo::after,
+#world.world-design[data-design-style="school"] .hero.has-photo::after,
+#world.world-design[data-design-style="martial"] .hero.has-photo::after,
+#world.world-design[data-design-style="mystery"] .hero.has-photo::after,
+#world.world-design[data-design-style="historical"] .hero.has-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.30));z-index:1}
+#world.world-design[data-design-style="darkfantasy"] .hero>div,
+#world.world-design[data-design-style="horror"] .hero>div,
+#world.world-design[data-design-style="romance"] .hero>div,
+#world.world-design[data-design-style="school"] .hero>div,
+#world.world-design[data-design-style="martial"] .hero>div,
+#world.world-design[data-design-style="mystery"] .hero>div,
+#world.world-design[data-design-style="historical"] .hero>div{z-index:4!important}
+
+@media(max-width:700px){
+  #world.world-design .unified-genre-frame{opacity:.72!important}
+  #world.world-design .ug-motif{stroke-width:2.4!important;opacity:.72!important}
+  #world.world-design .ug-label{top:20px!important;font-size:6px!important}
+  #world.world-design .ug-badge{top:43px;font-size:5.5px;padding:4px 6px;opacity:.62}
+  #world.world-design .ug-badge-left{left:18px}
+  #world.world-design .ug-badge-right{right:18px}
+  #world.world-design .hero::before{inset:5px;border-radius:11px}
+}
