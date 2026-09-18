@@ -2231,6 +2231,62 @@ function ensureWorldDesignStyles(){
     document.head.appendChild(style);
 }
 
+
+/* 버튼 배경색의 실제 밝기를 계산해 글자색을 자동 결정 */
+function applyAutoButtonTextColor(root = document) {
+  const scope = root.querySelector?.('#world.world-design') || document.querySelector('#world.world-design');
+  if (!scope) return;
+
+  const hexToRgb = (hex) => {
+    if (!hex) return null;
+    let h = String(hex).trim().replace('#','');
+    if (h.length === 3) h = h.split('').map(x=>x+x).join('');
+    if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+    return {
+      r: parseInt(h.slice(0,2),16),
+      g: parseInt(h.slice(2,4),16),
+      b: parseInt(h.slice(4,6),16)
+    };
+  };
+
+  const getBg = (el) => {
+    const cs = getComputedStyle(el);
+    const bg = cs.backgroundColor;
+    const m = bg && bg.match(/rgba?\(([^)]+)\)/i);
+    if (m) {
+      const a = m[1].split(',').map(v=>parseFloat(v.trim()));
+      if (a.length >= 3 && (a.length < 4 || a[3] > 0.05)) {
+        return {r:a[0],g:a[1],b:a[2]};
+      }
+    }
+    const bgImage = cs.backgroundImage;
+    const colorMatch = bgImage && bgImage.match(/#[0-9a-fA-F]{3,8}/);
+    return colorMatch ? hexToRgb(colorMatch[0]) : null;
+  };
+
+  const luminance = ({r,g,b}) => {
+    const vals=[r,g,b].map(v=>{
+      v/=255;
+      return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4);
+    });
+    return 0.2126*vals[0] + 0.7152*vals[1] + 0.0722*vals[2];
+  };
+
+  scope.querySelectorAll('button,.btn,.button,[role="button"]').forEach(btn=>{
+    const rgb=getBg(btn);
+    if (!rgb) return;
+
+    // WCAG 대비를 고려해 중간값을 기준으로 검정/흰색 결정
+    const lum=luminance(rgb);
+    const textColor=lum > 0.48 ? '#222' : '#fff';
+
+    btn.style.setProperty('--wd-button-text', textColor);
+    btn.style.color=textColor;
+    btn.classList.toggle('wd-button-light', lum > 0.48);
+    btn.classList.toggle('wd-button-dark', lum <= 0.48);
+  });
+}
+
 function applyWorldDesign(w){
     ensureWorldDesignStyles();
     const el=$('world');
@@ -6332,3 +6388,16 @@ window.clearMonthsTest = async function() {
     await updateAuthUI();
     console.log("[테스트 종료] 실제 가입일 기준으로 복구했습니다.");
 };
+
+
+/* 디자인 적용 후 새로 만들어진 버튼에도 자동 글자색 적용 */
+(function initAutoButtonTextObserver(){
+  const run=()=>applyAutoButtonTextColor(document);
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>setTimeout(run,50),{once:true});
+  }else{
+    setTimeout(run,50);
+  }
+  const obs=new MutationObserver(()=>setTimeout(run,0));
+  obs.observe(document.body,{childList:true,subtree:true});
+})();
