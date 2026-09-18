@@ -2468,7 +2468,7 @@ async function openWorldDecorModal(worldId){
 function getCyberpunkDecorLayer(){
   return `
     <div class="cyber-frame-art" aria-hidden="true">
-      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid meet" focusable="false">
         <defs>
           <filter id="cyberGlow" x="-80%" y="-80%" width="260%" height="260%">
             <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
@@ -2662,7 +2662,7 @@ function getSFDecorLayer(){
 function getFantasyDecorLayer(){
   return `
     <div class="fantasy-frame-art" aria-hidden="true">
-      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid meet" focusable="false">
         <defs>
           <linearGradient id="fantasyGlow" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="currentColor" stop-opacity=".92"/>
@@ -2857,7 +2857,7 @@ function getMysteryDecorLayer(){
 function getHealingDecorLayer(){
   return `
     <div class="healing-plush-art" aria-hidden="true">
-      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
+      <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid meet" focusable="false">
         <defs>
           <filter id="healSoft" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="1.2"/>
