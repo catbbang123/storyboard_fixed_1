@@ -39,6 +39,8 @@ const supabaseClient = window.supabase.createClient(
     }
 );
 
+let cachedAuthUser = null;
+
 async function updateAuthUI(session = null){
 
     // 전달받은 세션이 없을 때만 현재 세션을 확인합니다.
@@ -374,6 +376,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 supabaseClient.auth.onAuthStateChange((event, session) => {
 
     console.log('인증 상태 변경:', event, session);
+    cachedAuthUser = session?.user || null;
 
     // 로그아웃되면 비공개 세계관 관련 정보 즉시 초기화
     if(!session){
@@ -5850,7 +5853,14 @@ function getMemberIconUrl(userId) {
  */
 
 async function applyPersonalMonthlyIcons() {
-    const { data: { user: supabaseUser } } = await supabaseClient.auth.getUser();
+    // 반복적인 getUser() 네트워크 요청을 막아 PC에서 로그인/프로필 메뉴가
+    // 느려지는 현상을 방지합니다. 현재 인증 사용자를 메모리에서 재사용합니다.
+    let supabaseUser = cachedAuthUser;
+    if (!supabaseUser) {
+        const { data } = await supabaseClient.auth.getSession();
+        supabaseUser = data?.session?.user || null;
+        cachedAuthUser = supabaseUser;
+    }
 
     if (!supabaseUser) return;
 
@@ -6159,32 +6169,63 @@ function openIconChangeModal() {
 }
 
 // 페이지 로드 시 실행 및 동적 화면 갱신 대응
-// 세계관을 열거나 탭을 바꾸면 render 함수가 기존 DOM을 다시 만들기 때문에
-// 최초 1회만 아이콘을 적용하면 새로 만들어진 캐릭터/지역/소설/설정 아이콘이 사라집니다.
-// DOM 변경을 감지하여 현재 사용자가 작성한 콘텐츠에만 다시 아이콘을 적용합니다.
+// body 전체가 바뀔 때마다 auth.getUser()와 전체 DOM 스캔을 반복하던 기존 방식은
+// PC에서 특히 무거웠습니다. 프로필 영역 변경은 무시하고 실제 콘텐츠 변경만
+// 짧게 묶어서 처리합니다.
 let personalIconApplyTimer = null;
 let personalIconApplying = false;
+let personalIconQueued = false;
 
 async function applyPersonalIconsAfterRender() {
-    if (personalIconApplying) return;
+    if (personalIconApplying) {
+        personalIconQueued = true;
+        return;
+    }
     personalIconApplying = true;
     try {
         await applyPersonalMonthlyIcons();
     } finally {
         personalIconApplying = false;
+        if (personalIconQueued) {
+            personalIconQueued = false;
+            schedulePersonalIconApply();
+        }
     }
 }
 
+function schedulePersonalIconApply() {
+    clearTimeout(personalIconApplyTimer);
+    personalIconApplyTimer = setTimeout(() => {
+        applyPersonalIconsAfterRender();
+    }, 300);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    applyPersonalIconsAfterRender();
+    // 로그인/프로필 UI를 먼저 그린 다음 아이콘 보정을 실행합니다.
+    setTimeout(() => applyPersonalIconsAfterRender(), 0);
 
     const observerTarget = document.body;
     if (observerTarget && !window.__personalIconObserver) {
-        window.__personalIconObserver = new MutationObserver(() => {
-            clearTimeout(personalIconApplyTimer);
-            personalIconApplyTimer = setTimeout(() => {
-                applyPersonalIconsAfterRender();
-            }, 80);
+        window.__personalIconObserver = new MutationObserver((mutations) => {
+            let relevantChange = false;
+
+            for (const mutation of mutations) {
+                if (!mutation.addedNodes || mutation.addedNodes.length === 0) continue;
+                const target = mutation.target;
+
+                // 로그인/프로필 영역 자체의 변경은 다시 전체 아이콘을 적용할 필요가 없습니다.
+                if (target?.closest?.('#profileArea')) continue;
+
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.TEXT_NODE) continue;
+                    if (node.nodeType === Node.ELEMENT_NODE && node.closest?.('#profileArea')) continue;
+                    relevantChange = true;
+                    break;
+                }
+                if (relevantChange) break;
+            }
+
+            if (relevantChange) schedulePersonalIconApply();
         });
 
         window.__personalIconObserver.observe(observerTarget, {
