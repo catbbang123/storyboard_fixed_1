@@ -209,49 +209,105 @@ async function requireLogin(){
 // 보안상 브라우저의 supabase-js만으로 auth.users를 직접 삭제할 수 없으므로
 // Supabase에 SECURITY DEFINER RPC 함수(delete_my_account)를 만들어 두고 호출합니다.
 async function deleteMyAccount(){
+    // 탈퇴 버튼을 여러 번 눌러 중복 실행되는 것을 방지합니다.
+    const deleteBtn = document.getElementById("deleteAccountBtn");
+    if(deleteBtn?.dataset.deleting === "true") return;
+
     const { data: userData, error: userError } =
         await supabaseClient.auth.getUser();
 
     const user = userData?.user;
 
     if(userError || !user){
-        alert("로그인 상태를 확인하지 못했습니다.");
+        alert("현재 로그인된 계정을 확인하지 못했습니다.\n페이지를 새로고침한 뒤 다시 시도해주세요.");
         return;
     }
 
-    const confirmed = confirm(
-        "정말 회원 탈퇴하시겠습니까?\\n\\n" +
-        "회원 탈퇴하면 계정과 프로필 정보가 삭제되며, 다시 로그인하려면 새 계정을 만들어야 합니다."
+    const confirmed = window.confirm(
+        "정말 회원 탈퇴하시겠습니까?\n\n" +
+        "탈퇴하면 이 계정의 프로필과 계정 정보가 삭제됩니다.\n" +
+        "탈퇴 후에는 같은 Google 계정으로 새 계정을 만들어야 합니다."
     );
 
     if(!confirmed) return;
 
-    const secondConfirmed = confirm(
-        "마지막 확인입니다.\\n정말로 회원 탈퇴를 진행하시겠습니까?"
+    const secondConfirmed = window.confirm(
+        "마지막 확인입니다.\n\n" +
+        "회원 탈퇴를 진행하시겠습니까?"
     );
 
     if(!secondConfirmed) return;
 
-    const { error: deleteError } =
-        await supabaseClient.rpc("delete_my_account");
-
-    if(deleteError){
-        console.error("회원 탈퇴 실패:", deleteError);
-        alert(
-            "회원 탈퇴에 실패했습니다.\\n\\n" +
-            "Supabase에 delete_my_account 함수가 설정되어 있는지 확인해주세요.\\n" +
-            deleteError.message
-        );
-        return;
+    if(deleteBtn){
+        deleteBtn.dataset.deleting = "true";
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = "탈퇴 처리 중...";
     }
 
-    localStorage.removeItem("my_platform_nickname");
-    localStorage.removeItem("my_custom_icon_path");
-    localStorage.removeItem("my_platform_join_date");
+    try{
+        // auth.users 삭제는 브라우저에서 직접 할 수 없으므로
+        // Supabase SECURITY DEFINER RPC를 통해 현재 로그인한 사용자만 삭제합니다.
+        const { error: deleteError } =
+            await supabaseClient.rpc("delete_my_account");
 
-    await supabaseClient.auth.signOut();
-    alert("회원 탈퇴가 완료되었습니다.");
-    window.location.href = window.location.origin + window.location.pathname;
+        if(deleteError){
+            console.error("회원 탈퇴 RPC 오류:", deleteError);
+
+            let message =
+                "회원 탈퇴에 실패했습니다.\n\n" +
+                "Supabase의 delete_my_account 함수가 올바르게 설정되어 있는지 확인해주세요.";
+
+            if(deleteError.message){
+                message += "\n\n오류: " + deleteError.message;
+            }
+
+            alert(message);
+            return;
+        }
+
+        // 계정 삭제 후에는 기존 세션도 즉시 폐기합니다.
+        const { error: signOutError } =
+            await supabaseClient.auth.signOut();
+
+        if(signOutError){
+            console.warn("탈퇴 후 세션 정리 경고:", signOutError);
+        }
+
+        // 이 사이트가 저장해 둔 사용자 관련 로컬 캐시를 정리합니다.
+        localStorage.removeItem("my_platform_nickname");
+        localStorage.removeItem("my_custom_icon_path");
+        localStorage.removeItem("my_platform_join_date");
+
+        // Supabase Auth 세션 키도 남아 있지 않도록 정리합니다.
+        Object.keys(localStorage).forEach(key => {
+            if(
+                key.startsWith("sb-") &&
+                key.endsWith("-auth-token")
+            ){
+                localStorage.removeItem(key);
+            }
+        });
+
+        alert("회원 탈퇴가 완료되었습니다.");
+
+        // 로그인 화면이 확실하게 다시 표시되도록 홈을 새로 로드합니다.
+        window.location.replace(
+            window.location.origin + window.location.pathname
+        );
+
+    }catch(err){
+        console.error("회원 탈퇴 처리 중 예외:", err);
+        alert(
+            "회원 탈퇴 처리 중 오류가 발생했습니다.\n\n" +
+            (err?.message || err)
+        );
+    }finally{
+        if(deleteBtn){
+            deleteBtn.dataset.deleting = "false";
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = "🚪 탈퇴하기";
+        }
+    }
 }
 
 function ensureAccountDeleteButton(){
