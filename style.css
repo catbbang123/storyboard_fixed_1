@@ -2722,3 +2722,108 @@
 #world.world-design .wd-button-dark{
   color:#fff !important;
 }
+
+
+/* =========================================================
+   2026-09-18 모바일 안정화 — 사이버펑크 / 판타지 / 힐링
+   기존 버튼·카드·레이아웃은 유지하고 장식과 텍스트의 넘침만 보정
+========================================================= */
+
+/* 사이버펑크: 모바일에서 긴 세계관명/설명/탭이 가로로 밀리지 않게 */
+#world.world-design[data-design-style="cyberpunk"]{
+  max-width:100%;
+  min-width:0;
+  overflow-x:hidden!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .hero,
+#world.world-design[data-design-style="cyberpunk"] .tabs,
+#world.world-design[data-design-style="cyberpunk"] .content{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .hero > div:last-child{
+  min-width:0!important;
+  width:auto!important;
+  max-width:calc(100% - 20px)!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .hero h1,
+#world.world-design[data-design-style="cyberpunk"] .hero p,
+#world.world-design[data-design-style="cyberpunk"] .content h1,
+#world.world-design[data-design-style="cyberpunk"] .content h2,
+#world.world-design[data-design-style="cyberpunk"] .content h3,
+#world.world-design[data-design-style="cyberpunk"] .content p,
+#world.world-design[data-design-style="cyberpunk"] .content span,
+#world.world-design[data-design-style="cyberpunk"] .content div{
+  max-width:100%!important;
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .tabs{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  overflow:hidden!important;
+  gap:2px!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .tabs button{
+  flex:1 1 0!important;
+  min-width:0!important;
+  max-width:100%!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:keep-all!important;
+  line-height:1.25!important;
+  padding-left:7px!important;
+  padding-right:7px!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .hero .actions{
+  max-width:calc(100% - 78px)!important;
+  min-width:0!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+  gap:4px!important;
+}
+#world.world-design[data-design-style="cyberpunk"] .hero .actions button{
+  max-width:100%!important;
+  min-width:0!important;
+}
+
+/* 판타지: 모바일에서 SVG가 세로로 찌그러져 잎/꽃이 뒤틀리는 현상 방지 */
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art{
+  overflow:hidden!important;
+}
+#world.world-design[data-design-style="fantasy"] .fantasy-frame-art svg{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  overflow:hidden!important;
+}
+@media(max-width:700px){
+  #world.world-design[data-design-style="fantasy"] .fantasy-frame-art{opacity:.66!important;}
+  /* 모바일 가장자리에서 잎이 콘텐츠 위로 튀어나오지 않도록 한 단계 안쪽으로 */
+  #world.world-design[data-design-style="fantasy"] .content::before{
+    left:6px!important;top:6px!important;font-size:20px!important;
+  }
+  #world.world-design[data-design-style="fantasy"] .content::after{
+    right:6px!important;bottom:6px!important;font-size:20px!important;
+  }
+}
+
+/* 힐링: SVG 원본 비율 유지 → 봉제인형이 세로로 늘어나지 않게 */
+#world.world-design[data-design-style="healing"] .healing-plush-art{
+  overflow:hidden!important;
+}
+#world.world-design[data-design-style="healing"] .healing-plush-art svg{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  overflow:hidden!important;
+}
+@media(max-width:700px){
+  #world.world-design[data-design-style="healing"] .healing-plush-art{opacity:.68!important;}
+  #world.world-design[data-design-style="healing"] .plush{transform-origin:center center;}
+}
