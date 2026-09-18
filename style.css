@@ -2675,3 +2675,50 @@
 #world.world-design[data-design-style="mystery"] .content .item::before,#world.world-design[data-design-style="mystery"] .content .card::before,#world.world-design[data-design-style="mystery"] .content .story-card::before,#world.world-design[data-design-style="mystery"] .content .setting-card::before{content:"";position:absolute;right:10px;top:8px;width:7px;height:7px;border:1px solid var(--wd-accent);border-radius:50%;opacity:.5;}
 #world.world-design[data-design-style="fantasy"] .content .item,#world.world-design[data-design-style="fantasy"] .content .card,#world.world-design[data-design-style="fantasy"] .content .story-card,#world.world-design[data-design-style="fantasy"] .content .setting-card{position:relative!important;}
 #world.world-design[data-design-style="fantasy"] .content .item::after,#world.world-design[data-design-style="fantasy"] .content .card::after,#world.world-design[data-design-style="fantasy"] .content .story-card::after,#world.world-design[data-design-style="fantasy"] .content .setting-card::after{content:"✦";position:absolute;right:12px;bottom:7px;color:var(--wd-accent);opacity:.22;font-size:14px;pointer-events:none;}
+
+
+/* =========================================================
+   버튼 배경 밝기 자동 판별 → 글자색 자동 전환
+   밝은 버튼 = 어두운 글자 / 어두운 버튼 = 밝은 글자
+========================================================= */
+
+:root{
+  --auto-button-text:#fff;
+}
+
+/* JS가 계산한 버튼 글자색을 모든 버튼의 공통 변수로 사용 */
+#world.world-design{
+  --wd-button-text:auto;
+}
+
+/* 세계관 디자인 영역의 버튼 */
+#world.world-design button,
+#world.world-design .btn,
+#world.world-design .button,
+#world.world-design [role="button"]{
+  color:var(--wd-button-text,#fff) !important;
+}
+
+/* active/hover에서도 글자색이 반전되지 않도록 유지 */
+#world.world-design button:hover,
+#world.world-design button:focus,
+#world.world-design button:active,
+#world.world-design .btn:hover,
+#world.world-design .btn:focus,
+#world.world-design .btn:active,
+#world.world-design .button:hover,
+#world.world-design .button:focus,
+#world.world-design .button:active,
+#world.world-design [role="button"]:hover,
+#world.world-design [role="button"]:focus,
+#world.world-design [role="button"]:active{
+  color:var(--wd-button-text,#fff) !important;
+}
+
+/* JS가 클래스로 판별하는 경우를 위한 보조 규칙 */
+#world.world-design .wd-button-light{
+  color:#222 !important;
+}
+#world.world-design .wd-button-dark{
+  color:#fff !important;
+}
