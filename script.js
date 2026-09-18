@@ -39,53 +39,6 @@ const supabaseClient = window.supabase.createClient(
     }
 );
 
-async function ensureMyProfile(user){
-    if(!user?.id) return null;
-
-    const { data: existing, error: checkError } = await supabaseClient
-        .from('profiles')
-        .select('user_id, nickname, created_at, icon_url')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-    if(checkError){
-        console.error('프로필 확인 실패:', checkError);
-        return null;
-    }
-
-    if(existing) return existing;
-
-    // 탈퇴 후 같은 Google 계정으로 다시 로그인한 경우처럼
-    // 새 auth.users가 만들어졌지만 profiles가 없는 상황을 자동으로 복구합니다.
-    const defaultNickname =
-        user.user_metadata?.full_name ||
-        user.user_metadata?.name ||
-        user.email?.split('@')[0] ||
-        '사용자';
-
-    const { data: created, error: insertError } = await supabaseClient
-        .from('profiles')
-        .insert({
-            user_id: user.id,
-            nickname: defaultNickname
-        })
-        .select('user_id, nickname, created_at, icon_url')
-        .maybeSingle();
-
-    if(insertError){
-        // 동시에 다른 세션/트리거가 프로필을 만든 경우에는 다시 읽습니다.
-        console.warn('새 프로필 생성 실패, 기존 프로필을 다시 확인합니다:', insertError);
-        const { data: retryProfile } = await supabaseClient
-            .from('profiles')
-            .select('user_id, nickname, created_at, icon_url')
-            .eq('user_id', user.id)
-            .maybeSingle();
-        return retryProfile || null;
-    }
-
-    return created || null;
-}
-
 async function updateAuthUI(session = null){
 
     // session을 전달받지 못했을 때만 Supabase에서 다시 확인
@@ -144,9 +97,6 @@ async function updateAuthUI(session = null){
     const user = session.user;
     const metadata = user.user_metadata || {};
 
-    // 탈퇴 후 같은 Google 계정으로 재가입하면 profiles가 새로 필요할 수 있습니다.
-    const ensuredProfile = await ensureMyProfile(user);
-
     const name =
         metadata.full_name ||
         metadata.name ||
@@ -159,8 +109,20 @@ async function updateAuthUI(session = null){
 // ==========================================
 let nickname = '사용자';
 
-if(ensuredProfile?.nickname){
-    nickname = ensuredProfile.nickname;
+const { data: myProfile, error: myProfileError } =
+    await supabaseClient
+        .from('profiles')
+        .select('nickname')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+if(myProfileError){
+    console.error(
+        '내 프로필 불러오기 실패:',
+        myProfileError
+    );
+}else if(myProfile?.nickname){
+    nickname = myProfile.nickname;
 }
 
     const avatar =
@@ -383,6 +345,14 @@ async function logout(){
 document.addEventListener('DOMContentLoaded', async function () {
 
     // ==========================================
+    // 페이지가 열리면 현재 로그인 상태 즉시 확인
+    // ==========================================
+    const { data } = await supabaseClient.auth.getSession();
+
+    await updateAuthUI(data?.session || null);
+
+
+    // ==========================================
     // 로그인 / 로그아웃 상태 변화 감지
     // ==========================================
 supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -412,31 +382,32 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
         googleLoginBtn.addEventListener('click', async () => {
 
-            // 중복 클릭으로 OAuth 요청이 여러 번 실행되는 것을 방지합니다.
-            if (googleLoginBtn.dataset.loggingIn === 'true') return;
+            const { error } =
+                await supabaseClient.auth.signInWithOAuth({
 
-            googleLoginBtn.dataset.loggingIn = 'true';
-            googleLoginBtn.disabled = true;
-            googleLoginBtn.style.opacity = '0.6';
-            googleLoginBtn.title = 'Google 로그인 페이지로 이동 중...';
-
-            try {
-                const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
+
                     options: {
-                        redirectTo: window.location.origin + window.location.pathname
+                        redirectTo: window.location.origin,
+                        queryParams: {
+                            prompt: 'select_account'
+                        }
                     }
+
                 });
 
-                if(error) throw error;
-            } catch(error) {
-                console.error('Google 로그인 실패:', error);
-                alert('Google 로그인에 실패했습니다.\n\n' + (error?.message || '알 수 없는 오류'));
-                googleLoginBtn.dataset.loggingIn = 'false';
-                googleLoginBtn.disabled = false;
-                googleLoginBtn.style.opacity = '';
-                googleLoginBtn.title = '';
+            if(error){
+
+                console.error(
+                    'Google 로그인 실패:',
+                    error
+                );
+
+                alert(
+                    'Google 로그인에 실패했습니다.'
+                );
             }
+
         });
 
     }
