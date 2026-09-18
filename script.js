@@ -107,23 +107,19 @@ async function updateAuthUI(session = null){
 // 사이트 닉네임 불러오기
 // Google 이름/이메일은 공개 닉네임으로 사용하지 않음
 // ==========================================
+// 로그인 직후에는 프로필 DB 조회를 기다리지 않습니다.
+// 닉네임은 백그라운드에서 조회해 화면에 반영합니다.
 let nickname = '사용자';
-
-const { data: myProfile, error: myProfileError } =
-    await supabaseClient
-        .from('profiles')
-        .select('nickname')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-if(myProfileError){
-    console.error(
-        '내 프로필 불러오기 실패:',
-        myProfileError
-    );
-}else if(myProfile?.nickname){
-    nickname = myProfile.nickname;
-}
+supabaseClient.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()
+  .then(({data: myProfile, error: myProfileError}) => {
+      if(myProfileError){ console.error('내 프로필 불러오기 실패:', myProfileError); return; }
+      if(myProfile?.nickname){
+          const latestName=document.getElementById('profileName');
+          const latestInput=document.getElementById('nicknameInput');
+          if(latestName) latestName.textContent=myProfile.nickname;
+          if(latestInput) latestInput.value=myProfile.nickname;
+      }
+  }).catch(err=>console.error('내 프로필 조회 중 오류:',err));
 
     const avatar =
         metadata.avatar_url ||
@@ -404,13 +400,16 @@ async function logout(){
 
 document.addEventListener('DOMContentLoaded', async function () {
 
-    // ==========================================
-    // 페이지가 열리면 현재 로그인 상태 즉시 확인
-    // ==========================================
-    const { data } = await supabaseClient.auth.getSession();
-
-    await updateAuthUI(data?.session || null);
-
+    // 초기 로그인 상태는 한 번만 확인합니다.
+    // 프로필 조회는 updateAuthUI 내부에서 백그라운드로 처리하므로
+    // 로그인 직후 화면 전환을 오래 기다리지 않습니다.
+    try {
+        const { data, error } = await supabaseClient.auth.getSession();
+        if(error) console.error('초기 로그인 상태 확인 실패:', error);
+        await updateAuthUI(data?.session || null);
+    } catch(err){
+        console.error('초기 인증 초기화 중 오류:', err);
+    }
 
     // ==========================================
     // 로그인 / 로그아웃 상태 변화 감지
@@ -441,33 +440,30 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     if(googleLoginBtn){
 
         googleLoginBtn.addEventListener('click', async () => {
+            if(googleLoginBtn.dataset.loggingIn === 'true') return;
 
-            const { error } =
-                await supabaseClient.auth.signInWithOAuth({
+            googleLoginBtn.dataset.loggingIn = 'true';
+            googleLoginBtn.disabled = true;
+            googleLoginBtn.style.opacity = '0.65';
+            googleLoginBtn.title = 'Google 로그인으로 이동 중...';
 
+            try{
+                const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
-
                     options: {
-                        redirectTo: window.location.origin,
-                        queryParams: {
-                            prompt: 'select_account'
-                        }
+                        redirectTo: window.location.origin + window.location.pathname,
+                        queryParams: { prompt: 'select_account' }
                     }
-
                 });
-
-            if(error){
-
-                console.error(
-                    'Google 로그인 실패:',
-                    error
-                );
-
-                alert(
-                    'Google 로그인에 실패했습니다.'
-                );
+                if(error) throw error;
+            }catch(error){
+                console.error('Google 로그인 실패:', error);
+                googleLoginBtn.dataset.loggingIn = 'false';
+                googleLoginBtn.disabled = false;
+                googleLoginBtn.style.opacity = '';
+                googleLoginBtn.title = '';
+                alert('Google 로그인에 실패했습니다.\n\n' + (error?.message || error));
             }
-
         });
 
     }
@@ -5309,15 +5305,13 @@ document.addEventListener("DOMContentLoaded",function(){
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-
-    // 인증 상태 먼저 확인
-    const { data } = await supabaseClient.auth.getSession();
-
-    await updateAuthUI(data?.session || null);
-
-    // 그 다음 세계관 데이터 불러오기
-    await load();
-
+    // 인증 확인은 위의 단일 auth 초기화에서 처리합니다.
+    // 여기서는 세계관 데이터만 불러와 중복 요청을 막습니다.
+    try {
+        await load();
+    } catch(err){
+        console.error('세계관 초기 로딩 중 오류:', err);
+    }
 });
 
 
