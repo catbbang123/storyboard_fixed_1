@@ -279,8 +279,7 @@
 #profileBtn,
 #create,
 #mobileCreate{
-    transition: opacity .2s ease,
-                transform .2s ease;
+    transition: none;
 }
 
 #create:disabled,
@@ -344,6 +343,7 @@
 
 #profileMenu{
     position:absolute;
+    contain:layout paint;
     top:52px;
     right:0;
     width:230px;
