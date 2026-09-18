@@ -41,7 +41,8 @@ const supabaseClient = window.supabase.createClient(
 
 async function updateAuthUI(session = null){
 
-    // session을 전달받지 못했을 때만 Supabase에서 다시 확인
+    // 전달받은 세션이 없을 때만 현재 세션을 확인합니다.
+    // UI 표시 자체는 프로필 조회를 기다리지 않고 먼저 처리합니다.
     if(session === null){
         const { data } = await supabaseClient.auth.getSession();
         session = data?.session || null;
@@ -59,27 +60,14 @@ async function updateAuthUI(session = null){
         document.getElementById('mobileCreate')
     ];
 
-    // =========================
-    // 로그아웃 상태
-    // =========================
     if(!session){
-
         currentUserId = null;
         myWorldMemberships = [];
-        
-        if(googleLoginBtn){
-            googleLoginBtn.style.display = '';
-        }
 
-        if(profileBtn){
-            profileBtn.style.display = 'none';
-        }
+        if(googleLoginBtn) googleLoginBtn.style.display = 'flex';
+        if(profileBtn) profileBtn.style.display = 'none';
+        if(profileMenu) profileMenu.style.display = 'none';
 
-        if(profileMenu){
-            profileMenu.style.display = 'none';
-        }
-
-        // 세계관 만들기 버튼 비활성화
         createButtons.forEach(btn => {
             if(btn){
                 btn.disabled = true;
@@ -87,89 +75,33 @@ async function updateAuthUI(session = null){
                 btn.title = '로그인 후 세계관을 만들 수 있습니다.';
             }
         });
-
         return;
     }
 
-    // =========================
-    // 로그인 상태
-    // =========================
     const user = session.user;
     const metadata = user.user_metadata || {};
 
-    const name =
-        metadata.full_name ||
-        metadata.name ||
-        user.email?.split('@')[0] ||
-        '사용자';
+    // 로그인 상태 UI를 먼저 표시합니다.
+    // 프로필 조회 때문에 PC에서 메뉴가 늦게 나타나는 것을 막습니다.
+    currentUserId = user.id;
 
-    // ==========================================
-// 사이트 닉네임 불러오기
-// Google 이름/이메일은 공개 닉네임으로 사용하지 않음
-// ==========================================
-// 로그인 직후에는 프로필 DB 조회를 기다리지 않습니다.
-// 닉네임은 백그라운드에서 조회해 화면에 반영합니다.
-let nickname = '사용자';
-supabaseClient.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()
-  .then(({data: myProfile, error: myProfileError}) => {
-      if(myProfileError){ console.error('내 프로필 불러오기 실패:', myProfileError); return; }
-      if(myProfile?.nickname){
-          const latestName=document.getElementById('profileName');
-          const latestInput=document.getElementById('nicknameInput');
-          if(latestName) latestName.textContent=myProfile.nickname;
-          if(latestInput) latestInput.value=myProfile.nickname;
-      }
-  }).catch(err=>console.error('내 프로필 조회 중 오류:',err));
+    if(googleLoginBtn) googleLoginBtn.style.display = 'none';
+    if(profileBtn) profileBtn.style.display = 'flex';
 
-    const avatar =
-        metadata.avatar_url ||
-        metadata.picture ||
-        '';
+    if(profileEmail) profileEmail.textContent = user.email || '';
 
-    // Google 로그인 버튼 숨기기
-    if(googleLoginBtn){
-        googleLoginBtn.style.display = 'none';
-    }
-
-    // 프로필 버튼 표시
-    if(profileBtn){
-        profileBtn.style.display = 'flex';
-    }
-
-    // 프로필 이름
-if(profileName){
-    profileName.textContent = nickname;
-}
-
-const nicknameInput =
-    document.getElementById('nicknameInput');
-
-if(nicknameInput){
-    nicknameInput.value =
-        nickname === '사용자' ? '' : nickname;
-}
-
-    // 프로필 이메일
-    if(profileEmail){
-        profileEmail.textContent = user.email || '';
-    }
-
-    // 프로필 사진
+    const avatar = metadata.avatar_url || metadata.picture || '';
     if(profileAvatar){
-
         if(avatar){
-            profileAvatar.innerHTML =
-                `<img src="${esc(avatar)}" alt="프로필 사진">`;
+            profileAvatar.innerHTML = `<img src="${esc(avatar)}" alt="프로필 사진">`;
         }else{
             profileAvatar.textContent = '👤';
         }
-
     }
 
-    // 프로필 메뉴에 아이콘 변경/회원 탈퇴 버튼 보장
+    // 메뉴 버튼들은 프로필 조회와 관계없이 즉시 준비합니다.
     ensureAccountDeleteButton();
 
-    // 세계관 만들기 버튼 활성화
     createButtons.forEach(btn => {
         if(btn){
             btn.disabled = false;
@@ -177,6 +109,32 @@ if(nicknameInput){
             btn.title = '';
         }
     });
+
+    // 닉네임은 백그라운드에서 불러옵니다.
+    let nickname = '사용자';
+    const { data: myProfile, error: myProfileError } =
+        await supabaseClient
+            .from('profiles')
+            .select('nickname')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+    if(myProfileError){
+        console.error('내 프로필 불러오기 실패:', myProfileError);
+    }else if(myProfile?.nickname){
+        nickname = myProfile.nickname;
+    }
+
+    // 다른 로그인/로그아웃으로 사용자가 바뀌었다면 오래된 프로필을 덮어쓰지 않습니다.
+    const { data: latestSessionData } = await supabaseClient.auth.getSession();
+    if(latestSessionData?.session?.user?.id !== user.id) return;
+
+    if(profileName) profileName.textContent = nickname;
+
+    const nicknameInput = document.getElementById('nicknameInput');
+    if(nicknameInput){
+        nicknameInput.value = nickname === '사용자' ? '' : nickname;
+    }
 }
 
 async function requireLogin(){
@@ -400,16 +358,15 @@ async function logout(){
 
 document.addEventListener('DOMContentLoaded', async function () {
 
-    // 초기 로그인 상태는 한 번만 확인합니다.
-    // 프로필 조회는 updateAuthUI 내부에서 백그라운드로 처리하므로
-    // 로그인 직후 화면 전환을 오래 기다리지 않습니다.
-    try {
-        const { data, error } = await supabaseClient.auth.getSession();
-        if(error) console.error('초기 로그인 상태 확인 실패:', error);
-        await updateAuthUI(data?.session || null);
-    } catch(err){
-        console.error('초기 인증 초기화 중 오류:', err);
-    }
+    // ==========================================
+    // 페이지가 열리면 현재 로그인 상태 즉시 확인
+    // ==========================================
+    const { data } = await supabaseClient.auth.getSession();
+
+    // 최초 1회만 현재 세션으로 UI를 초기화합니다.
+    // 이후 변경은 onAuthStateChange가 담당합니다.
+    updateAuthUI(data?.session || null);
+
 
     // ==========================================
     // 로그인 / 로그아웃 상태 변화 감지
@@ -440,30 +397,40 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     if(googleLoginBtn){
 
         googleLoginBtn.addEventListener('click', async () => {
-            if(googleLoginBtn.dataset.loggingIn === 'true') return;
 
-            googleLoginBtn.dataset.loggingIn = 'true';
+            if(googleLoginBtn.dataset.loginLoading === '1') return;
+            googleLoginBtn.dataset.loginLoading = '1';
             googleLoginBtn.disabled = true;
-            googleLoginBtn.style.opacity = '0.65';
-            googleLoginBtn.title = 'Google 로그인으로 이동 중...';
 
-            try{
-                const { error } = await supabaseClient.auth.signInWithOAuth({
+            const { error } =
+                await supabaseClient.auth.signInWithOAuth({
+
                     provider: 'google',
+
                     options: {
-                        redirectTo: window.location.origin + window.location.pathname,
-                        queryParams: { prompt: 'select_account' }
+                        redirectTo: window.location.origin,
+                        queryParams: {
+                            prompt: 'select_account'
+                        }
                     }
+
                 });
-                if(error) throw error;
-            }catch(error){
-                console.error('Google 로그인 실패:', error);
-                googleLoginBtn.dataset.loggingIn = 'false';
+
+            if(error){
+
+                console.error(
+                    'Google 로그인 실패:',
+                    error
+                );
+
+                googleLoginBtn.dataset.loginLoading = '0';
                 googleLoginBtn.disabled = false;
-                googleLoginBtn.style.opacity = '';
-                googleLoginBtn.title = '';
-                alert('Google 로그인에 실패했습니다.\n\n' + (error?.message || error));
+
+                alert(
+                    'Google 로그인에 실패했습니다.'
+                );
             }
+
         });
 
     }
@@ -5305,13 +5272,17 @@ document.addEventListener("DOMContentLoaded",function(){
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 인증 확인은 위의 단일 auth 초기화에서 처리합니다.
-    // 여기서는 세계관 데이터만 불러와 중복 요청을 막습니다.
-    try {
-        await load();
-    } catch(err){
-        console.error('세계관 초기 로딩 중 오류:', err);
-    }
+
+    // 인증 상태 먼저 확인
+    const { data } = await supabaseClient.auth.getSession();
+
+    // 최초 1회만 현재 세션으로 UI를 초기화합니다.
+    // 이후 변경은 onAuthStateChange가 담당합니다.
+    updateAuthUI(data?.session || null);
+
+    // 그 다음 세계관 데이터 불러오기
+    await load();
+
 });
 
 
