@@ -5922,6 +5922,53 @@ if (profileMenu) {
         profileMenu.appendChild(iconChangeBtn);
     }
 
+    let iconResetBtn = document.getElementById("profileIconResetBtn");
+    if (!iconResetBtn) {
+        iconResetBtn = document.createElement("button");
+        iconResetBtn.id = "profileIconResetBtn";
+        iconResetBtn.type = "button";
+        iconResetBtn.textContent = "↩️ 기본 아이콘으로 되돌리기";
+        iconResetBtn.style.cssText =
+            "width:100%; margin-top:8px; padding:9px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:13px;";
+        profileMenu.appendChild(iconResetBtn);
+    }
+
+    iconResetBtn.onclick = async (e) => {
+        e.stopPropagation();
+        const user = cachedAuthUser;
+        if (!user) {
+            alert("로그인 상태를 확인할 수 없습니다.");
+            return;
+        }
+
+        if (!confirm("현재 저장된 개인 아이콘을 삭제하고 기본 아이콘으로 되돌릴까요?")) return;
+
+        iconResetBtn.disabled = true;
+        iconResetBtn.textContent = "되돌리는 중...";
+
+        const { error } = await supabaseClient
+            .from("profiles")
+            .update({ icon_url: null })
+            .eq("user_id", user.id);
+
+        if (error) {
+            console.error("기본 아이콘 복구 실패:", error);
+            alert("기본 아이콘으로 되돌리지 못했습니다.\n" + error.message);
+            iconResetBtn.disabled = false;
+            iconResetBtn.textContent = "↩️ 기본 아이콘으로 되돌리기";
+            return;
+        }
+
+        localStorage.removeItem("my_custom_icon_path");
+        delete profileIconCache[user.id];
+
+        iconResetBtn.disabled = false;
+        iconResetBtn.textContent = "↩️ 기본 아이콘으로 되돌리기";
+
+        await applyPersonalMonthlyIcons();
+        alert("기본 아이콘으로 되돌렸습니다.");
+    };
+
     iconChangeBtn.textContent = canChangeIcon
         ? "✨ 내 아이콘 변경"
         : "✨ 내 아이콘 변경 🔒";
