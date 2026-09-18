@@ -2657,3 +2657,21 @@
     background-size:auto,auto,auto!important;
   }
 }
+
+/* === 장르별 안쪽 레이아웃 보강 / PC·모바일 동일 === */
+@media(max-width:700px){
+  #world.world-design .content::after{inset:10px !important;}
+  #world.world-design .tabs::before,#world.world-design .tabs::after{max-width:none!important;overflow:visible!important;white-space:nowrap!important;text-overflow:clip!important;}
+}
+/* 판타지 내부 겹침 방지: 두 번째 잎 장식만 제거 */
+#world.world-design[data-design-style="fantasy"] .content .fantasy-leaf-decoration:nth-of-type(2),
+#world.world-design[data-design-style="fantasy"] .content .leaf-decoration:nth-of-type(2){display:none!important;}
+/* 내부 카드에 장르 포인트를 더해 빈 느낌을 줄이되 기존 컴포넌트는 유지 */
+#world.world-design[data-design-style="sf"] .content .item::before,#world.world-design[data-design-style="sf"] .content .card::before,#world.world-design[data-design-style="sf"] .content .story-card::before,#world.world-design[data-design-style="sf"] .content .setting-card::before,
+#world.world-design[data-design-style="cyberpunk"] .content .item::before,#world.world-design[data-design-style="cyberpunk"] .content .card::before,#world.world-design[data-design-style="cyberpunk"] .content .story-card::before,#world.world-design[data-design-style="cyberpunk"] .content .setting-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--wd-accent);opacity:.55;}
+#world.world-design[data-design-style="sf"] .content .item,#world.world-design[data-design-style="sf"] .content .card,#world.world-design[data-design-style="sf"] .content .story-card,#world.world-design[data-design-style="sf"] .content .setting-card,
+#world.world-design[data-design-style="cyberpunk"] .content .item,#world.world-design[data-design-style="cyberpunk"] .content .card,#world.world-design[data-design-style="cyberpunk"] .content .story-card,#world.world-design[data-design-style="cyberpunk"] .content .setting-card{position:relative!important;overflow:hidden!important;}
+#world.world-design[data-design-style="mystery"] .content .item,#world.world-design[data-design-style="mystery"] .content .card,#world.world-design[data-design-style="mystery"] .content .story-card,#world.world-design[data-design-style="mystery"] .content .setting-card{position:relative!important;overflow:hidden!important;}
+#world.world-design[data-design-style="mystery"] .content .item::before,#world.world-design[data-design-style="mystery"] .content .card::before,#world.world-design[data-design-style="mystery"] .content .story-card::before,#world.world-design[data-design-style="mystery"] .content .setting-card::before{content:"";position:absolute;right:10px;top:8px;width:7px;height:7px;border:1px solid var(--wd-accent);border-radius:50%;opacity:.5;}
+#world.world-design[data-design-style="fantasy"] .content .item,#world.world-design[data-design-style="fantasy"] .content .card,#world.world-design[data-design-style="fantasy"] .content .story-card,#world.world-design[data-design-style="fantasy"] .content .setting-card{position:relative!important;}
+#world.world-design[data-design-style="fantasy"] .content .item::after,#world.world-design[data-design-style="fantasy"] .content .card::after,#world.world-design[data-design-style="fantasy"] .content .story-card::after,#world.world-design[data-design-style="fantasy"] .content .setting-card::after{content:"✦";position:absolute;right:12px;bottom:7px;color:var(--wd-accent);opacity:.22;font-size:14px;pointer-events:none;}
