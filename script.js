@@ -221,7 +221,7 @@ async function deleteMyAccount(){
 
     const confirmed = confirm(
         "정말 회원 탈퇴하시겠습니까?\\n\\n" +
-        "회원 탈퇴하면 계정과 프로필 정보가 삭제되며, 다시 로그인하려면 새 계정을 만들어야 합니다."
+        "회원 탈퇴하면 계정과 프로필 정보가 삭제되며, 같은 Google 계정으로도 다시 가입할 수 있습니다."
     );
 
     if(!confirmed) return;
@@ -280,6 +280,66 @@ function ensureAccountDeleteButton(){
     iconChangeBtn.onclick = (e) => {
         e.stopPropagation();
         openIconChangeModal();
+    };
+
+
+    // ==========================================
+    // Google 계정 바꾸기 버튼
+    // ==========================================
+    let switchAccountBtn =
+        document.getElementById("switchGoogleAccountBtn");
+
+    if(!switchAccountBtn){
+        switchAccountBtn = document.createElement("button");
+
+        switchAccountBtn.id = "switchGoogleAccountBtn";
+        switchAccountBtn.type = "button";
+        switchAccountBtn.textContent = "🔄 Google 계정 바꾸기";
+
+        switchAccountBtn.style.cssText =
+            "width:100%; margin-top:8px; padding:9px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; cursor:pointer; font-size:13px;";
+
+        // 로그아웃/탈퇴 버튼 위에 표시
+        profileMenu.appendChild(switchAccountBtn);
+    }
+
+    switchAccountBtn.onclick = async (e) => {
+        e.stopPropagation();
+
+        switchAccountBtn.disabled = true;
+        switchAccountBtn.textContent = "🔄 계정 선택 창을 여는 중...";
+
+        try{
+            // 현재 World Platform 세션만 먼저 종료합니다.
+            // Google 계정 자체는 로그아웃하지 않으므로
+            // Google 계정 선택 화면에서 계정 A/B를 선택할 수 있습니다.
+            const { error: signOutError } =
+                await supabaseClient.auth.signOut({ scope: 'local' });
+
+            if(signOutError){
+                throw signOutError;
+            }
+
+            const { error } =
+                await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin,
+                        queryParams: {
+                            prompt: 'select_account'
+                        }
+                    }
+                });
+
+            if(error){
+                throw error;
+            }
+        }catch(error){
+            console.error('Google 계정 변경 실패:', error);
+            alert('Google 계정을 바꾸는 중 오류가 발생했습니다.\n\n' + (error?.message || error));
+            switchAccountBtn.disabled = false;
+            switchAccountBtn.textContent = "🔄 Google 계정 바꾸기";
+        }
     };
 
 
