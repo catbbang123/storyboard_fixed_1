@@ -518,7 +518,8 @@ async function loadCharactersFromSupabase(worldId){
         description: c.description || '',
         group: c.group_name || '',
         photo: c.photo || '',
-         owner_id: c.owner_id || null
+        owner_id: c.owner_id || null,
+        createdAt: c.created_at ? new Date(c.created_at).getTime() : 0
     }));
 }
 
@@ -701,6 +702,33 @@ async function loadWorldsWithJwtRecovery(){
         .order('name', { ascending: true });
 
     return result;
+}
+
+// 캐릭터/지역/세계관 설정의 생성 순서를 안정적으로 유지합니다.
+// 일부 기존 테이블에는 created_at 컬럼이 없을 수 있으므로,
+// created_at이 있으면 그것을 우선 사용하고, 기존 코드가 생성한
+// ID(char-/loc-/set-/story- + Date.now())에서도 생성 시각을 복원합니다.
+function getCreationTime(item){
+    if(!item) return 0;
+
+    if(item.createdAt){
+        const t=Number(item.createdAt);
+        if(Number.isFinite(t) && t>0) return t;
+    }
+
+    if(item.created_at){
+        const t=new Date(item.created_at).getTime();
+        if(Number.isFinite(t) && t>0) return t;
+    }
+
+    const id=String(item.id||'');
+    const match=id.match(/^(?:char|loc|set|story)-(\d{10,})-/);
+    if(match){
+        const t=Number(match[1]);
+        if(Number.isFinite(t)) return t;
+    }
+
+    return 0;
 }
 
 async function load(){
@@ -991,25 +1019,29 @@ if(userIds.length){
         // 캐릭터
         characters: (characterData || [])
             .filter(c => c.world_id === w.id)
+            .sort((a,b) => getCreationTime(a) - getCreationTime(b))
             .map(c => ({
                 id: c.id,
                 name: c.name,
                 description: c.description || '',
                 group: c.group_name || '',
                 photo: c.photo || '',
-                owner_id: c.owner_id || null
+                owner_id: c.owner_id || null,
+                createdAt: c.created_at ? new Date(c.created_at).getTime() : 0
             })),
 
         // 지역
         locations: (locationData || [])
             .filter(l => l.world_id === w.id)
+            .sort((a,b) => getCreationTime(a) - getCreationTime(b))
             .map(l => ({
                 id: l.id,
                 name: l.name,
                 description: l.description || '',
                 group: l.group_name || '',
                 photo: l.photo || '',
-                created_by: l.created_by || null
+                created_by: l.created_by || null,
+                createdAt: l.created_at ? new Date(l.created_at).getTime() : 0
             })),
 
 // 소설 (수정)
@@ -1040,13 +1072,15 @@ if(userIds.length){
         // 세계관 설정
         settings: (settingsData || [])
             .filter(s => s.world_id === w.id)
+            .sort((a,b) => getCreationTime(a) - getCreationTime(b))
             .map(s => ({
                 id: s.id,
                 name: s.name,
                 description: s.description || '',
                 group: s.group_name || '세계관 기본 설정',
                 photo: s.photo || '',
-                created_by: s.created_by || null
+                created_by: s.created_by || null,
+                createdAt: s.created_at ? new Date(s.created_at).getTime() : 0
             }))
     }));
 
@@ -3341,9 +3375,9 @@ function section(w){
 
         (groups.length
         ? groups.map(g=>{
-            const chars=w.characters.filter(
-                c=>(c.group||'기타')===g
-            );
+            const chars=w.characters
+                .filter(c=>(c.group||'기타')===g)
+                .sort((a,b)=>getCreationTime(a)-getCreationTime(b));
 
             return `
                 <div class="character-group-title">
@@ -3407,7 +3441,9 @@ function section(w){
         </div>`);
     }
 
-    let arr=w[tab]||[];
+    // 같은 그룹 안에서도 '먼저 만든 항목'이 항상 먼저 나오도록
+    // 생성 시각을 기준으로 안정적으로 정렬합니다.
+    let arr=[...(w[tab]||[])].sort((a,b)=>getCreationTime(a)-getCreationTime(b));
 
     const groupNames=[
         ...new Set(
@@ -4874,7 +4910,8 @@ if(error){
             description:d,
             group:group,
             photo:genericPhoto || '',
-            created_by:user.id
+            created_by:user.id,
+            createdAt:Date.now()
         });
     }
 
@@ -5042,7 +5079,8 @@ const characterData={
       description:d,
       group:group,
       photo:selectedCharacterPhoto||'',
-        owner_id:user.id
+        owner_id:user.id,
+        createdAt:Date.now()
     });
   }
 
@@ -5091,8 +5129,7 @@ async function loadMyCreationStories(){
     const { data, error } = await supabaseClient
         .from('stories')
         .select('*')
-        .eq('created_by', currentUserId)
-        .order('created_at', { ascending: true });
+        .eq('created_by', currentUserId);
 
     if(error){
         console.error('내 창작 소설 불러오기 실패:', error);
