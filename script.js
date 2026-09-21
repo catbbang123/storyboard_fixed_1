@@ -518,8 +518,7 @@ async function loadCharactersFromSupabase(worldId){
         description: c.description || '',
         group: c.group_name || '',
         photo: c.photo || '',
-        owner_id: c.owner_id || null,
-        createdAt: c.created_at ? new Date(c.created_at).getTime() : 0
+         owner_id: c.owner_id || null
     }));
 }
 
@@ -702,33 +701,6 @@ async function loadWorldsWithJwtRecovery(){
         .order('name', { ascending: true });
 
     return result;
-}
-
-// 캐릭터/지역/세계관 설정의 생성 순서를 안정적으로 유지합니다.
-// 일부 기존 테이블에는 created_at 컬럼이 없을 수 있으므로,
-// created_at이 있으면 그것을 우선 사용하고, 기존 코드가 생성한
-// ID(char-/loc-/set-/story- + Date.now())에서도 생성 시각을 복원합니다.
-function getCreationTime(item){
-    if(!item) return 0;
-
-    if(item.createdAt){
-        const t=Number(item.createdAt);
-        if(Number.isFinite(t) && t>0) return t;
-    }
-
-    if(item.created_at){
-        const t=new Date(item.created_at).getTime();
-        if(Number.isFinite(t) && t>0) return t;
-    }
-
-    const id=String(item.id||'');
-    const match=id.match(/^(?:char|loc|set|story)-(\d{10,})-/);
-    if(match){
-        const t=Number(match[1]);
-        if(Number.isFinite(t)) return t;
-    }
-
-    return 0;
 }
 
 async function load(){
@@ -939,7 +911,8 @@ if(userIds.length){
     // ② 캐릭터 불러오기
     const { data: characterData, error: characterError } = await supabaseClient
         .from('characters')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: true });
 
     if(characterError){
         console.error('Supabase characters 불러오기 실패:', characterError);
@@ -950,7 +923,8 @@ if(userIds.length){
     // ③ 지역 불러오기
     const { data: locationData, error: locationError } = await supabaseClient
         .from('locations')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: true });
 
     if(locationError){
         console.error('Supabase locations 불러오기 실패:', locationError);
@@ -961,7 +935,8 @@ if(userIds.length){
     // ④ 세계관 설정 불러오기
     const { data: settingsData, error: settingsError } = await supabaseClient
         .from('world_settings')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: true });
 
     if(settingsError){
         console.error('Supabase world_settings 불러오기 실패:', settingsError);
@@ -1019,29 +994,25 @@ if(userIds.length){
         // 캐릭터
         characters: (characterData || [])
             .filter(c => c.world_id === w.id)
-            .sort((a,b) => getCreationTime(a) - getCreationTime(b))
             .map(c => ({
                 id: c.id,
                 name: c.name,
                 description: c.description || '',
                 group: c.group_name || '',
                 photo: c.photo || '',
-                owner_id: c.owner_id || null,
-                createdAt: c.created_at ? new Date(c.created_at).getTime() : 0
+                owner_id: c.owner_id || null
             })),
 
         // 지역
         locations: (locationData || [])
             .filter(l => l.world_id === w.id)
-            .sort((a,b) => getCreationTime(a) - getCreationTime(b))
             .map(l => ({
                 id: l.id,
                 name: l.name,
                 description: l.description || '',
                 group: l.group_name || '',
                 photo: l.photo || '',
-                created_by: l.created_by || null,
-                createdAt: l.created_at ? new Date(l.created_at).getTime() : 0
+                created_by: l.created_by || null
             })),
 
 // 소설 (수정)
@@ -1072,15 +1043,13 @@ if(userIds.length){
         // 세계관 설정
         settings: (settingsData || [])
             .filter(s => s.world_id === w.id)
-            .sort((a,b) => getCreationTime(a) - getCreationTime(b))
             .map(s => ({
                 id: s.id,
                 name: s.name,
                 description: s.description || '',
                 group: s.group_name || '세계관 기본 설정',
                 photo: s.photo || '',
-                created_by: s.created_by || null,
-                createdAt: s.created_at ? new Date(s.created_at).getTime() : 0
+                created_by: s.created_by || null
             }))
     }));
 
@@ -3375,9 +3344,9 @@ function section(w){
 
         (groups.length
         ? groups.map(g=>{
-            const chars=w.characters
-                .filter(c=>(c.group||'기타')===g)
-                .sort((a,b)=>getCreationTime(a)-getCreationTime(b));
+            const chars=w.characters.filter(
+                c=>(c.group||'기타')===g
+            );
 
             return `
                 <div class="character-group-title">
@@ -3441,9 +3410,7 @@ function section(w){
         </div>`);
     }
 
-    // 같은 그룹 안에서도 '먼저 만든 항목'이 항상 먼저 나오도록
-    // 생성 시각을 기준으로 안정적으로 정렬합니다.
-    let arr=[...(w[tab]||[])].sort((a,b)=>getCreationTime(a)-getCreationTime(b));
+    let arr=w[tab]||[];
 
     const groupNames=[
         ...new Set(
@@ -4910,8 +4877,7 @@ if(error){
             description:d,
             group:group,
             photo:genericPhoto || '',
-            created_by:user.id,
-            createdAt:Date.now()
+            created_by:user.id
         });
     }
 
@@ -5079,8 +5045,7 @@ const characterData={
       description:d,
       group:group,
       photo:selectedCharacterPhoto||'',
-        owner_id:user.id,
-        createdAt:Date.now()
+        owner_id:user.id
     });
   }
 
@@ -5129,7 +5094,8 @@ async function loadMyCreationStories(){
     const { data, error } = await supabaseClient
         .from('stories')
         .select('*')
-        .eq('created_by', currentUserId);
+        .eq('created_by', currentUserId)
+        .order('created_at', { ascending: true });
 
     if(error){
         console.error('내 창작 소설 불러오기 실패:', error);
@@ -5169,7 +5135,8 @@ async function loadMyCreationSettings(){
     const { data, error } = await supabaseClient
         .from('world_settings')
         .select('*')
-        .eq('created_by', currentUserId);
+        .eq('created_by', currentUserId)
+        .order('created_at', { ascending: true });
 
     if(error){
         console.error('내 창작 세계관 설정 불러오기 실패:', error);
@@ -5247,7 +5214,8 @@ async function loadMyCreationLocations(){
     const { data, error } = await supabaseClient
         .from('locations')
         .select('*')
-        .eq('created_by', currentUserId);
+        .eq('created_by', currentUserId)
+        .order('created_at', { ascending: true });
 
     if(error){
         console.error('내 창작 지역 불러오기 실패:', error);
@@ -5287,7 +5255,8 @@ async function loadMyCreationCharacters(){
     const { data, error } = await supabaseClient
         .from('characters')
         .select('*')
-        .eq('owner_id', currentUserId);
+        .eq('owner_id', currentUserId)
+        .order('created_at', { ascending: true });
 
     if(error){
         console.error('내 창작 캐릭터 불러오기 실패:', error);
@@ -5453,6 +5422,10 @@ function openImageCropModal(file, target, ratio, callback) {
 
     const reader = new FileReader();
 
+    reader.onerror = function(){
+        alert('사진 파일을 읽는 중 오류가 발생했습니다. 다른 사진으로 다시 시도해주세요.');
+    };
+
     reader.onload = function(e) {
         imageCropTarget = target;
         imageCropRatio = ratio;
@@ -5480,6 +5453,10 @@ function openImageCropModal(file, target, ratio, callback) {
             drawImageCrop();
         };
 
+        imageCropImage.onerror = function(){
+            alert('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
+            closeImageCropModal();
+        };
         imageCropImage.src = e.target.result;
     };
 
@@ -5720,7 +5697,15 @@ if(imageCropApply){
         outputCanvas.height = outputSize.height;
 
         const outputCtx = outputCanvas.getContext('2d', { alpha: false });
+        if(!outputCtx){
+            alert('사진을 처리할 수 없습니다. 브라우저를 새로고침한 뒤 다시 시도해주세요.');
+            return;
+        }
         const img = imageCropImage;
+        if(!img.width || !img.height){
+            alert('사진을 읽을 수 없습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
+            return;
+        }
         const baseScale = Math.max(
             outputSize.width / img.width,
             outputSize.height / img.height
@@ -5749,7 +5734,7 @@ if(imageCropApply){
         outputCtx.drawImage(img,drawX,drawY,drawWidth,drawHeight);
 
         // JPEG 품질을 높여 사진의 디테일과 텍스트 가독성을 최대한 유지합니다.
-        const result=outputCanvas.toDataURL('image/jpeg',0.94);
+        const result=outputCanvas.toDataURL('image/jpeg',0.82);
 
         if(imageCropCallback){
             imageCropCallback(result);
