@@ -5437,24 +5437,8 @@ function openImageCropModal(file, target, ratio, callback) {
     const zoom = $('imageZoom');
     if(zoom) zoom.value = '1';
 
-    // 모바일에서는 파일을 읽는 동안에도 조정 창을 먼저 보여줍니다.
-    // 이전 버전은 이미지 디코딩이 끝난 뒤에만 모달을 열어서,
-    // 모바일에서 디코딩이 오래 걸리거나 실패하면 아무 창도 안 뜨는 것처럼 보였습니다.
     const modal = $('imageCropModal');
     if(modal) modal.classList.add('show');
-    const canvas = $('imageCropCanvas');
-    if(canvas){
-        const ctx = canvas.getContext('2d');
-        if(ctx){
-            const w = Math.min(520, Math.max(240, modal?.clientWidth ? modal.clientWidth - 40 : 320));
-            const h = w / ratio;
-            canvas.width = Math.round(w);
-            canvas.height = Math.round(h);
-            canvas.style.width = w + 'px';
-            canvas.style.height = h + 'px';
-            ctx.clearRect(0,0,w,h);
-        }
-    }
 
     const fail = (message) => {
         console.error('이미지 처리 실패:', message, file?.name, file?.type, file?.size);
@@ -5462,64 +5446,65 @@ function openImageCropModal(file, target, ratio, callback) {
         closeImageCropModal();
     };
 
-    const openLoadedImage = (img, cleanup) => {
-        if(!img || !img.width || !img.height){
+    // 중요: 원본 사진의 가로세로 비율을 절대 강제로 바꾸지 않습니다.
+    // 모바일에서는 원본 전체를 먼저 안전하게 읽은 뒤, 비율을 유지한 채 최대 1600px로 축소합니다.
+    const openImage = (img, cleanup) => {
+        if(!img || !img.naturalWidth || !img.naturalHeight){
             if(cleanup) cleanup();
             fail('사진을 읽을 수 없습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
             return;
         }
-        imageCropImage = img;
-        if(cleanup) imageCropCleanup = cleanup;
-        requestAnimationFrame(drawImageCrop);
+
+        const maxSide = 1600;
+        const sourceW = img.naturalWidth;
+        const sourceH = img.naturalHeight;
+        const scale = Math.min(1, maxSide / Math.max(sourceW, sourceH));
+        const w = Math.max(1, Math.round(sourceW * scale));
+        const h = Math.max(1, Math.round(sourceH * scale));
+
+        // 이미 충분히 작은 사진이면 원본을 그대로 사용합니다.
+        if(scale >= 1){
+            imageCropImage = img;
+            if(cleanup) imageCropCleanup = cleanup;
+            requestAnimationFrame(drawImageCrop);
+            return;
+        }
+
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        const ctx = c.getContext('2d');
+        if(!ctx){
+            if(cleanup) cleanup();
+            fail('사진을 처리할 수 없습니다. 다른 사진으로 다시 시도해주세요.');
+            return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const small = new Image();
+        small.onload = () => {
+            if(cleanup) cleanup();
+            imageCropImage = small;
+            requestAnimationFrame(drawImageCrop);
+        };
+        small.onerror = () => {
+            if(cleanup) cleanup();
+            fail('사진 미리보기를 만들 수 없습니다. 다른 사진으로 다시 시도해주세요.');
+        };
+        small.src = c.toDataURL('image/jpeg', 0.88);
     };
 
-    // 먼저 createImageBitmap으로 모바일 메모리 사용량을 줄여봅니다.
-    if(typeof createImageBitmap === 'function'){
-        createImageBitmap(file, {resizeWidth: 1800, resizeHeight: 1800, resizeQuality: 'high'})
-        .then(bitmap => {
-            const c = document.createElement('canvas');
-            const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
-            c.width = Math.max(1, Math.round(bitmap.width * scale));
-            c.height = Math.max(1, Math.round(bitmap.height * scale));
-            const ctx = c.getContext('2d');
-            if(!ctx) throw new Error('canvas context');
-            ctx.drawImage(bitmap,0,0,c.width,c.height);
-            if(bitmap.close) bitmap.close();
-            const img = new Image();
-            img.onload = () => openLoadedImage(img, null);
-            img.onerror = () => fail('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
-            img.src = c.toDataURL('image/jpeg',0.82);
-        })
-        .catch(err => {
-            console.warn('createImageBitmap 실패, object URL로 재시도:', err);
-            // object URL은 FileReader보다 불필요한 Base64 복사를 줄여 모바일에서 유리합니다.
-            const url = URL.createObjectURL(file);
-            const img = new Image();
-            img.onload = () => {
-                URL.revokeObjectURL(url);
-                openLoadedImage(img, null);
-            };
-            img.onerror = () => {
-                URL.revokeObjectURL(url);
-                fail('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
-            };
-            img.src = url;
-        });
-        return;
-    }
-
-    // createImageBitmap이 없는 브라우저용 fallback
-    const url = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-        URL.revokeObjectURL(url);
-        openLoadedImage(img, null);
+        // onload가 끝난 뒤에만 revoke합니다. 모바일에서 조기 해제되는 문제를 피합니다.
+        openImage(img, () => URL.revokeObjectURL(objectUrl));
     };
     img.onerror = () => {
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(objectUrl);
         fail('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
     };
-    img.src = url;
+    img.src = objectUrl;
 }
 
 function getCropCanvasSize(){
