@@ -5416,94 +5416,110 @@ let imageCropStartY = 0;
 let imageCropPointers = new Map();
 let imageCropLastPinchDistance = 0;
 let imageCropCallback = null;
+let imageCropCleanup = null;
 
 function openImageCropModal(file, target, ratio, callback) {
     if (!file) return;
 
-    // 모바일에서는 고해상도 원본(예: 4000~8000px)을 그대로 Image에 넣으면
-    // 파일 용량이 작아도 디코딩 과정에서 메모리가 부족해 페이지가 새로고침될 수 있습니다.
-    // 자르기 화면에 필요한 최대 크기로 먼저 축소해서 메모리 사용량을 줄입니다.
-    const MAX_IMAGE_SIDE = 2000;
+    imageCropTarget = target;
+    imageCropRatio = ratio;
+    imageCropCallback = typeof callback === 'function' ? callback : null;
+    imageCropImage = null;
+    imageCropScale = 1;
+    imageCropX = 0;
+    imageCropY = 0;
+    imageCropDragging = false;
+    imageCropPointers.clear();
+    imageCropLastPinchDistance = 0;
 
-    function openWithSource(src, revokeUrl) {
-        imageCropTarget = target;
-        imageCropRatio = ratio;
-        imageCropCallback = typeof callback === 'function' ? callback : null;
+    const title = $('imageCropTitle');
+    if(title) title.textContent = ratio === 16 / 9 ? '세계관 대표 사진 조정' : '사진 조정';
+    const zoom = $('imageZoom');
+    if(zoom) zoom.value = '1';
 
-        const title = $('imageCropTitle');
-        if(title){
-            title.textContent = ratio === 16 / 9 ? '세계관 대표 사진 조정' : '사진 조정';
+    // 모바일에서는 파일을 읽는 동안에도 조정 창을 먼저 보여줍니다.
+    // 이전 버전은 이미지 디코딩이 끝난 뒤에만 모달을 열어서,
+    // 모바일에서 디코딩이 오래 걸리거나 실패하면 아무 창도 안 뜨는 것처럼 보였습니다.
+    const modal = $('imageCropModal');
+    if(modal) modal.classList.add('show');
+    const canvas = $('imageCropCanvas');
+    if(canvas){
+        const ctx = canvas.getContext('2d');
+        if(ctx){
+            const w = Math.min(520, Math.max(240, modal?.clientWidth ? modal.clientWidth - 40 : 320));
+            const h = w / ratio;
+            canvas.width = Math.round(w);
+            canvas.height = Math.round(h);
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            ctx.clearRect(0,0,w,h);
         }
-
-        imageCropImage = new Image();
-        imageCropImage.onload = function() {
-            if(revokeUrl) URL.revokeObjectURL(revokeUrl);
-
-            imageCropScale = 1;
-            imageCropX = 0;
-            imageCropY = 0;
-            imageCropDragging = false;
-            imageCropPointers.clear();
-            imageCropLastPinchDistance = 0;
-
-            const zoom = $('imageZoom');
-            if (zoom) zoom.value = '1';
-
-            $('imageCropModal')?.classList.add('show');
-            requestAnimationFrame(drawImageCrop);
-        };
-
-        imageCropImage.onerror = function(){
-            if(revokeUrl) URL.revokeObjectURL(revokeUrl);
-            alert('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
-            closeImageCropModal();
-        };
-        imageCropImage.src = src;
     }
 
-    // createImageBitmap의 리사이즈 기능을 우선 사용합니다.
-    // 원본을 먼저 큰 Image로 디코딩하지 않아 모바일 메모리 사용량을 크게 줄입니다.
-    if (typeof createImageBitmap === 'function') {
-        createImageBitmap(file, {
-            resizeWidth: MAX_IMAGE_SIDE,
-            resizeHeight: MAX_IMAGE_SIDE,
-            resizeQuality: 'high'
-        }).then(bitmap => {
+    const fail = (message) => {
+        console.error('이미지 처리 실패:', message, file?.name, file?.type, file?.size);
+        alert(message);
+        closeImageCropModal();
+    };
+
+    const openLoadedImage = (img, cleanup) => {
+        if(!img || !img.width || !img.height){
+            if(cleanup) cleanup();
+            fail('사진을 읽을 수 없습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
+            return;
+        }
+        imageCropImage = img;
+        if(cleanup) imageCropCleanup = cleanup;
+        requestAnimationFrame(drawImageCrop);
+    };
+
+    // 먼저 createImageBitmap으로 모바일 메모리 사용량을 줄여봅니다.
+    if(typeof createImageBitmap === 'function'){
+        createImageBitmap(file, {resizeWidth: 1800, resizeHeight: 1800, resizeQuality: 'high'})
+        .then(bitmap => {
             const c = document.createElement('canvas');
-            const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(bitmap.width, bitmap.height));
+            const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
             c.width = Math.max(1, Math.round(bitmap.width * scale));
             c.height = Math.max(1, Math.round(bitmap.height * scale));
             const ctx = c.getContext('2d');
-            if(!ctx) throw new Error('canvas');
+            if(!ctx) throw new Error('canvas context');
             ctx.drawImage(bitmap,0,0,c.width,c.height);
             if(bitmap.close) bitmap.close();
-
-            // 모바일에서 큰 Data URL을 만들지 않도록 적당한 품질로 축소 이미지만 전달합니다.
-            const dataUrl = c.toDataURL('image/jpeg',0.86);
-            openWithSource(dataUrl, false);
-        }).catch(() => {
-            // 일부 구형 모바일 브라우저에서는 createImageBitmap 옵션이 지원되지 않을 수 있으므로
-            // 기존 FileReader 방식으로 안전하게 대체합니다.
-            const reader = new FileReader();
-            reader.onerror = function(){
-                alert('사진 파일을 읽는 중 오류가 발생했습니다. 다른 사진으로 다시 시도해주세요.');
+            const img = new Image();
+            img.onload = () => openLoadedImage(img, null);
+            img.onerror = () => fail('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
+            img.src = c.toDataURL('image/jpeg',0.82);
+        })
+        .catch(err => {
+            console.warn('createImageBitmap 실패, object URL로 재시도:', err);
+            // object URL은 FileReader보다 불필요한 Base64 복사를 줄여 모바일에서 유리합니다.
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                URL.revokeObjectURL(url);
+                openLoadedImage(img, null);
             };
-            reader.onload = function(e){
-                openWithSource(e.target.result, false);
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                fail('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
             };
-            reader.readAsDataURL(file);
+            img.src = url;
         });
         return;
     }
 
-    const reader = new FileReader();
-    reader.onerror = function(){
-        alert('사진 파일을 읽는 중 오류가 발생했습니다. 다른 사진으로 다시 시도해주세요.');
+    // createImageBitmap이 없는 브라우저용 fallback
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+        URL.revokeObjectURL(url);
+        openLoadedImage(img, null);
     };
-    reader.onload = function(e) {
-        openWithSource(e.target.result, false);
+    img.onerror = () => {
+        URL.revokeObjectURL(url);
+        fail('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
     };
-    reader.readAsDataURL(file);
+    img.src = url;
 }
 
 function getCropCanvasSize(){
@@ -5710,6 +5726,8 @@ function closeImageCropModal(){
     imageCropPointers.clear();
     imageCropLastPinchDistance=0;
     imageCropCallback=null;
+    if(typeof imageCropCleanup === 'function'){ try{ imageCropCleanup(); }catch(e){} }
+    imageCropCleanup=null;
 }
 
 if(imageCropClose) imageCropClose.addEventListener('click',closeImageCropModal);
