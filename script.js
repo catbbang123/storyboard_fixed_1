@@ -5455,7 +5455,7 @@ function openImageCropModal(file, target, ratio, callback) {
             return;
         }
 
-        const maxSide = 1600;
+        const maxSide = (window.matchMedia && window.matchMedia('(max-width:700px)').matches) ? 1200 : 1600;
         const sourceW = img.naturalWidth;
         const sourceH = img.naturalHeight;
         const scale = Math.min(1, maxSide / Math.max(sourceW, sourceH));
@@ -5479,19 +5479,13 @@ function openImageCropModal(file, target, ratio, callback) {
             fail('사진을 처리할 수 없습니다. 다른 사진으로 다시 시도해주세요.');
             return;
         }
+        // 모바일에서는 canvas -> Base64 -> 새 Image로 다시 만드는 과정이
+        // 메모리를 크게 늘려 페이지가 종료될 수 있으므로 하지 않습니다.
+        // 축소한 canvas 자체를 미리보기 이미지로 사용합니다.
         ctx.drawImage(img, 0, 0, w, h);
-
-        const small = new Image();
-        small.onload = () => {
-            if(cleanup) cleanup();
-            imageCropImage = small;
-            requestAnimationFrame(drawImageCrop);
-        };
-        small.onerror = () => {
-            if(cleanup) cleanup();
-            fail('사진 미리보기를 만들 수 없습니다. 다른 사진으로 다시 시도해주세요.');
-        };
-        small.src = c.toDataURL('image/jpeg', 0.88);
+        if(cleanup) cleanup();
+        imageCropImage = c;
+        requestAnimationFrame(drawImageCrop);
     };
 
     const objectUrl = URL.createObjectURL(file);
