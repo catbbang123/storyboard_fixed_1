@@ -653,12 +653,59 @@ function force16x9(){
 }
 window.addEventListener('resize',()=>requestAnimationFrame(force16x9));
 
-async function load(){
-    // ① 세계관 불러오기
-    const { data, error } = await supabaseClient
+// Supabase JWT가 일시적으로 "issued at future"로 판정되는 경우를
+// 사용자가 직접 새로고침하지 않아도 한 번 자동 복구합니다.
+async function loadWorldsWithJwtRecovery(){
+    let result = await supabaseClient
         .from('worlds')
         .select('*')
         .order('name', { ascending: true });
+
+    if(!result.error) return result;
+
+    const errorText = [
+        result.error?.code || '',
+        result.error?.message || '',
+        result.error?.details || '',
+        result.error?.hint || ''
+    ].join(' ').toLowerCase();
+
+    const isJwtFutureError =
+        errorText.includes('jwt issued at future') ||
+        errorText.includes('pgrst303') ||
+        (errorText.includes('jwt') && errorText.includes('future'));
+
+    if(!isJwtFutureError){
+        return result;
+    }
+
+    console.warn('JWT issued at future 감지: 세션을 갱신한 뒤 세계관 조회를 다시 시도합니다.');
+
+    // 현재 세션의 액세스 토큰을 새로 발급받습니다.
+    const { data: refreshData, error: refreshError } =
+        await supabaseClient.auth.refreshSession();
+
+    if(refreshError){
+        console.warn('Supabase 세션 자동 갱신 실패:', refreshError);
+        // 아주 짧게 기다린 뒤 동일 요청을 한 번 더 시도합니다.
+        // 일시적인 JWT 검증 시간 차이에도 대응합니다.
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }else if(refreshData?.session){
+        console.log('Supabase 세션 자동 갱신 완료');
+    }
+
+    // 새 세션으로 세계관 목록을 딱 한 번 재조회합니다.
+    result = await supabaseClient
+        .from('worlds')
+        .select('*')
+        .order('name', { ascending: true });
+
+    return result;
+}
+
+async function load(){
+    // ① 세계관 불러오기
+    const { data, error } = await loadWorldsWithJwtRecovery();
 
     if(error){
         console.error('Supabase worlds 불러오기 실패:', error);
