@@ -7,16 +7,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="manifest" href="manifest.webmanifest?v=20260918-icon-reset-fix1">
-  <link rel="apple-touch-icon" href="icons/icon-192.png?v=20260918-icon-reset-fix1">
-  <meta name="world-platform-version" content="pwa-mobile-pc-20260918-icon-reset-fix1">
-  <title>World Platform</title><link rel="stylesheet" href="style.css?v=20260918-icon-reset-fix1">
-  <link rel="shortcut icon" type="image/x-icon" href="images/logo_1.png?v=20260918-icon-reset-fix1">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="world-platform-version" content="pwa-mobile-pc-20260823-createfix">
+  <title>World Platform</title><link rel="stylesheet" href="style.css?v=20260829-photo-hq2">
+  <link rel="shortcut icon" type="image/x-icon" href="images/logo_1.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@400;500;600;700;800&family=Orbitron:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style id="mobile-theme-intro-font-fix">
 @media (max-width: 768px) {
   .hero > div:last-child > p {
@@ -132,9 +129,7 @@
 <button id="mobileCreate" class="mobile-create" type="button">＋ 세계관 만들기</button>
 <nav class="mobile"><button data-home>🏠<small>홈</small></button><button data-world-menu>🌍<small>세계관</small></button><button data-home data-my-creation>✍️<small>내 창작</small>
 </button><button data-joined-worlds>👤<small>가입한 세계관</small></button></nav>
-<div id="modal" class="modal"><div class="shade"></div><div class="box"><header><h2 id="mtitle">세계관 만들기</h2><button id="mclose">×</button></header><label>세계관 이름<input id="name"></label><label>세계관 소개<textarea id="desc"></textarea></label><label>장르<select id="genre">
-<option>판타지</option><option>다크 판타지</option><option>SF</option><option>사이버펑크</option><option>현대</option><option>로맨스</option><option>학원물</option><option>무협</option><option>추리물</option><option>공포</option><option>역사극</option><option>힐링</option><option>종교/신화</option><option>기타</option>
-</select>
+<div id="modal" class="modal"><div class="shade"></div><div class="box"><header><h2 id="mtitle">세계관 만들기</h2><button id="mclose">×</button></header><label>세계관 이름<input id="name"></label><label>세계관 소개<textarea id="desc"></textarea></label><label>장르<select id="genre"><option>판타지</option><option>SF</option><option>현대</option><option>역사</option><option>공포</option><option>기타</option></select>
 <div id="customGenreWrap" class="custom-input-wrap">
 <label>기타 장르 직접 입력
 <input id="customGenre" type="text" maxlength="30" placeholder="예: 다크 판타지, 디젤펑크">
@@ -199,6 +194,7 @@
 <select id="storyType">
 <option value="normal">일반 소설</option>
 <option value="relay">🔄 릴레이 소설</option>
+<option value="choice">🎮 선택형 소설</option>
 </select>
 <small class="upload-help">릴레이 소설은 이 세계관의 승인된 멤버가 다음 회차를 이어서 작성할 수 있습니다.</small>
 </label>
@@ -216,6 +212,20 @@
     </header>
     <label>회차 제목<input id="chapterName" placeholder="예: 1화 - 새로운 시작"></label>
     <label>본문<textarea id="chapterBody" class="chapter-body" placeholder="이곳에 이야기를 작성하세요."></textarea></label>
+
+    <!-- ===== 선택형 소설 시작 ===== -->
+    <div id="choiceEditor" class="choice-editor" style="display:none;">
+        <div class="choice-editor-head">
+            <div>
+                <strong>선택지</strong>
+                <small>독자가 이 회차를 읽은 뒤 선택할 내용을 만들어주세요.</small>
+            </div>
+        </div>
+        <div id="choiceList"></div>
+        <button type="button" id="addChoice" class="choice-add-btn">＋ 선택지 추가</button>
+    </div>
+    <!-- ===== 선택형 소설 끝 ===== -->
+
     <footer>
       <button id="chapterCancel">취소</button>
       <button id="chapterSave">저장</button></footer>
@@ -280,7 +290,7 @@
   </div>
 </div>
 
-<script src="script.js?v=20260918-icon-reset-fix1"></script>
+<script src="script.js?v=20260903-world-nav"></script>
 
 <script>
 (function(){
