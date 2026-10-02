@@ -39,12 +39,9 @@ const supabaseClient = window.supabase.createClient(
     }
 );
 
-let cachedAuthUser = null;
-
 async function updateAuthUI(session = null){
 
-    // 전달받은 세션이 없을 때만 현재 세션을 확인합니다.
-    // UI 표시 자체는 프로필 조회를 기다리지 않고 먼저 처리합니다.
+    // session을 전달받지 못했을 때만 Supabase에서 다시 확인
     if(session === null){
         const { data } = await supabaseClient.auth.getSession();
         session = data?.session || null;
@@ -62,14 +59,27 @@ async function updateAuthUI(session = null){
         document.getElementById('mobileCreate')
     ];
 
+    // =========================
+    // 로그아웃 상태
+    // =========================
     if(!session){
+
         currentUserId = null;
         myWorldMemberships = [];
+        
+        if(googleLoginBtn){
+            googleLoginBtn.style.display = '';
+        }
 
-        if(googleLoginBtn) googleLoginBtn.style.display = 'flex';
-        if(profileBtn) profileBtn.style.display = 'none';
-        if(profileMenu) profileMenu.style.display = 'none';
+        if(profileBtn){
+            profileBtn.style.display = 'none';
+        }
 
+        if(profileMenu){
+            profileMenu.style.display = 'none';
+        }
+
+        // 세계관 만들기 버튼 비활성화
         createButtons.forEach(btn => {
             if(btn){
                 btn.disabled = true;
@@ -77,33 +87,93 @@ async function updateAuthUI(session = null){
                 btn.title = '로그인 후 세계관을 만들 수 있습니다.';
             }
         });
+
         return;
     }
 
+    // =========================
+    // 로그인 상태
+    // =========================
     const user = session.user;
     const metadata = user.user_metadata || {};
 
-    // 로그인 상태 UI를 먼저 표시합니다.
-    // 프로필 조회 때문에 PC에서 메뉴가 늦게 나타나는 것을 막습니다.
-    currentUserId = user.id;
+    const name =
+        metadata.full_name ||
+        metadata.name ||
+        user.email?.split('@')[0] ||
+        '사용자';
 
-    if(googleLoginBtn) googleLoginBtn.style.display = 'none';
-    if(profileBtn) profileBtn.style.display = 'flex';
+    // ==========================================
+// 사이트 닉네임 불러오기
+// Google 이름/이메일은 공개 닉네임으로 사용하지 않음
+// ==========================================
+let nickname = '사용자';
 
-    if(profileEmail) profileEmail.textContent = user.email || '';
+const { data: myProfile, error: myProfileError } =
+    await supabaseClient
+        .from('profiles')
+        .select('nickname')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    const avatar = metadata.avatar_url || metadata.picture || '';
+if(myProfileError){
+    console.error(
+        '내 프로필 불러오기 실패:',
+        myProfileError
+    );
+}else if(myProfile?.nickname){
+    nickname = myProfile.nickname;
+}
+
+    const avatar =
+        metadata.avatar_url ||
+        metadata.picture ||
+        '';
+
+    // Google 로그인 버튼 숨기기
+    if(googleLoginBtn){
+        googleLoginBtn.style.display = 'none';
+    }
+
+    // 프로필 버튼 표시
+    if(profileBtn){
+        profileBtn.style.display = 'flex';
+    }
+
+    // 프로필 이름
+if(profileName){
+    profileName.textContent = nickname;
+}
+
+const nicknameInput =
+    document.getElementById('nicknameInput');
+
+if(nicknameInput){
+    nicknameInput.value =
+        nickname === '사용자' ? '' : nickname;
+}
+
+    // 프로필 이메일
+    if(profileEmail){
+        profileEmail.textContent = user.email || '';
+    }
+
+    // 프로필 사진
     if(profileAvatar){
+
         if(avatar){
-            profileAvatar.innerHTML = `<img src="${esc(avatar)}" alt="프로필 사진">`;
+            profileAvatar.innerHTML =
+                `<img src="${esc(avatar)}" alt="프로필 사진">`;
         }else{
             profileAvatar.textContent = '👤';
         }
+
     }
 
-    // 메뉴 버튼들은 프로필 조회와 관계없이 즉시 준비합니다.
+    // 프로필 메뉴에 아이콘 변경/회원 탈퇴 버튼 보장
     ensureAccountDeleteButton();
 
+    // 세계관 만들기 버튼 활성화
     createButtons.forEach(btn => {
         if(btn){
             btn.disabled = false;
@@ -111,32 +181,6 @@ async function updateAuthUI(session = null){
             btn.title = '';
         }
     });
-
-    // 닉네임은 백그라운드에서 불러옵니다.
-    let nickname = '사용자';
-    const { data: myProfile, error: myProfileError } =
-        await supabaseClient
-            .from('profiles')
-            .select('nickname')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-    if(myProfileError){
-        console.error('내 프로필 불러오기 실패:', myProfileError);
-    }else if(myProfile?.nickname){
-        nickname = myProfile.nickname;
-    }
-
-    // 다른 로그인/로그아웃으로 사용자가 바뀌었다면 오래된 프로필을 덮어쓰지 않습니다.
-    const { data: latestSessionData } = await supabaseClient.auth.getSession();
-    if(latestSessionData?.session?.user?.id !== user.id) return;
-
-    if(profileName) profileName.textContent = nickname;
-
-    const nicknameInput = document.getElementById('nicknameInput');
-    if(nicknameInput){
-        nicknameInput.value = nickname === '사용자' ? '' : nickname;
-    }
 }
 
 async function requireLogin(){
@@ -177,7 +221,7 @@ async function deleteMyAccount(){
 
     const confirmed = confirm(
         "정말 회원 탈퇴하시겠습니까?\\n\\n" +
-        "회원 탈퇴하면 계정과 프로필 정보가 삭제되며, 같은 Google 계정으로도 다시 가입할 수 있습니다."
+        "회원 탈퇴하면 계정과 프로필 정보가 삭제되며, 다시 로그인하려면 새 계정을 만들어야 합니다."
     );
 
     if(!confirmed) return;
@@ -236,66 +280,6 @@ function ensureAccountDeleteButton(){
     iconChangeBtn.onclick = (e) => {
         e.stopPropagation();
         openIconChangeModal();
-    };
-
-
-    // ==========================================
-    // Google 계정 바꾸기 버튼
-    // ==========================================
-    let switchAccountBtn =
-        document.getElementById("switchGoogleAccountBtn");
-
-    if(!switchAccountBtn){
-        switchAccountBtn = document.createElement("button");
-
-        switchAccountBtn.id = "switchGoogleAccountBtn";
-        switchAccountBtn.type = "button";
-        switchAccountBtn.textContent = "🔄 Google 계정 바꾸기";
-
-        switchAccountBtn.style.cssText =
-            "width:100%; margin-top:8px; padding:9px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; cursor:pointer; font-size:13px;";
-
-        // 로그아웃/탈퇴 버튼 위에 표시
-        profileMenu.appendChild(switchAccountBtn);
-    }
-
-    switchAccountBtn.onclick = async (e) => {
-        e.stopPropagation();
-
-        switchAccountBtn.disabled = true;
-        switchAccountBtn.textContent = "🔄 계정 선택 창을 여는 중...";
-
-        try{
-            // 현재 World Platform 세션만 먼저 종료합니다.
-            // Google 계정 자체는 로그아웃하지 않으므로
-            // Google 계정 선택 화면에서 계정 A/B를 선택할 수 있습니다.
-            const { error: signOutError } =
-                await supabaseClient.auth.signOut({ scope: 'local' });
-
-            if(signOutError){
-                throw signOutError;
-            }
-
-            const { error } =
-                await supabaseClient.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.origin,
-                        queryParams: {
-                            prompt: 'select_account'
-                        }
-                    }
-                });
-
-            if(error){
-                throw error;
-            }
-        }catch(error){
-            console.error('Google 계정 변경 실패:', error);
-            alert('Google 계정을 바꾸는 중 오류가 발생했습니다.\n\n' + (error?.message || error));
-            switchAccountBtn.disabled = false;
-            switchAccountBtn.textContent = "🔄 Google 계정 바꾸기";
-        }
     };
 
 
@@ -365,9 +349,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // ==========================================
     const { data } = await supabaseClient.auth.getSession();
 
-    // 최초 1회만 현재 세션으로 UI를 초기화합니다.
-    // 이후 변경은 onAuthStateChange가 담당합니다.
-    updateAuthUI(data?.session || null);
+    await updateAuthUI(data?.session || null);
 
 
     // ==========================================
@@ -376,7 +358,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 supabaseClient.auth.onAuthStateChange((event, session) => {
 
     console.log('인증 상태 변경:', event, session);
-    cachedAuthUser = session?.user || null;
 
     // 로그아웃되면 비공개 세계관 관련 정보 즉시 초기화
     if(!session){
@@ -401,20 +382,13 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
         googleLoginBtn.addEventListener('click', async () => {
 
-            if(googleLoginBtn.dataset.loginLoading === '1') return;
-            googleLoginBtn.dataset.loginLoading = '1';
-            googleLoginBtn.disabled = true;
-
             const { error } =
                 await supabaseClient.auth.signInWithOAuth({
 
                     provider: 'google',
 
                     options: {
-                        redirectTo: window.location.origin,
-                        queryParams: {
-                            prompt: 'select_account'
-                        }
+                        redirectTo: window.location.origin
                     }
 
                 });
@@ -425,9 +399,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
                     'Google 로그인 실패:',
                     error
                 );
-
-                googleLoginBtn.dataset.loginLoading = '0';
-                googleLoginBtn.disabled = false;
 
                 alert(
                     'Google 로그인에 실패했습니다.'
@@ -592,10 +563,6 @@ async function save(){
         theme: w.theme ?? 'purple',
         design_style: w.designStyle ?? 'fantasy',
         design_color: w.designColor ?? 'purple',
-        design_font: w.designFont ?? 'system',
-        design_text_color: w.designTextColor ?? 'default',
-        design_button_shape: w.designButtonShape ?? 'rounded',
-        design_layout_color: w.designLayoutColor ?? getDefaultLayoutColor(w),
         cover_image: w.coverImage ?? ''
     }));
 
@@ -653,59 +620,12 @@ function force16x9(){
 }
 window.addEventListener('resize',()=>requestAnimationFrame(force16x9));
 
-// Supabase JWT가 일시적으로 "issued at future"로 판정되는 경우를
-// 사용자가 직접 새로고침하지 않아도 한 번 자동 복구합니다.
-async function loadWorldsWithJwtRecovery(){
-    let result = await supabaseClient
-        .from('worlds')
-        .select('*')
-        .order('name', { ascending: true });
-
-    if(!result.error) return result;
-
-    const errorText = [
-        result.error?.code || '',
-        result.error?.message || '',
-        result.error?.details || '',
-        result.error?.hint || ''
-    ].join(' ').toLowerCase();
-
-    const isJwtFutureError =
-        errorText.includes('jwt issued at future') ||
-        errorText.includes('pgrst303') ||
-        (errorText.includes('jwt') && errorText.includes('future'));
-
-    if(!isJwtFutureError){
-        return result;
-    }
-
-    console.warn('JWT issued at future 감지: 세션을 갱신한 뒤 세계관 조회를 다시 시도합니다.');
-
-    // 현재 세션의 액세스 토큰을 새로 발급받습니다.
-    const { data: refreshData, error: refreshError } =
-        await supabaseClient.auth.refreshSession();
-
-    if(refreshError){
-        console.warn('Supabase 세션 자동 갱신 실패:', refreshError);
-        // 아주 짧게 기다린 뒤 동일 요청을 한 번 더 시도합니다.
-        // 일시적인 JWT 검증 시간 차이에도 대응합니다.
-        await new Promise(resolve => setTimeout(resolve, 500));
-    }else if(refreshData?.session){
-        console.log('Supabase 세션 자동 갱신 완료');
-    }
-
-    // 새 세션으로 세계관 목록을 딱 한 번 재조회합니다.
-    result = await supabaseClient
-        .from('worlds')
-        .select('*')
-        .order('name', { ascending: true });
-
-    return result;
-}
-
 async function load(){
     // ① 세계관 불러오기
-    const { data, error } = await loadWorldsWithJwtRecovery();
+    const { data, error } = await supabaseClient
+        .from('worlds')
+        .select('*')
+        .order('name', { ascending: true });
 
     if(error){
         console.error('Supabase worlds 불러오기 실패:', error);
@@ -911,8 +831,7 @@ if(userIds.length){
     // ② 캐릭터 불러오기
     const { data: characterData, error: characterError } = await supabaseClient
         .from('characters')
-        .select('*')
-        .order('created_at', { ascending: true });
+        .select('*');
 
     if(characterError){
         console.error('Supabase characters 불러오기 실패:', characterError);
@@ -923,8 +842,7 @@ if(userIds.length){
     // ③ 지역 불러오기
     const { data: locationData, error: locationError } = await supabaseClient
         .from('locations')
-        .select('*')
-        .order('created_at', { ascending: true });
+        .select('*');
 
     if(locationError){
         console.error('Supabase locations 불러오기 실패:', locationError);
@@ -935,8 +853,7 @@ if(userIds.length){
     // ④ 세계관 설정 불러오기
     const { data: settingsData, error: settingsError } = await supabaseClient
         .from('world_settings')
-        .select('*')
-        .order('created_at', { ascending: true });
+        .select('*');
 
     if(settingsError){
         console.error('Supabase world_settings 불러오기 실패:', settingsError);
@@ -981,10 +898,6 @@ if(userIds.length){
         theme: w.theme ?? 'purple',
         designStyle: w.design_style ?? 'fantasy',
         designColor: w.design_color ?? 'purple',
-        designFont: w.design_font ?? '',
-        designTextColor: w.design_text_color ?? '',
-        designButtonShape: w.design_button_shape ?? '',
-        designLayoutColor: w.design_layout_color ?? '',
         coverImage: w.cover_image ?? '',
         joined: myWorldMemberships.some(
             m => m.world_id === w.id && m.status === 'approved'
@@ -1137,32 +1050,7 @@ function restoreStoryView(){
     }
 }
 
-function clearWorldDesign(){
-    const el = $('world');
-    if(!el) return;
-
-    // 세계관 상세 화면에서만 적용되는 디자인 상태를 목록 화면으로 가져가지 않도록 초기화합니다.
-    el.classList.remove('world-design');
-    delete el.dataset.designStyle;
-    delete el.dataset.designColor;
-    delete el.dataset.genre;
-    delete el.dataset.designFont;
-    delete el.dataset.designTextColor;
-    delete el.dataset.designButtonShape;
-    delete el.dataset.designLayoutColor;
-
-    [
-        '--wd-accent','--sf-accent','--wd-radius','--wd-shadow','--wd-border',
-        '--wd-font','--wd-text-color','--wd-button-radius','--wd-button-transform',
-        '--wd-layout-bg','--wd-layout-panel','--wd-layout-soft',
-        '--wd-layout-border','--wd-layout-text'
-    ].forEach(name => el.style.removeProperty(name));
-
-    el.style.fontFamily = '';
-}
-
 function showJoinedWorlds(){
-    clearWorldDesign();
     current = null;
 
     $('home').classList.add('hidden');
@@ -1230,7 +1118,6 @@ $('world').innerHTML = `
 }
 
 function home(){
-    clearWorldDesign();
     current=null;
     sessionStorage.removeItem('storyboard_current_reader');
     sessionStorage.removeItem('storyboard_current_story');
@@ -1245,7 +1132,6 @@ function home(){
 }
 
 function showMyWorlds(){
-    clearWorldDesign();
     current = null;
 
     $('home').classList.add('hidden');
@@ -1277,7 +1163,6 @@ function showMyWorlds(){
 }
 
 function renderHome(q=''){
-    clearWorldDesign();
     let k=q.toLowerCase().trim();
 
     // 로그아웃 상태에서는 비공개 세계관을 목록에서 숨김
@@ -1391,7 +1276,7 @@ function bind(){document.querySelectorAll('[data-open]').forEach(x=>x.onclick=()
                 c.querySelector('.more>button').onclick=e=>{e.stopPropagation();
                  document.querySelectorAll('.menu.show').forEach(x=>x.classList.remove('show'));m.classList.add('show')};
                  c.querySelector('.edit').onclick=()=>openModal(id);
-                c.querySelector('.decorate').onclick=(e)=>{e.preventDefault();e.stopPropagation();m.classList.remove('show');openWorldDecorModal(id);};
+                c.querySelector('.decorate').onclick=()=>openWorldDecorModal(id);
                 c.querySelector('.join').onclick=()=>{
                     const world = get(id);
                 
@@ -1732,121 +1617,34 @@ async function openMembershipRequests(worldId){
 // =========================
 // 세계관 내부 디자인
 // =========================
+// 단순한 색상 변경이 아니라, 세계관 내부 UI 전체를 장르별로 바꾸는 디자인 시스템입니다.
 const WORLD_DESIGN_STYLES = {
-    sf: { label:'SF', font:'system-ui, sans-serif', radius:'10px', shadow:'0 8px 24px rgba(40,120,180,.18)', border:'1px solid rgba(70,170,220,.35)' },
-    cyberpunk: { label:'사이버펑크', font:'system-ui, sans-serif', radius:'3px', shadow:'0 0 24px rgba(0,220,255,.16)', border:'1px solid rgba(0,220,255,.38)' },
-    fantasy: { label:'판타지', font:'Georgia, "Noto Serif KR", serif', radius:'16px', shadow:'0 12px 30px rgba(80,50,20,.16)', border:'1px solid rgba(150,105,45,.30)' },
-    darkfantasy: { label:'다크 판타지', font:'Georgia, "Noto Serif KR", serif', radius:'6px', shadow:'0 14px 34px rgba(0,0,0,.34)', border:'1px solid rgba(150,45,55,.38)' },
-    horror: { label:'공포', font:'"Noto Serif KR", Georgia, serif', radius:'2px', shadow:'0 10px 28px rgba(0,0,0,.30)', border:'1px solid rgba(120,30,35,.38)' },
-    romance: { label:'로맨스', font:'"Noto Sans KR", sans-serif', radius:'22px', shadow:'0 10px 28px rgba(190,90,135,.15)', border:'1px solid rgba(220,130,170,.32)' },
-    school: { label:'학원물', font:'"Noto Sans KR", sans-serif', radius:'8px', shadow:'0 5px 16px rgba(60,90,120,.12)', border:'1px solid rgba(80,110,145,.24)' },
-    martial: { label:'무협', font:'"Noto Serif KR", Georgia, serif', radius:'4px', shadow:'0 8px 24px rgba(30,30,30,.16)', border:'1px solid rgba(60,60,60,.30)' },
-    mystery: { label:'추리물', font:'Georgia, "Noto Serif KR", serif', radius:'2px', shadow:'0 6px 18px rgba(40,40,40,.18)', border:'1px solid rgba(40,40,40,.35)' },
-    historical: { label:'역사극', font:'"Noto Serif KR", Georgia, serif', radius:'5px', shadow:'0 8px 22px rgba(100,75,40,.16)', border:'1px solid rgba(115,85,45,.28)' },
-    healing: { label:'힐링', font:'system-ui, "Noto Sans KR", sans-serif', radius:'22px', shadow:'0 8px 24px rgba(80,120,90,.12)', border:'1px solid rgba(100,150,110,.22)' },
-    religion: { label:'종교', font:'Georgia, "Noto Serif KR", serif', radius:'12px', shadow:'0 10px 28px rgba(100,80,50,.14)', border:'1px solid rgba(130,110,70,.28)' }
+    sf:       { label:'SF',       desc:'홀로그램 HUD · 네온 · 미래 시스템', icon:'◉' },
+    fantasy:  { label:'판타지',   desc:'마법진 · 고서 · 신비로운 장식', icon:'✦' },
+    martial:  { label:'무협',     desc:'한지 · 서예 · 무림 문양', icon:'☯' },
+    mystery: { label:'추리물',   desc:'사건 파일 · 수사 기록 · 탐정 문서', icon:'⌕' },
+    healing: { label:'힐링',     desc:'자연 · 꽃 · 부드럽고 편안한 화면', icon:'❀' },
+    religion: { label:'종교',     desc:'성전 · 성소 · 장엄한 문양', icon:'✧' }
 };
 
 const WORLD_DESIGN_COLORS = {
-    purple:'#7c5cff', blue:'#4d7cff', sky:'#57b7e6', green:'#62a86b', teal:'#45a89a',
-    gold:'#c59b45', red:'#c85b5b', orange:'#d88945', pink:'#d47aa5', black:'#222222', white:'#f5f5f5'
+    white:'#f7f7f4', red:'#d64b55', orange:'#e58a45', yellow:'#d8b33f',
+    green:'#63a86d', sky:'#5fc7df', blue:'#4f78dc', purple:'#795bd8',
+    black:'#25282c', rainbow:'rainbow'
 };
 
-// 세계관 글꼴 / 글자색 / 버튼 모양 커스터마이징
-const WORLD_FONT_OPTIONS = {
-  system:{label:'기본 고딕', css:'"Noto Sans KR", system-ui, sans-serif'},
-  clean:{label:'모던 산세리프', css:'"Noto Sans KR", sans-serif'},
-  serif:{label:'고전 명조', css:'"Noto Serif KR", serif'},
-  elegant:{label:'우아한 세리프', css:'"Playfair Display", "Noto Serif KR", serif'},
-  mono:{label:'터미널', css:'"DM Mono", "Noto Sans Mono", monospace'},
-  orbit:{label:'미래형', css:'"Orbitron", "Noto Sans KR", sans-serif'},
-  handwritten:{label:'손글씨', css:'"Gaegu", "Noto Sans KR", sans-serif'},
-  gothic:{label:'고딕 장식', css:'Georgia, "Noto Serif KR", serif'},
-  editorial:{label:'매거진', css:'"Playfair Display", "Noto Sans KR", serif'},
-  rounded:{label:'둥근 감성', css:'"Noto Sans KR", system-ui, sans-serif'}
-};
-const WORLD_TEXT_COLORS = {
-  default:{label:'기본',value:'#202124'}, ivory:{label:'아이보리',value:'#f7f1df'}, white:{label:'화이트',value:'#ffffff'},
-  black:{label:'검정',value:'#111111'}, navy:{label:'네이비',value:'#1d3158'}, wine:{label:'와인',value:'#7d2638'},
-  emerald:{label:'에메랄드',value:'#176b58'}, violet:{label:'보라',value:'#6345a8'}, rose:{label:'장미',value:'#b54e78'},
-  gold:{label:'금빛',value:'#b07a20'}, sky:{label:'하늘',value:'#2879a8'}, orange:{label:'주황',value:'#c46325'}
-};
-const WORLD_LAYOUT_COLORS = {
-  ivory:{label:'아이보리',bg:'#f5f0e4',panel:'#fffaf0',soft:'#eee5d4',border:'#d8c9ad',text:'#3f3528'},
-  lavender:{label:'라벤더',bg:'#f0edfb',panel:'#fbf9ff',soft:'#e5dff5',border:'#cfc5e8',text:'#352f43'},
-  mist:{label:'안개빛',bg:'#eaf2f6',panel:'#f8fbfc',soft:'#dce9ef',border:'#c2d5de',text:'#293943'},
-  rose:{label:'로즈',bg:'#f7edf1',panel:'#fff9fb',soft:'#eedde4',border:'#dfc2ce',text:'#49333c'},
-  mint:{label:'민트',bg:'#eaf4ee',panel:'#f9fdfb',soft:'#dcece2',border:'#bfd6c7',text:'#2e4135'},
-  parchment:{label:'양피지',bg:'#e9dfc9',panel:'#fbf4e4',soft:'#ded0b4',border:'#c5b28f',text:'#473a2a'},
-  charcoal:{label:'차콜',bg:'#252934',panel:'#303542',soft:'#3a4050',border:'#555d70',text:'#f2f3f6'},
-  white:{label:'화이트',bg:'#f7f8fa',panel:'#ffffff',soft:'#edf0f4',border:'#d9dde5',text:'#252831'},
-  skyblue:{label:'맑은 하늘',bg:'#e5f2fb',panel:'#f8fcff',soft:'#d2e8f5',border:'#a9cde3',text:'#263b4a'},
-  ocean:{label:'오션',bg:'#e3f0f2',panel:'#f7fcfc',soft:'#cfe5e7',border:'#9fc6ca',text:'#244348'},
-  sage:{label:'세이지',bg:'#e8eee6',panel:'#f9fbf7',soft:'#d9e3d5',border:'#b9cbb4',text:'#334332'},
-  lemon:{label:'레몬크림',bg:'#faf5d9',panel:'#fffdf1',soft:'#eee6b8',border:'#d9cd84',text:'#4a4324'},
-  peach:{label:'피치',bg:'#faeee5',panel:'#fffaf6',soft:'#f1ddd0',border:'#dfbda9',text:'#4b3930'},
-  coral:{label:'코랄',bg:'#fae9e5',panel:'#fff9f7',soft:'#efd2cc',border:'#d9aaa1',text:'#4b302c'},
-  plum:{label:'플럼',bg:'#eee7f2',panel:'#fbf8fd',soft:'#dfd2e8',border:'#c4add0',text:'#403247'},
-  wine:{label:'버건디',bg:'#f1e4e7',panel:'#fcf7f8',soft:'#e4cbd0',border:'#cda3ad',text:'#4a2b33'},
-  midnight:{label:'미드나이트',bg:'#20283a',panel:'#2b354a',soft:'#36425a',border:'#596981',text:'#f1f4fa'},
-  forest:{label:'딥 포레스트',bg:'#26372f',panel:'#31463b',soft:'#3b5548',border:'#617a6a',text:'#f0f5f1'},
-  navy:{label:'딥 네이비',bg:'#26344d',panel:'#33435e',soft:'#3d4f6c',border:'#657894',text:'#f2f5fa'},
-  sand:{label:'샌드',bg:'#efe7d8',panel:'#fcf8ef',soft:'#e4dac7',border:'#cdbfa7',text:'#493f32'},
-  smoke:{label:'스모크',bg:'#e5e6e8',panel:'#fafafa',soft:'#d4d6da',border:'#b9bdc5',text:'#34383f'},
-  black:{label:'블랙',bg:'#181a1f',panel:'#24272e',soft:'#30343c',border:'#4a505b',text:'#f3f4f6'}
-};
-
-function getDefaultLayoutColor(w){
-  const map={purple:'lavender',blue:'mist',pink:'rose',red:'parchment'};
-  return map[w?.theme] || 'ivory';
+function getDesignAccent(value){
+    if(WORLD_DESIGN_COLORS[value]) return WORLD_DESIGN_COLORS[value];
+    if(/^#[0-9a-fA-F]{6}$/.test(value||'')) return value;
+    return WORLD_DESIGN_COLORS.purple;
 }
 
-const WORLD_BUTTON_SHAPES = {
-  rounded:{label:'라운드',radius:'14px',transform:'none',className:'shape-rounded'},
-  pill:{label:'알약',radius:'999px',transform:'none',className:'shape-pill'},
-  square:{label:'각진 사각',radius:'2px',transform:'none',className:'shape-square'},
-  soft:{label:'소프트 카드',radius:'9px',transform:'none',className:'shape-soft'},
-  cut:{label:'사선 컷',radius:'2px',transform:'skewX(-5deg)',className:'shape-cut'},
-  ticket:{label:'티켓',radius:'7px',transform:'none',className:'shape-ticket'},
-  outline:{label:'아웃라인',radius:'4px',transform:'none',className:'shape-outline'},
-  stamp:{label:'도장',radius:'3px',transform:'rotate(-2deg)',className:'shape-stamp'},
-  tab:{label:'탭형',radius:'6px 6px 0 0',transform:'none',className:'shape-tab'},
-  diamond:{label:'다이아',radius:'4px',transform:'skewX(-8deg)',className:'shape-diamond'}
-};
-
-function getWorldDecorExtras(w){
-  let extras={font:'system',textColor:'default',buttonShape:'rounded',layoutColor:getDefaultLayoutColor(w)};
-  try{
-    const local=localStorage.getItem('world_platform_design_'+w.id);
-    if(local) extras={...extras,...JSON.parse(local)};
-  }catch(e){}
-  return {
-    font:w.designFont || extras.font,
-    textColor:w.designTextColor || extras.textColor,
-    buttonShape:w.designButtonShape || extras.buttonShape,
-    layoutColor:w.designLayoutColor || extras.layoutColor || getDefaultLayoutColor(w)
-  };
-}
-
-
-// 장르가 정해져 있으면 그 장르의 UI를 기본값으로 사용합니다.
-// 단, 사용자가 꾸미기에서 다른 스타일을 직접 고르면 그 선택을 우선합니다.
-function getGenreDesignPreset(genre){
-    const g=String(genre||'').toLowerCase().replace(/\s+/g,'');
-    if(/사이버펑크|cyberpunk|디젤펑크|dieselpunk|스팀펑크|steampunk/.test(g)) return {style:'cyberpunk',color:'teal'};
-    if(/sf|공상과학|우주|미래/.test(g)) return {style:'sf',color:'sky'};
-    if(/다크판타지|darkfantasy|고딕판타지|고딕/.test(g)) return {style:'darkfantasy',color:'red'};
-    if(/공포|호러|horror|괴담|좀비/.test(g)) return {style:'horror',color:'red'};
-    if(/로맨스|romance|연애|순정/.test(g)) return {style:'romance',color:'pink'};
-    if(/학원|school|청춘/.test(g)) return {style:'school',color:'blue'};
-    if(/무협|martial|선협|동양/.test(g)) return {style:'martial',color:'gold'};
-    if(/추리|미스터리|mystery|탐정|스릴러/.test(g)) return {style:'mystery',color:'black'};
-    if(/역사|사극|시대극|historical/.test(g)) return {style:'historical',color:'gold'};
-    if(/힐링|healing|일상|slice/.test(g)) return {style:'healing',color:'green'};
-    if(/종교|신화|성전|religion|신성/.test(g)) return {style:'religion',color:'gold'};
-    if(/판타지|fantasy|마법|중세/.test(g)) return {style:'fantasy',color:'gold'};
-    if(/현대|modern|일상/.test(g)) return {style:'school',color:'blue'};
-    return {style:'fantasy',color:'gold'};
+function getDesignAccentSoft(value){
+    if(value==='rainbow') return 'rgba(121,91,216,.12)';
+    const hex=getDesignAccent(value);
+    if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return 'rgba(121,91,216,.12)';
+    const n=parseInt(hex.slice(1),16);
+    return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},.12)`;
 }
 
 function ensureWorldDesignStyles(){
@@ -1854,535 +1652,143 @@ function ensureWorldDesignStyles(){
     const style=document.createElement('style');
     style.id='worldDesignRuntimeStyle';
     style.textContent=`
-      #world.world-design{
-        --wd-accent:#7c5cff;--wd-bg:#faf9ff;--wd-panel:#fff;--wd-text:#222;
-        --wd-radius:16px;--wd-shadow:0 12px 30px rgba(0,0,0,.12);
-        --wd-border:1px solid rgba(0,0,0,.12);color:var(--wd-text);
-        min-height:100%;position:relative;overflow:hidden;
-        background:var(--wd-bg);
-      }
-      #world.world-design .hero{
-        font-family:inherit;border-radius:0 0 var(--wd-radius) var(--wd-radius);
-        position:relative;overflow:hidden;
-      }
-      #world.world-design .tabs{
-        gap:8px;padding:12px;flex-wrap:wrap;background:var(--wd-bg);
-        border-bottom:var(--wd-border);
-      }
-      #world.world-design .tabs button{
-        border:var(--wd-border);border-radius:var(--wd-radius);box-shadow:none;
-        background:var(--wd-panel);color:var(--wd-text);transition:.18s;
-      }
-      #world.world-design .tabs button:hover{transform:translateY(-1px);}
-      #world.world-design .tabs button.active{
-        background:var(--wd-accent);color:#fff;border-color:var(--wd-accent);
-      }
-      #world.world-design .content .card,
-      #world.world-design .content .story-card,
-      #world.world-design .content .item,
-      #world.world-design .content .setting-card{
-        border-radius:var(--wd-radius);box-shadow:var(--wd-shadow);
-        border:var(--wd-border);background:var(--wd-panel);color:var(--wd-text);
-      }
-      #world.world-design button:not(.back){border-radius:var(--wd-radius);}
-      #world.world-design .wd-section-title{
-        border-left:5px solid var(--wd-accent);padding-left:10px;
-      }
+      /* 세계관 내부 디자인은 #world 안에서만 적용됩니다. */
+      #world.world-design{--wd-accent:#795bd8;--wd-accent-soft:rgba(121,91,216,.12);--wd-bg:#f7f6fb;--wd-panel:#fff;--wd-text:#26232a;--wd-muted:#77727c;--wd-line:rgba(40,35,45,.13);--wd-radius:16px;--wd-shadow:0 12px 32px rgba(30,25,40,.10);font-family:"Noto Sans KR","Malgun Gothic",Arial,sans-serif;background:var(--wd-bg);border-radius:22px;padding:0 0 34px;position:relative;overflow:hidden;}
+      #world.world-design .hero,#world.world-design .tabs,#world.world-design .content{position:relative;z-index:2;}
+      #world.world-design .hero{border-radius:0 0 22px 22px;box-shadow:var(--wd-shadow);}
+      #world.world-design .tabs{margin:16px 0;padding:9px;background:var(--wd-panel);border:1px solid var(--wd-line);border-radius:16px;box-shadow:var(--wd-shadow);}
+      #world.world-design .tabs button{position:relative;border:1px solid var(--wd-line);background:transparent;color:var(--wd-text);font-weight:700;transition:.2s;}
+      #world.world-design .tabs button.active{background:var(--wd-accent);border-color:var(--wd-accent);color:#fff;box-shadow:0 6px 18px var(--wd-accent-soft);}
+      #world.world-design .content{background:var(--wd-panel);border:1px solid var(--wd-line);border-radius:18px;padding:26px;color:var(--wd-text);box-shadow:var(--wd-shadow);}
+      #world.world-design .content h2{letter-spacing:-.02em;}
+      #world.world-design .content-head{border-bottom:1px solid var(--wd-line);padding-bottom:16px;margin-bottom:18px;}
+      #world.world-design .content-head button,#world.world-design .join button,#world.world-design .story-card-actions button{background:var(--wd-accent);color:#fff;border:0;box-shadow:0 5px 14px var(--wd-accent-soft);}
+      #world.world-design .item,#world.world-design .character-card,#world.world-design .story-card,#world.world-design .location-card,#world.world-design .setting-card{background:var(--wd-panel);border:1px solid var(--wd-line);border-radius:var(--wd-radius);box-shadow:var(--wd-shadow);}
+      #world.world-design .meta span{background:var(--wd-accent-soft);color:var(--wd-accent);border:1px solid rgba(0,0,0,.04);}
+      #world.world-design .join{background:var(--wd-accent-soft);border:1px solid var(--wd-line);}
+      #world.world-design .join button:disabled{opacity:.55;box-shadow:none;}
 
-      /* SF — HUD / 인터페이스 */
-      #world.world-design[data-design-style="sf"]{
-        --wd-bg:#07131f;--wd-panel:#0c1e2d;--wd-text:#e8f7ff;
-      }
-      #world.world-design[data-design-style="sf"] .hero{
-        box-shadow:inset 0 -1px 0 rgba(87,183,230,.45);
-      }
-      #world.world-design[data-design-style="sf"] .tabs button,
-      #world.world-design[data-design-style="sf"] .content .card,
-      #world.world-design[data-design-style="sf"] .content .story-card,
-      #world.world-design[data-design-style="sf"] .content .item,
-      #world.world-design[data-design-style="sf"] .content .setting-card{
-        background:#0c1e2d;color:#e8f7ff;border-color:rgba(87,183,230,.35);
-      }
+      /* SF — 예시 이미지처럼 HUD / 홀로그램 패널 */
+      #world.world-design[data-design-style="sf"]{--wd-bg:#061a1a;--wd-panel:rgba(7,37,37,.92);--wd-text:#d8fffb;--wd-muted:#8cc9c4;--wd-line:rgba(88,255,235,.38);--wd-radius:0;--wd-shadow:0 0 28px rgba(52,255,226,.10);font-family:"Rajdhani","Noto Sans KR",sans-serif;background-image:linear-gradient(rgba(71,255,230,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(71,255,230,.055) 1px,transparent 1px);background-size:24px 24px;}
+      #world.world-design[data-design-style="sf"]:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 20%,rgba(57,255,229,.13),transparent 38%),repeating-linear-gradient(0deg,transparent 0 5px,rgba(70,255,230,.025) 6px);pointer-events:none;z-index:1;}
+      #world.world-design[data-design-style="sf"] .hero{border:1px solid rgba(98,255,238,.65);box-shadow:0 0 25px rgba(65,255,225,.18),inset 0 0 40px rgba(65,255,225,.06);border-radius:0;}
+      #world.world-design[data-design-style="sf"] .hero:after{content:"SYSTEM ONLINE  //  WORLD DATA";position:absolute;right:18px;bottom:13px;font:700 10px/1 monospace;color:#72fff0;letter-spacing:2px;opacity:.8;}
+      #world.world-design[data-design-style="sf"] .tabs{background:rgba(3,25,25,.78);border:1px solid rgba(83,255,232,.42);border-radius:0;gap:8px;}
+      #world.world-design[data-design-style="sf"] .tabs button{border:1px solid rgba(88,255,235,.34);border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);text-transform:uppercase;letter-spacing:.04em;}
+      #world.world-design[data-design-style="sf"] .tabs button:before{content:"";position:absolute;left:5px;top:5px;width:6px;height:6px;background:var(--wd-accent);box-shadow:0 0 8px var(--wd-accent);}
+      #world.world-design[data-design-style="sf"] .tabs button{padding-left:25px;position:relative;} #world.world-design[data-design-style="sf"] .tabs button:nth-child(1):after{content:"◉";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;} #world.world-design[data-design-style="sf"] .tabs button:nth-child(2):after{content:"♙";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;} #world.world-design[data-design-style="sf"] .tabs button:nth-child(3):after{content:"⌖";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;} #world.world-design[data-design-style="sf"] .tabs button:nth-child(4):after{content:"▣";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;} #world.world-design[data-design-style="sf"] .tabs button:nth-child(5):after{content:"⚙";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;}
+      #world.world-design[data-design-style="sf"] .tabs button.active{background:rgba(54,255,225,.18);color:#a7fff5;box-shadow:inset 0 0 16px rgba(54,255,225,.10),0 0 14px rgba(54,255,225,.15);}
+      #world.world-design[data-design-style="sf"] .content{background:rgba(4,27,27,.88);border:1px solid rgba(87,255,234,.36);border-radius:0;box-shadow:inset 0 0 40px rgba(45,255,225,.03);}
+      #world.world-design[data-design-style="sf"] .content-head{border-bottom:1px solid rgba(87,255,234,.3);}
+      #world.world-design[data-design-style="sf"] .content-head h2:before{content:"◈  ";color:var(--wd-accent);}
+      #world.world-design[data-design-style="sf"] .item,#world.world-design[data-design-style="sf"] .character-card,#world.world-design[data-design-style="sf"] .story-card,#world.world-design[data-design-style="sf"] .location-card,#world.world-design[data-design-style="sf"] .setting-card{border:1px solid rgba(87,255,234,.28);border-radius:0;background:rgba(5,42,41,.58);box-shadow:inset 0 0 22px rgba(53,255,229,.04);position:relative;}
+      #world.world-design[data-design-style="sf"] .item:before,#world.world-design[data-design-style="sf"] .character-card:before,#world.world-design[data-design-style="sf"] .story-card:before{content:"";position:absolute;left:0;top:0;width:26px;height:2px;background:var(--wd-accent);box-shadow:0 0 10px var(--wd-accent);}
+      #world.world-design[data-design-style="sf"] .story-card-cover,#world.world-design[data-design-style="sf"] .character-card-photo{border-radius:0;filter:saturate(.8) contrast(1.05);}
+      #world.world-design[data-design-style="sf"] .content-head button,#world.world-design[data-design-style="sf"] .join button,#world.world-design[data-design-style="sf"] .story-card-actions button{border-radius:0;clip-path:polygon(9px 0,100% 0,calc(100% - 9px) 100%,0 100%);background:rgba(53,255,225,.13);border:1px solid rgba(93,255,238,.62);color:#9ffff5;box-shadow:0 0 12px rgba(53,255,225,.12);}
+      #world.world-design[data-design-style="sf"] .meta span{border-radius:0;color:#86fff2;background:rgba(53,255,225,.08);border-color:rgba(93,255,238,.3);}
+      #world.world-design[data-design-style="sf"] .join{border-radius:0;background:rgba(53,255,225,.06);}
 
-      /* 사이버펑크 — 네온 HUD */
-      #world.world-design[data-design-style="cyberpunk"]{
-        --wd-bg:#080611;--wd-panel:#11101d;--wd-text:#f4f4ff;
-      }
-      #world.world-design[data-design-style="cyberpunk"] .hero{
-        box-shadow:0 0 35px rgba(0,220,255,.12);
-      }
-      #world.world-design[data-design-style="cyberpunk"] .tabs{
-        background:#080611;border-bottom:1px solid rgba(255,0,170,.25);
-      }
-      #world.world-design[data-design-style="cyberpunk"] .tabs button{
-        background:#11101d;color:#f4f4ff;border-color:rgba(0,220,255,.35);
-        border-radius:3px;text-transform:uppercase;
-      }
-      #world.world-design[data-design-style="cyberpunk"] .tabs button.active{
-        box-shadow:0 0 15px rgba(0,220,255,.32);
-      }
+      /* 판타지 — 마법서 / 마법진 / 장식 테두리 */
+      #world.world-design[data-design-style="fantasy"]{--wd-bg:#f7f1e5;--wd-panel:#fffaf0;--wd-text:#3e2c21;--wd-muted:#806e5c;--wd-line:rgba(112,74,37,.24);--wd-radius:15px;--wd-shadow:0 12px 28px rgba(83,52,24,.13);font-family:Georgia,"Noto Serif KR",serif;background-image:radial-gradient(circle at 20% 10%,rgba(180,139,77,.08) 0 2px,transparent 3px),radial-gradient(circle at 80% 70%,rgba(180,139,77,.06) 0 1px,transparent 2px);background-size:34px 34px,27px 27px;}
+      #world.world-design[data-design-style="fantasy"] .hero{border:1px solid rgba(174,132,62,.45);box-shadow:inset 0 0 35px rgba(255,239,186,.10),var(--wd-shadow);}
+      #world.world-design[data-design-style="fantasy"] .tabs{background:#efe1c8;border-color:#c9aa76;}
+      #world.world-design[data-design-style="fantasy"] .tabs button{font-family:inherit;border-color:#d0b27c;background:#f9f0df;}
+      #world.world-design[data-design-style="fantasy"] .tabs button.active{background:linear-gradient(#b9914d,#8d6835);border-color:#79542b;color:#fff9e8;}
+      #world.world-design[data-design-style="fantasy"] .content{border-color:#c8aa75;background:rgba(255,250,239,.94);}
+      #world.world-design[data-design-style="fantasy"] .content-head h2:after{content:"  ✦";color:var(--wd-accent);}
+      #world.world-design[data-design-style="fantasy"] .item,#world.world-design[data-design-style="fantasy"] .character-card,#world.world-design[data-design-style="fantasy"] .story-card{border-color:#d7bc8d;box-shadow:0 8px 20px rgba(80,48,19,.09),inset 0 0 0 1px rgba(255,255,255,.45);}
+      #world.world-design[data-design-style="fantasy"] .content-head button,#world.world-design[data-design-style="fantasy"] .join button,#world.world-design[data-design-style="fantasy"] .story-card-actions button{background:linear-gradient(135deg,#b18a4c,#77552e);border:1px solid #62431f;}
 
-      /* 판타지 — 고서 / 마법서 */
-      #world.world-design[data-design-style="fantasy"]{
-        --wd-bg:#f5efe2;--wd-panel:#fffaf0;--wd-text:#392b1e;
-      }
-      #world.world-design[data-design-style="fantasy"] .tabs{
-        background:#eee2cc;
-      }
-      #world.world-design[data-design-style="fantasy"] .content .card,
-      #world.world-design[data-design-style="fantasy"] .content .story-card,
-      #world.world-design[data-design-style="fantasy"] .content .item,
-      #world.world-design[data-design-style="fantasy"] .content .setting-card{
-        background:#fffaf0;
-      }
-      #world.world-design[data-design-style="fantasy"] .tabs button.active{
-        box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
-      }
+      /* 무협 — 한지 / 서예 / 직선적인 문양 */
+      #world.world-design[data-design-style="martial"]{--wd-bg:#eee7d8;--wd-panel:#fbf8ef;--wd-text:#27231f;--wd-muted:#746b5e;--wd-line:rgba(65,52,38,.28);--wd-radius:3px;--wd-shadow:0 7px 18px rgba(45,36,25,.12);font-family:"Noto Serif KR",Georgia,serif;background-image:linear-gradient(90deg,transparent 49.5%,rgba(88,72,51,.035) 50%,transparent 50.5%);background-size:38px 100%;}
+      #world.world-design[data-design-style="martial"] .hero{border-radius:0;border-bottom:3px double rgba(70,54,37,.55);}
+      #world.world-design[data-design-style="martial"] .tabs{background:#e1d4bc;border-radius:3px;border-color:#9e8c70;}
+      #world.world-design[data-design-style="martial"] .tabs button{border-radius:2px;font-family:inherit;}
+      #world.world-design[data-design-style="martial"] .tabs button.active{background:#332f2a;color:#f6ead3;border-color:#332f2a;}
+      #world.world-design[data-design-style="martial"] .content{border-radius:3px;border-color:#a99a80;background:#faf7ed;}
+      #world.world-design[data-design-style="martial"] .item,#world.world-design[data-design-style="martial"] .character-card,#world.world-design[data-design-style="martial"] .story-card{border-radius:2px;border-color:#b6a78d;box-shadow:2px 3px 0 rgba(65,52,38,.07);}
+      #world.world-design[data-design-style="martial"] .content-head h2:before{content:"❖  ";font-size:.8em;color:#6c3e2e;}
+      #world.world-design[data-design-style="martial"] .content-head button,#world.world-design[data-design-style="martial"] .join button,#world.world-design[data-design-style="martial"] .story-card-actions button{border-radius:2px;background:#403a33;color:#f8ecd7;}
 
-      /* 판타지 기본 색상: 고서풍 금빛 (기존 판타지 UI 디자인은 그대로 유지) */
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"]{
-        --wd-accent:#a8792f;
-        --wd-bg:#f3ead7;
-        --wd-panel:#fffaf0;
-        --wd-text:#3b2a1a;
-        --wd-border:1px solid rgba(126,88,35,.30);
-      }
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .tabs{
-        background:#e8dbc0;
-        border-bottom:1px solid rgba(126,88,35,.30);
-      }
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .tabs button.active{
-        background:#a8792f; color:#fffaf0; border-color:#a8792f;
-      }
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] button:not(.back){
-        border-color:#c9ad75;
-      }
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .content-head button,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .join button,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-list-btn,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .story-read-btn,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .add-btn{
-        background:#a8792f; color:#fffaf0; border-color:#a8792f;
-      }
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .story-chapter-btn,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-view-btn,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .chapter-nav-btn{
-        background:#efe2c8; color:#79551f; border-color:#d2b57b;
-      }
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .meta span,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .character-group-count{
-        background:#efe2c8; color:#79551f;
-      }
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] .content-head h2,
-      #world.world-design[data-design-style="fantasy"][data-design-color="gold"] h2{
-        color:#5b3d1b;
-      }
+      /* 추리물 — 사건 파일 / 서류철 */
+      #world.world-design[data-design-style="mystery"]{--wd-bg:#e9e6df;--wd-panel:#f8f7f3;--wd-text:#292929;--wd-muted:#686868;--wd-line:rgba(35,35,35,.22);--wd-radius:2px;--wd-shadow:0 5px 13px rgba(0,0,0,.10);font-family:"Courier New","Noto Sans KR",monospace;background-image:radial-gradient(rgba(0,0,0,.055) .6px,transparent .6px);background-size:5px 5px;}
+      #world.world-design[data-design-style="mystery"] .hero{border-radius:2px;filter:saturate(.75) contrast(1.03);}
+      #world.world-design[data-design-style="mystery"] .tabs{border-radius:2px;background:#d8d4cb;border-color:#aaa59a;}
+      #world.world-design[data-design-style="mystery"] .tabs button{border-radius:0;background:#eeeae2;border-color:#aaa59a;clip-path:polygon(0 0,100% 0,94% 100%,0 100%);}
+      #world.world-design[data-design-style="mystery"] .tabs button.active{background:#353535;color:#fff;border-color:#353535;}
+      #world.world-design[data-design-style="mystery"] .content{border-radius:2px;background:#f9f8f3;border-color:#aaa59a;}
+      #world.world-design[data-design-style="mystery"] .content-head{border-bottom:2px solid #383838;}
+      #world.world-design[data-design-style="mystery"] .content-head h2:after{content:"  // CASE FILE";font:700 10px monospace;color:#888;}
+      #world.world-design[data-design-style="mystery"] .item,#world.world-design[data-design-style="mystery"] .character-card,#world.world-design[data-design-style="mystery"] .story-card{border-radius:0;border-color:#bbb7ad;box-shadow:3px 4px 0 rgba(0,0,0,.06);}
+      #world.world-design[data-design-style="mystery"] .content-head button,#world.world-design[data-design-style="mystery"] .join button,#world.world-design[data-design-style="mystery"] .story-card-actions button{border-radius:1px;background:#3b3b3b;color:#fff;}
 
-      /* 다크 판타지 — 고딕 / 붉은 포인트 */
-      #world.world-design[data-design-style="darkfantasy"]{
-        --wd-bg:#110e12;--wd-panel:#1a151a;--wd-text:#eee4e5;
-      }
-      #world.world-design[data-design-style="darkfantasy"] .tabs{
-        background:#0c0a0d;border-color:rgba(180,55,65,.32);
-      }
-      #world.world-design[data-design-style="darkfantasy"] .content .card,
-      #world.world-design[data-design-style="darkfantasy"] .content .story-card,
-      #world.world-design[data-design-style="darkfantasy"] .content .item,
-      #world.world-design[data-design-style="darkfantasy"] .content .setting-card{
-        background:#1a151a;color:#eee4e5;border-color:rgba(180,55,65,.30);
-      }
+      /* 힐링 — 자연 / 카드 / 부드러운 곡선 */
+      #world.world-design[data-design-style="healing"]{--wd-bg:#edf7ee;--wd-panel:#fffdf8;--wd-text:#31443a;--wd-muted:#74867a;--wd-line:rgba(73,117,84,.17);--wd-radius:24px;--wd-shadow:0 10px 25px rgba(73,117,84,.10);font-family:"Noto Sans KR",sans-serif;background-image:radial-gradient(circle at 15% 20%,rgba(115,184,123,.10) 0 28px,transparent 29px),radial-gradient(circle at 85% 75%,rgba(115,184,123,.08) 0 35px,transparent 36px);}
+      #world.world-design[data-design-style="healing"] .hero{border-radius:0 0 30px 30px;}
+      #world.world-design[data-design-style="healing"] .tabs{background:#f5fbf4;border-color:#cfe4d0;border-radius:25px;}
+      #world.world-design[data-design-style="healing"] .tabs button{border-radius:20px;border-color:#d7e9d8;}
+      #world.world-design[data-design-style="healing"] .tabs button.active{background:#76ad7d;border-color:#76ad7d;}
+      #world.world-design[data-design-style="healing"] .content{border-radius:28px;background:rgba(255,253,248,.95);border-color:#d7e8d7;}
+      #world.world-design[data-design-style="healing"] .content-head h2:before{content:"❀  ";color:#72a978;}
+      #world.world-design[data-design-style="healing"] .item,#world.world-design[data-design-style="healing"] .character-card,#world.world-design[data-design-style="healing"] .story-card{border-color:#d8e9d8;box-shadow:0 7px 18px rgba(76,126,84,.08);}
+      #world.world-design[data-design-style="healing"] .content-head button,#world.world-design[data-design-style="healing"] .join button,#world.world-design[data-design-style="healing"] .story-card-actions button{border-radius:18px;background:#76ad7d;}
 
-      /* 공포 — 사건 기록 / 경고 */
-      #world.world-design[data-design-style="horror"]{
-        --wd-bg:#0b0b0b;--wd-panel:#151515;--wd-text:#e8e8e8;
-      }
-      #world.world-design[data-design-style="horror"] .tabs{
-        background:#080808;border-color:#3b1b1d;
-      }
-      #world.world-design[data-design-style="horror"] .content .card,
-      #world.world-design[data-design-style="horror"] .content .story-card,
-      #world.world-design[data-design-style="horror"] .content .item,
-      #world.world-design[data-design-style="horror"] .content .setting-card{
-        background:#151515;color:#e8e8e8;border-color:#3b2526;border-radius:2px;
-      }
-      #world.world-design[data-design-style="horror"] .tabs button.active{
-        box-shadow:0 0 0 1px rgba(200,91,91,.5);
-      }
+      /* 종교 — 성전 / 장엄한 금속 장식 */
+      #world.world-design[data-design-style="religion"]{--wd-bg:#f1eee7;--wd-panel:#fffdf7;--wd-text:#3d3429;--wd-muted:#756a5d;--wd-line:rgba(115,88,42,.25);--wd-radius:10px;--wd-shadow:0 9px 25px rgba(74,56,31,.11);font-family:Georgia,"Noto Serif KR",serif;background-image:linear-gradient(45deg,rgba(174,137,65,.035) 25%,transparent 25%,transparent 75%,rgba(174,137,65,.035) 75%);background-size:34px 34px;}
+      #world.world-design[data-design-style="religion"] .hero{border-radius:10px 10px 22px 22px;border:1px solid rgba(190,151,72,.45);}
+      #world.world-design[data-design-style="religion"] .tabs{background:#eee5d3;border-color:#bda26b;border-radius:10px;}
+      #world.world-design[data-design-style="religion"] .tabs button{border-color:#c8ae78;border-radius:7px;}
+      #world.world-design[data-design-style="religion"] .tabs button.active{background:linear-gradient(135deg,#9a783b,#6e5227);border-color:#61471f;color:#fffaf0;}
+      #world.world-design[data-design-style="religion"] .content{border-color:#cbb17d;background:#fffdf8;}
+      #world.world-design[data-design-style="religion"] .content-head{text-align:center;border-bottom:1px solid #c9af78;}
+      #world.world-design[data-design-style="religion"] .content-head h2:before{content:"✧  ";color:#b18a46;}#world.world-design[data-design-style="religion"] .content-head h2:after{content:"  ✧";color:#b18a46;}
+      #world.world-design[data-design-style="religion"] .item,#world.world-design[data-design-style="religion"] .character-card,#world.world-design[data-design-style="religion"] .story-card{border-color:#d6c298;box-shadow:inset 0 0 0 1px rgba(180,145,76,.08),var(--wd-shadow);}
+      #world.world-design[data-design-style="religion"] .content-head button,#world.world-design[data-design-style="religion"] .join button,#world.world-design[data-design-style="religion"] .story-card-actions button{background:linear-gradient(135deg,#a58245,#735628);border:1px solid #63481f;}
 
-      /* 로맨스 — 부드러운 잡지 / 다이어리 */
-      #world.world-design[data-design-style="romance"]{
-        --wd-bg:#fff5f8;--wd-panel:#fffafd;--wd-text:#4b303c;
-      }
-      #world.world-design[data-design-style="romance"] .tabs{
-        background:#ffe9f0;
-      }
-      #world.world-design[data-design-style="romance"] .content .card,
-      #world.world-design[data-design-style="romance"] .content .story-card,
-      #world.world-design[data-design-style="romance"] .content .item,
-      #world.world-design[data-design-style="romance"] .content .setting-card{
-        background:#fffafd;border-color:rgba(212,122,165,.25);
-      }
+      /* 장르별 탭 아이콘 */
+      #world.world-design[data-design-style="fantasy"] .tabs button:before{content:"✦";margin-right:6px;color:var(--wd-accent);}
+      #world.world-design[data-design-style="martial"] .tabs button:before{content:"◆";margin-right:6px;color:#6c3e2e;font-size:.75em;}
+      #world.world-design[data-design-style="mystery"] .tabs button:before{content:"□";margin-right:6px;color:#555;}
+      #world.world-design[data-design-style="healing"] .tabs button:before{content:"❀";margin-right:6px;color:#72a978;}
+      #world.world-design[data-design-style="religion"] .tabs button:before{content:"✧";margin-right:6px;color:#b18a46;}
 
-      /* 학원물 — 노트 / 게시판 */
-      #world.world-design[data-design-style="school"]{
-        --wd-bg:#f4f7fb;--wd-panel:#fff;--wd-text:#26364a;
-      }
-      #world.world-design[data-design-style="school"] .tabs{
-        background:#eaf0f7;
-      }
-      #world.world-design[data-design-style="school"] .content .card,
-      #world.world-design[data-design-style="school"] .content .story-card,
-      #world.world-design[data-design-style="school"] .content .item,
-      #world.world-design[data-design-style="school"] .content .setting-card{
-        border-radius:8px;
-      }
+      /* 색상 선택에 따른 전체 강조색 */
+      #world.world-design[data-design-color="rainbow"]{--wd-accent:#ff5e8b;}
+      #world.world-design[data-design-color="rainbow"] .tabs button.active,#world.world-design[data-design-color="rainbow"] .content-head button,#world.world-design[data-design-color="rainbow"] .story-card-actions button{background:linear-gradient(90deg,#ff5e8b,#ffb84d,#62c96b,#58bfe9,#8c69ef);}
 
-      /* 무협 — 한지 / 수묵 */
-      #world.world-design[data-design-style="martial"]{
-        --wd-bg:#eeeae1;--wd-panel:#faf8f2;--wd-text:#292725;
-      }
-      #world.world-design[data-design-style="martial"] .tabs{
-        background:#e4ded1;
-      }
-      #world.world-design[data-design-style="martial"] .tabs button{
-        border-radius:4px;
-      }
-
-      /* 추리 — 사건 파일 */
-      #world.world-design[data-design-style="mystery"]{
-        --wd-bg:#e9e7e1;--wd-panel:#f7f5ee;--wd-text:#252525;
-      }
-      #world.world-design[data-design-style="mystery"] .tabs{
-        background:#dedbd2;
-      }
-      #world.world-design[data-design-style="mystery"] .content .card,
-      #world.world-design[data-design-style="mystery"] .content .story-card,
-      #world.world-design[data-design-style="mystery"] .content .item,
-      #world.world-design[data-design-style="mystery"] .content .setting-card{
-        border-radius:2px;
-      }
-
-      /* 역사극 — 기록 / 박물관 */
-      #world.world-design[data-design-style="historical"]{
-        --wd-bg:#f0eadc;--wd-panel:#fbf7ec;--wd-text:#403629;
-      }
-      #world.world-design[data-design-style="historical"] .tabs{
-        background:#e5dbc7;
-      }
-
-      /* 힐링 — 자연 / 카드형 */
-      #world.world-design[data-design-style="healing"]{
-        --wd-bg:#f4faf5;--wd-panel:#ffffff;--wd-text:#304638;
-      }
-      #world.world-design[data-design-style="healing"] .tabs{
-        background:#e7f3e9;
-      }
-
-
-      /* 힐링 — 포근한 인형방 / 봉제인형 가득한 쉼터 */
-      #world.world-design[data-design-style="healing"]{
-        --healing-accent:var(--wd-accent);
-      }
-      #world.world-design[data-design-style="healing"] .healing-plush-art{
-        position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;color:var(--healing-accent);
-      }
-      #world.world-design[data-design-style="healing"] .healing-plush-art svg{width:100%;height:100%;display:block;}
-      #world.world-design[data-design-style="healing"] .plush{filter:drop-shadow(0 8px 8px rgba(95,80,90,.10));}
-      #world.world-design[data-design-style="healing"] .heal-garland{filter:drop-shadow(0 2px 3px rgba(80,120,90,.08));}
-      #world.world-design[data-design-style="healing"] .heal-shelf{filter:drop-shadow(0 5px 7px rgba(80,90,80,.08));}
-      #world.world-design[data-design-style="healing"] .hero,
-      #world.world-design[data-design-style="healing"] .tabs,
-      #world.world-design[data-design-style="healing"] .content{position:relative;z-index:2;}
-      #world.world-design[data-design-style="healing"] .tabs button{border-radius:999px;}
-      #world.world-design[data-design-style="healing"] .content .card,
-      #world.world-design[data-design-style="healing"] .content .story-card,
-      #world.world-design[data-design-style="healing"] .content .item,
-      #world.world-design[data-design-style="healing"] .content .setting-card{border-radius:18px;}
-      #world.world-design[data-design-style="healing"] .hero::after{
-        content:"♡  cuddle corner  ♡";position:absolute;right:18px;bottom:12px;padding:5px 10px;border-radius:999px;
-        background:rgba(255,255,255,.72);color:var(--healing-accent);font-size:10px;font-weight:700;letter-spacing:.08em;
-        box-shadow:0 4px 12px rgba(80,120,90,.08);
-      }
-
-      /* 종교 / 신화 — 성전 / 고전 */
-      #world.world-design[data-design-style="religion"]{
-        --wd-bg:#f4f0e7;--wd-panel:#fffdf6;--wd-text:#3c3326;
-      }
-      #world.world-design[data-design-style="religion"] .tabs{
-        background:#e9e0cd;
-      }
-
-      .world-decor-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
-      .world-decor-box{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;color:#222;border-radius:20px;padding:26px;box-sizing:border-box;box-shadow:0 24px 70px rgba(0,0,0,.28);}
-      .world-decor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
-      .world-decor-option{padding:15px;border:1px solid #ddd;background:#fff;color:#222;border-radius:14px;text-align:left;cursor:pointer;transition:.18s;}
-      .world-decor-option:hover{transform:translateY(-1px);}
-      .world-decor-option.selected{border:2px solid var(--wd-accent,#7c5cff);box-shadow:0 0 0 3px rgba(124,92,255,.12);}
-      .world-decor-swatch{width:34px;height:34px;border-radius:50%;display:inline-block;vertical-align:middle;border:1px solid rgba(0,0,0,.12);margin-right:8px;}
-      .world-decor-preview{margin:18px 0 6px;padding:16px;border:1px solid #ddd;border-radius:14px;background:#f7f7f9;}
-      .world-decor-preview-frame{min-height:110px;border-radius:12px;padding:14px;display:flex;flex-direction:column;justify-content:center;gap:10px;}
-      .world-decor-preview-tabs{display:flex;gap:6px;flex-wrap:wrap;}
-      .world-decor-preview-tabs span{padding:7px 10px;border:1px solid currentColor;border-radius:inherit;font-size:11px;}
-      @media(max-width:560px){.world-decor-grid{grid-template-columns:1fr;}.world-decor-box{padding:20px;}}
-
-      /* =========================================================
-         장르별 UI 2차 디자인 — 색상뿐 아니라 형태/질감/배치까지 차별화
-      ========================================================= */
-      #world.world-design::before{
-        content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.42;
-      }
-      #world.world-design > *{position:relative;z-index:1;}
-      #world.world-design .hero h1{letter-spacing:-.04em;}
-      #world.world-design .hero p{opacity:.9;}
-      #world.world-design .content{background:var(--wd-bg);}
-      #world.world-design .content-head h2,
-      #world.world-design .content > h2{font-family:inherit;}
-
-      /* SF: 그리드/HUD */
-      #world.world-design[data-design-style="sf"]::before{
-        background-image:linear-gradient(rgba(87,183,230,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(87,183,230,.06) 1px,transparent 1px);
-        background-size:28px 28px;
-      }
-      #world.world-design[data-design-style="sf"] .tabs{padding:14px 18px;}
-      #world.world-design[data-design-style="sf"] .tabs button{border-radius:3px;letter-spacing:.05em;}
-      #world.world-design[data-design-style="sf"] .content .card,
-      #world.world-design[data-design-style="sf"] .content .story-card,
-      #world.world-design[data-design-style="sf"] .content .item,
-      #world.world-design[data-design-style="sf"] .content .setting-card{box-shadow:inset 0 0 0 1px rgba(87,183,230,.06),0 10px 30px rgba(0,0,0,.22);}
-
-      /* 사이버펑크: 사선/네온 */
-      #world.world-design[data-design-style="cyberpunk"]::before{
-        background:repeating-linear-gradient(135deg,transparent 0 24px,rgba(0,220,255,.025) 25px,transparent 26px);
-      }
-      #world.world-design[data-design-style="cyberpunk"] .hero::after{
-        content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--wd-accent),#ff2abf,var(--wd-accent),transparent);box-shadow:0 0 18px var(--wd-accent);
-      }
-      #world.world-design[data-design-style="cyberpunk"] .tabs button{clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);}
-      #world.world-design[data-design-style="cyberpunk"] .content .card,
-      #world.world-design[data-design-style="cyberpunk"] .content .story-card,
-      #world.world-design[data-design-style="cyberpunk"] .content .item,
-      #world.world-design[data-design-style="cyberpunk"] .content .setting-card{border-left:3px solid var(--wd-accent);}
-
-      /* 판타지: 양피지 + 장식선 */
-      #world.world-design[data-design-style="fantasy"]::before{
-        background:radial-gradient(circle at 15% 15%,rgba(197,155,69,.10),transparent 22%),radial-gradient(circle at 85% 80%,rgba(124,92,255,.07),transparent 24%);
-      }
-      #world.world-design[data-design-style="fantasy"] .tabs{border-top:1px solid rgba(130,90,40,.2);border-bottom:1px solid rgba(130,90,40,.2);}
-      #world.world-design[data-design-style="fantasy"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;}
-      #world.world-design[data-design-style="fantasy"] .content .card,
-      #world.world-design[data-design-style="fantasy"] .content .story-card,
-      #world.world-design[data-design-style="fantasy"] .content .item,
-      #world.world-design[data-design-style="fantasy"] .content .setting-card{box-shadow:0 8px 22px rgba(80,50,20,.10),inset 0 0 0 1px rgba(197,155,69,.12);}
-
-      /* 다크 판타지: 고딕 + 촛불 */
-      #world.world-design[data-design-style="darkfantasy"]::before{
-        background:radial-gradient(circle at 20% 10%,rgba(160,45,55,.10),transparent 18%),radial-gradient(circle at 80% 30%,rgba(100,30,50,.08),transparent 22%);
-      }
-      #world.world-design[data-design-style="darkfantasy"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;border-top-color:rgba(200,80,90,.4);}
-      #world.world-design[data-design-style="darkfantasy"] .content .card,
-      #world.world-design[data-design-style="darkfantasy"] .content .story-card,
-      #world.world-design[data-design-style="darkfantasy"] .content .item,
-      #world.world-design[data-design-style="darkfantasy"] .content .setting-card{box-shadow:0 18px 40px rgba(0,0,0,.35),inset 0 0 18px rgba(130,30,45,.04);}
-
-      /* 공포: CCTV/사건기록 */
-      #world.world-design[data-design-style="horror"]::before{
-        background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0 1px,transparent 1px 4px);
-      }
-      #world.world-design[data-design-style="horror"] .hero{filter:saturate(.75);}
-      #world.world-design[data-design-style="horror"] .tabs button{font-family:monospace;letter-spacing:.02em;}
-      #world.world-design[data-design-style="horror"] .content .card,
-      #world.world-design[data-design-style="horror"] .content .story-card,
-      #world.world-design[data-design-style="horror"] .content .item,
-      #world.world-design[data-design-style="horror"] .content .setting-card{box-shadow:0 8px 26px rgba(0,0,0,.4);}
-
-      /* 로맨스: 편지/다이어리 */
-      #world.world-design[data-design-style="romance"]::before{
-        background:radial-gradient(circle at 12% 20%,rgba(212,122,165,.10),transparent 18%),radial-gradient(circle at 88% 75%,rgba(255,190,215,.12),transparent 22%);
-      }
-      #world.world-design[data-design-style="romance"] .tabs{justify-content:center;}
-      #world.world-design[data-design-style="romance"] .tabs button{background:rgba(255,255,255,.78);font-weight:600;}
-      #world.world-design[data-design-style="romance"] .content .card,
-      #world.world-design[data-design-style="romance"] .content .story-card,
-      #world.world-design[data-design-style="romance"] .content .item,
-      #world.world-design[data-design-style="romance"] .content .setting-card{box-shadow:0 12px 30px rgba(190,90,135,.10);}
-
-      /* 학원물: 공책 줄 + 스티커 카드 */
-      #world.world-design[data-design-style="school"]::before{
-        background-image:linear-gradient(rgba(80,110,145,.045) 1px,transparent 1px);background-size:100% 28px;
-      }
-      #world.world-design[data-design-style="school"] .tabs button{box-shadow:0 2px 0 rgba(40,60,80,.08);}
-      #world.world-design[data-design-style="school"] .content .card,
-      #world.world-design[data-design-style="school"] .content .story-card,
-      #world.world-design[data-design-style="school"] .content .item,
-      #world.world-design[data-design-style="school"] .content .setting-card{box-shadow:2px 4px 12px rgba(40,60,80,.08);}
-
-      /* 무협: 수묵 */
-      #world.world-design[data-design-style="martial"]::before{
-        background:radial-gradient(ellipse at 20% 20%,rgba(30,30,30,.08),transparent 25%),radial-gradient(ellipse at 80% 70%,rgba(30,30,30,.06),transparent 28%);
-      }
-      #world.world-design[data-design-style="martial"] .tabs{justify-content:center;}
-      #world.world-design[data-design-style="martial"] .tabs button{font-family:"Noto Serif KR",Georgia,serif;background:rgba(250,248,242,.7);}
-      #world.world-design[data-design-style="martial"] .content .card,
-      #world.world-design[data-design-style="martial"] .content .story-card,
-      #world.world-design[data-design-style="martial"] .content .item,
-      #world.world-design[data-design-style="martial"] .content .setting-card{box-shadow:0 10px 24px rgba(40,35,30,.10);}
-
-      /* 추리: 서류철 */
-      #world.world-design[data-design-style="mystery"]::before{
-        background:linear-gradient(115deg,rgba(30,30,30,.035),transparent 35%),linear-gradient(0deg,rgba(120,100,70,.035),transparent 50%);
-      }
-      #world.world-design[data-design-style="mystery"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;text-transform:none;}
-      #world.world-design[data-design-style="mystery"] .content .card,
-      #world.world-design[data-design-style="mystery"] .content .story-card,
-      #world.world-design[data-design-style="mystery"] .content .item,
-      #world.world-design[data-design-style="mystery"] .content .setting-card{box-shadow:2px 5px 12px rgba(50,45,35,.10);}
-
-      /* 역사극: 문서 */
-      #world.world-design[data-design-style="historical"]::before{
-        background:radial-gradient(circle at 50% 0,rgba(150,110,50,.09),transparent 30%);
-      }
-      #world.world-design[data-design-style="historical"] .tabs button{font-family:"Noto Serif KR",Georgia,serif;}
-      #world.world-design[data-design-style="historical"] .content .card,
-      #world.world-design[data-design-style="historical"] .content .story-card,
-      #world.world-design[data-design-style="historical"] .content .item,
-      #world.world-design[data-design-style="historical"] .content .setting-card{box-shadow:0 9px 24px rgba(100,75,40,.09);}
-
-      /* 힐링: 자연스럽고 둥근 카드 */
-      #world.world-design[data-design-style="healing"]::before{
-        background:radial-gradient(circle at 10% 15%,rgba(100,170,120,.09),transparent 20%),radial-gradient(circle at 90% 85%,rgba(180,210,150,.10),transparent 25%);
-      }
-      #world.world-design[data-design-style="healing"] .tabs{justify-content:center;}
-      #world.world-design[data-design-style="healing"] .tabs button{background:rgba(255,255,255,.78);}
-      #world.world-design[data-design-style="healing"] .content .card,
-      #world.world-design[data-design-style="healing"] .content .story-card,
-      #world.world-design[data-design-style="healing"] .content .item,
-      #world.world-design[data-design-style="healing"] .content .setting-card{box-shadow:0 10px 26px rgba(80,120,90,.08);}
-
-      /* 종교/신화: 성전/제단 */
-      #world.world-design[data-design-style="religion"]::before{
-        background:radial-gradient(circle at 50% 5%,rgba(197,155,69,.12),transparent 25%);
-      }
-      #world.world-design[data-design-style="religion"] .tabs{justify-content:center;}
-      #world.world-design[data-design-style="religion"] .tabs button{font-family:Georgia,"Noto Serif KR",serif;}
-      #world.world-design[data-design-style="religion"] .content .card,
-      #world.world-design[data-design-style="religion"] .content .story-card,
-      #world.world-design[data-design-style="religion"] .content .item,
-      #world.world-design[data-design-style="religion"] .content .setting-card{box-shadow:0 12px 28px rgba(100,80,50,.09);}
-
-      /* 장르별 꾸미기 선택 카드도 실제 분위기를 보여줌 */
-      .world-decor-option[data-wd-style="sf"],.world-decor-option[data-wd-style="cyberpunk"]{background:#0d1720;color:#e8f7ff;border-color:#28546a;}
-      .world-decor-option[data-wd-style="darkfantasy"],.world-decor-option[data-wd-style="horror"]{background:#171216;color:#eee;border-color:#593039;}
-      .world-decor-option[data-wd-style="fantasy"],.world-decor-option[data-wd-style="historical"],.world-decor-option[data-wd-style="martial"],.world-decor-option[data-wd-style="religion"]{background:#faf5e9;color:#403629;border-color:#cdbb98;}
-      .world-decor-option[data-wd-style="romance"]{background:#fff3f7;color:#583846;border-color:#efc2d3;}
-      .world-decor-option[data-wd-style="school"]{background:#f2f6fb;color:#30445b;border-color:#c9d6e4;}
-      .world-decor-option[data-wd-style="mystery"]{background:#eeeae0;color:#333;border-color:#c7c0ae;}
-      .world-decor-option[data-wd-style="healing"]{background:#f1f8f2;color:#35503c;border-color:#c6ddca;}
+      /* 꾸미기 설정창 */
+      .world-decor-modal{position:fixed;inset:0;background:rgba(8,10,14,.62);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;backdrop-filter:blur(5px);}
+      .world-decor-box{width:min(820px,100%);max-height:92vh;overflow:auto;background:#fff;color:#222;border-radius:22px;padding:26px;box-sizing:border-box;box-shadow:0 28px 90px rgba(0,0,0,.35);}
+      .world-decor-heading{display:flex;align-items:center;gap:12px;margin-bottom:4px}.world-decor-heading-icon{width:42px;height:42px;border-radius:13px;background:#f0edff;display:grid;place-items:center;font-size:22px;}
+      .world-decor-style-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px;}
+      .world-decor-style-card{border:2px solid #e3e3e7;background:#fafafa;border-radius:16px;padding:0;overflow:hidden;text-align:left;cursor:pointer;transition:.18s;}
+      .world-decor-style-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.08)}
+      .world-decor-style-card.selected{border-color:#795bd8;box-shadow:0 0 0 3px rgba(121,91,216,.12)}
+      .wd-preview{height:104px;padding:12px;position:relative;overflow:hidden;display:flex;gap:7px;align-items:flex-end;}
+      .wd-preview:before,.wd-preview:after{content:"";position:absolute;inset:0;pointer-events:none;}
+      .wd-mini-tab{height:20px;flex:1;border-radius:4px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);position:relative;z-index:2}.wd-mini-card{height:45px;flex:1;border-radius:8px;background:rgba(255,255,255,.88);border:1px solid rgba(0,0,0,.1);position:relative;z-index:2}.wd-preview.sf{background:#072b2b;box-shadow:inset 0 0 22px rgba(63,255,230,.15)}.wd-preview.sf:before{background-image:linear-gradient(rgba(85,255,235,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(85,255,235,.10) 1px,transparent 1px);background-size:14px 14px}.wd-preview.sf .wd-mini-tab{border-radius:0;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);background:rgba(67,255,226,.12);border-color:#66ffe9}.wd-preview.fantasy{background:#e8d5b5}.wd-preview.fantasy .wd-mini-card{border-color:#b89255;border-radius:12px}.wd-preview.martial{background:#d7c8ae}.wd-preview.martial .wd-mini-card{border-radius:2px;box-shadow:2px 3px 0 rgba(0,0,0,.08)}.wd-preview.mystery{background:#d5d2cb}.wd-preview.mystery .wd-mini-card{border-radius:0;box-shadow:3px 3px 0 rgba(0,0,0,.08)}.wd-preview.healing{background:#dcefdc}.wd-preview.healing .wd-mini-card{border-radius:18px}.wd-preview.religion{background:#e6d9bf}.wd-preview.religion .wd-mini-card{border-radius:10px;border-color:#b49356}
+      .world-decor-style-info{padding:11px 12px 13px}.world-decor-style-info b{display:block;font-size:14px}.world-decor-style-info small{display:block;color:#777;margin-top:4px;line-height:1.45}
+      .world-decor-color-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;margin-top:12px}.world-decor-color{height:38px;border:2px solid #ddd;border-radius:10px;cursor:pointer;position:relative}.world-decor-color.selected{border-color:#222;box-shadow:0 0 0 3px rgba(0,0,0,.10)}.world-decor-color span{position:absolute;inset:6px;border-radius:6px}.world-decor-color.rainbow span{background:linear-gradient(135deg,#ff4f7b,#ffb24a,#67c86b,#58bfe9,#8c69ef)}
+      .world-decor-custom{display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px;border:1px solid #e1e1e5;border-radius:12px;background:#fafafa}.world-decor-custom input[type=color]{width:42px;height:34px;padding:2px;border:0;background:none}.world-decor-custom input[type=text]{flex:1;min-width:0;padding:8px 10px;border:1px solid #ddd;border-radius:8px;}
+      .world-decor-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}.world-decor-actions button{border:0;border-radius:10px;padding:11px 18px;cursor:pointer}.world-decor-cancel{background:#eee;color:#333}.world-decor-save{background:#795bd8;color:#fff;font-weight:700;}
+      @media(max-width:700px){.world-decor-style-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.world-decor-color-grid{grid-template-columns:repeat(5,1fr)}.world-decor-box{padding:20px;border-radius:18px}.world-decor-style-info small{font-size:11px}#world.world-design .content{padding:18px;}}
+      @media(max-width:430px){.world-decor-style-grid{grid-template-columns:1fr}.world-decor-color-grid{grid-template-columns:repeat(5,1fr)}.wd-preview{height:92px;}}
     `;
     document.head.appendChild(style);
-}
-
-
-/* 버튼 배경색의 실제 밝기를 계산해 글자색을 자동 결정 */
-function applyAutoButtonTextColor(root = document) {
-  const scope = root.querySelector?.('#world.world-design') || document.querySelector('#world.world-design');
-  if (!scope) return;
-
-  const hexToRgb = (hex) => {
-    if (!hex) return null;
-    let h = String(hex).trim().replace('#','');
-    if (h.length === 3) h = h.split('').map(x=>x+x).join('');
-    if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
-    return {
-      r: parseInt(h.slice(0,2),16),
-      g: parseInt(h.slice(2,4),16),
-      b: parseInt(h.slice(4,6),16)
-    };
-  };
-
-  const getBg = (el) => {
-    const cs = getComputedStyle(el);
-    const bg = cs.backgroundColor;
-    const m = bg && bg.match(/rgba?\(([^)]+)\)/i);
-    if (m) {
-      const a = m[1].split(',').map(v=>parseFloat(v.trim()));
-      if (a.length >= 3 && (a.length < 4 || a[3] > 0.05)) {
-        return {r:a[0],g:a[1],b:a[2]};
-      }
-    }
-    const bgImage = cs.backgroundImage;
-    const colorMatch = bgImage && bgImage.match(/#[0-9a-fA-F]{3,8}/);
-    return colorMatch ? hexToRgb(colorMatch[0]) : null;
-  };
-
-  const luminance = ({r,g,b}) => {
-    const vals=[r,g,b].map(v=>{
-      v/=255;
-      return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4);
-    });
-    return 0.2126*vals[0] + 0.7152*vals[1] + 0.0722*vals[2];
-  };
-
-  scope.querySelectorAll('button,.btn,.button,[role="button"]').forEach(btn=>{
-    const rgb=getBg(btn);
-    if (!rgb) return;
-
-    // WCAG 대비를 고려해 중간값을 기준으로 검정/흰색 결정
-    const lum=luminance(rgb);
-    const textColor=lum > 0.48 ? '#222' : '#fff';
-
-    btn.style.setProperty('--wd-button-text', textColor);
-    btn.style.color=textColor;
-    btn.classList.toggle('wd-button-light', lum > 0.48);
-    btn.classList.toggle('wd-button-dark', lum <= 0.48);
-  });
 }
 
 function applyWorldDesign(w){
     ensureWorldDesignStyles();
     const el=$('world');
     if(!el || !w) return;
-
-    // 저장된 스타일이 기본값(fantasy)인 기존 세계관은 장르에 맞춰 자동 적용합니다.
-    const genrePreset=getGenreDesignPreset(w.genre);
-    const savedStyle=w.designStyle||'fantasy';
-    const savedColor=w.designColor||'purple';
-    const useGenrePreset=(!w.designStyle || savedStyle==='fantasy') && genrePreset.style!=='fantasy';
-    const styleKey=useGenrePreset ? genrePreset.style : savedStyle;
-    const colorKey=useGenrePreset ? genrePreset.color : savedColor;
-
-    const style=WORLD_DESIGN_STYLES[styleKey]||WORLD_DESIGN_STYLES.fantasy;
-    const accent=WORLD_DESIGN_COLORS[colorKey]||WORLD_DESIGN_COLORS.purple;
-    const extras=getWorldDecorExtras(w);
-    const font=WORLD_FONT_OPTIONS[extras.font]||WORLD_FONT_OPTIONS.system;
-    const textColor=WORLD_TEXT_COLORS[extras.textColor]||WORLD_TEXT_COLORS.default;
-    const buttonShape=WORLD_BUTTON_SHAPES[extras.buttonShape]||WORLD_BUTTON_SHAPES.rounded;
-    const layout=WORLD_LAYOUT_COLORS[extras.layoutColor]||WORLD_LAYOUT_COLORS.ivory;
-
+    const styleKey=WORLD_DESIGN_STYLES[w.designStyle] ? w.designStyle : 'fantasy';
+    const colorKey=w.designColor || 'purple';
+    const accent=getDesignAccent(colorKey);
     el.classList.add('world-design');
-    Object.keys(WORLD_DESIGN_STYLES).forEach(k=>el.classList.remove('wd-style-'+k));
     el.dataset.designStyle=styleKey;
     el.dataset.designColor=colorKey;
-    el.dataset.genre=w.genre||'';
     el.style.setProperty('--wd-accent',accent);
-    // SF 장식이 포인트 색상을 확실하게 따라가도록 전용 변수도 직접 지정합니다.
-    el.style.setProperty('--sf-accent',accent);
-    el.style.setProperty('--wd-radius',style.radius);
-    el.style.setProperty('--wd-shadow',style.shadow);
-    el.style.setProperty('--wd-border',style.border);
-    el.style.setProperty('--wd-font',font.css);
-    el.style.setProperty('--wd-text-color',textColor.value);
-    el.style.setProperty('--wd-button-radius',buttonShape.radius);
-    el.style.setProperty('--wd-button-transform',buttonShape.transform);
-    el.style.setProperty('--wd-layout-bg',layout.bg);
-    el.style.setProperty('--wd-layout-panel',layout.panel);
-    el.style.setProperty('--wd-layout-soft',layout.soft);
-    el.style.setProperty('--wd-layout-border',layout.border);
-    el.style.setProperty('--wd-layout-text',layout.text);
-    el.dataset.designFont=extras.font;
-    el.dataset.designTextColor=extras.textColor;
-    el.dataset.designButtonShape=extras.buttonShape;
-    el.dataset.designLayoutColor=extras.layoutColor;
-    el.style.fontFamily=font.css;
+    el.style.setProperty('--wd-accent-soft',getDesignAccentSoft(colorKey));
 }
 
 async function openWorldDecorModal(worldId){
@@ -2395,405 +1801,53 @@ async function openWorldDecorModal(worldId){
     ensureWorldDesignStyles();
     document.querySelector('.world-decor-modal')?.remove();
 
-    const styles=[
-      ['sf','SF','미래 · 우주 · HUD'],['cyberpunk','사이버펑크','네온 · 글리치 · 기계'],
-      ['fantasy','판타지','마법 · 고서 · 모험'],['darkfantasy','다크 판타지','고딕 · 어둠 · 붉은빛'],
-      ['horror','공포','기록 · 경고 · 긴장'],['romance','로맨스','다이어리 · 감성 · 부드러움'],
-      ['school','학원물','노트 · 게시판 · 청춘'],['martial','무협','한지 · 수묵 · 동양풍'],
-      ['mystery','추리물','사건 파일 · 기록'],['historical','역사극','고전 문서 · 기록물'],
-      ['healing','힐링','자연 · 여백 · 편안함'],['religion','종교/신화','성전 · 신화 · 장엄함']
-    ];
-    const colors=[['purple','보라'],['blue','파랑'],['sky','하늘'],['green','초록'],['teal','청록'],['gold','금색'],['red','빨강'],['orange','주황'],['pink','분홍'],['black','검정'],['white','흰색']];
-    const extras=getWorldDecorExtras(w);
-    let chosenStyle=w.designStyle || getGenreDesignPreset(w.genre).style;
-    let chosenColor=w.designColor || getGenreDesignPreset(w.genre).color;
-    let chosenFont=extras.font, chosenTextColor=extras.textColor, chosenButtonShape=extras.buttonShape, chosenLayoutColor=extras.layoutColor;
-
     const modal=document.createElement('div');
     modal.className='world-decor-modal';
-    modal.innerHTML=`<div class="world-decor-box" role="dialog" aria-modal="true" aria-label="세계관 꾸미기">
-      <div class="wd-head">
-        <div><span class="wd-kicker">WORLD CUSTOMIZATION</span><h2>🎨 세계관 꾸미기</h2><p>${esc(w.name)}의 각 요소를 <b>따로</b> 선택할 수 있습니다.</p></div>
-        <button type="button" id="wdX" class="wd-close" aria-label="닫기">×</button>
-      </div>
+    const styleEntries=Object.entries(WORLD_DESIGN_STYLES);
+    const colors=[
+        ['white','화이트'],['red','빨강'],['orange','주황'],['yellow','노랑'],['green','초록'],
+        ['sky','하늘색'],['blue','파랑'],['purple','보라'],['black','검정'],['rainbow','무지개']
+    ];
+    let chosenStyle=WORLD_DESIGN_STYLES[w.designStyle] ? w.designStyle : 'fantasy';
+    let chosenColor=w.designColor || 'purple';
+    let customColor=/^#[0-9a-fA-F]{6}$/.test(chosenColor) ? chosenColor : '#795bd8';
+    if(/^#[0-9a-fA-F]{6}$/.test(chosenColor)) chosenColor='custom';
 
-      <div class="wd-current"><span>현재 조합</span><strong id="wdCurrentText"></strong></div>
-
-      <div class="wd-section">
-        <div class="wd-section-head"><h3>① 전체 분위기</h3><button type="button" class="wd-reset" data-reset="style">기본 분위기</button></div>
-        <div class="world-decor-grid">${styles.map(x=>`<button type="button" class="world-decor-option" data-wd-style="${x[0]}" aria-pressed="false"><span class="wd-check">✓</span><b>${x[1]}</b><small>${x[2]}</small></button>`).join('')}</div>
-      </div>
-
-      <div class="wd-section">
-        <div class="wd-section-head"><h3>② 포인트 색상</h3><button type="button" class="wd-reset" data-reset="color">기본 색상</button></div>
-        <div class="wd-color-grid">${colors.map(x=>`<button type="button" class="wd-color-option" data-wd-color="${x[0]}" aria-pressed="false"><span class="world-decor-swatch" style="background:${WORLD_DESIGN_COLORS[x[0]]}"></span><b>${x[1]}</b></button>`).join('')}</div>
-      </div>
-
-      <div class="wd-section">
-        <div class="wd-section-head"><h3>③ 바깥 레이아웃 색상</h3><button type="button" class="wd-reset" data-reset="layout">기본 레이아웃</button></div>
-        <div class="wd-layout-grid">${Object.entries(WORLD_LAYOUT_COLORS).map(([k,v])=>`<button type="button" class="wd-layout-option" data-wd-layout="${k}" aria-pressed="false"><span class="layout-preview-swatch" style="background:linear-gradient(135deg,${v.bg},${v.panel});border-color:${v.border}"></span><b>${v.label}</b><small>${({parchment:'고전적인 양피지',charcoal:'어두운 외곽',mint:'자연스러운 민트',mist:'차분한 안개빛',skyblue:'맑고 시원한 하늘',ocean:'차분한 바다빛',sage:'자연스러운 세이지',lemon:'밝은 레몬크림',peach:'따뜻한 피치',coral:'선명한 코랄',plum:'고급스러운 보랏빛',wine:'짙은 와인빛',midnight:'밤하늘처럼 깊은 색',forest:'깊은 숲의 색',navy:'차분한 네이비',sand:'따뜻한 모래빛',smoke:'중성적인 스모크',black:'깊고 어두운 외곽'}[k]||'부드러운 바탕')}</small></button>`).join('')}</div>
-      </div>
-
-      <div class="wd-section">
-        <div class="wd-section-head"><h3>④ 글씨체</h3><button type="button" class="wd-reset" data-reset="font">기본 글씨체</button></div>
-        <div class="wd-choice-grid">${Object.entries(WORLD_FONT_OPTIONS).map(([k,v])=>`<button type="button" class="wd-choice" data-wd-font="${k}" aria-pressed="false"><span style="font-family:${v.css}">가나다 ABC</span><small>${v.label}</small></button>`).join('')}</div>
-      </div>
-
-      <div class="wd-section">
-        <div class="wd-section-head"><h3>⑤ 글씨 색상</h3><button type="button" class="wd-reset" data-reset="text">기본 글씨색</button></div>
-        <div class="wd-color-grid text-color-grid">${Object.entries(WORLD_TEXT_COLORS).map(([k,v])=>`<button type="button" class="wd-color-option" data-wd-text="${k}" aria-pressed="false"><span class="text-swatch" style="background:${v.value}"></span><b>${v.label}</b></button>`).join('')}</div>
-      </div>
-
-      <div class="wd-section">
-        <div class="wd-section-head"><h3>⑥ 버튼 모양</h3><button type="button" class="wd-reset" data-reset="button">기본 버튼</button></div>
-        <div class="wd-button-grid">${Object.entries(WORLD_BUTTON_SHAPES).map(([k,v])=>`<button type="button" class="wd-shape-option" data-wd-button="${k}" aria-pressed="false"><span class="shape-demo ${v.className}">버튼</span><small>${v.label}</small></button>`).join('')}</div>
-      </div>
-
-      <div class="world-decor-preview"><div class="wd-preview-title">LIVE PREVIEW · 선택 즉시 변경</div><div id="worldDecorPreview" class="world-decor-preview-frame"></div></div>
-      <div class="wd-actions"><button type="button" id="wdCancel">취소</button><button type="button" id="wdSave">저장하기</button></div>
+    modal.innerHTML=`<div class="world-decor-box">
+      <div class="world-decor-heading"><div class="world-decor-heading-icon">🎨</div><div><h2 style="margin:0;">세계관 꾸미기</h2><p style="margin:3px 0 0;color:#777;font-size:13px;">${esc(w.name)}의 내부 화면 디자인을 선택하세요.</p></div></div>
+      <h3 style="margin:24px 0 0;">① 내부 UI 분위기</h3>
+      <div class="world-decor-style-grid">${styleEntries.map(([key,x])=>`<button type="button" class="world-decor-style-card ${key===chosenStyle?'selected':''}" data-wd-style="${key}"><div class="wd-preview ${key}"><span class="wd-mini-tab"></span><span class="wd-mini-tab"></span><span class="wd-mini-tab"></span><span class="wd-mini-card"></span></div><div class="world-decor-style-info"><b>${x.icon} ${x.label}</b><small>${x.desc}</small></div></button>`).join('')}</div>
+      <h3 style="margin:24px 0 0;">② 강조 색상</h3>
+      <div class="world-decor-color-grid">${colors.map(([key,label])=>`<button type="button" title="${label}" aria-label="${label}" class="world-decor-color ${key===chosenColor?'selected':''} ${key==='rainbow'?'rainbow':''}" data-wd-color="${key}"><span style="${key!=='rainbow'?`background:${WORLD_DESIGN_COLORS[key]}`:''}"></span></button>`).join('')}</div>
+      <div class="world-decor-custom"><input id="wdCustomColor" type="color" value="${customColor}"><input id="wdCustomColorText" type="text" maxlength="7" value="${customColor}" placeholder="#795bd8"><button type="button" id="wdUseCustom">직접 색상 사용</button></div>
+      <div class="world-decor-actions"><button type="button" class="world-decor-cancel" id="wdCancel">취소</button><button type="button" class="world-decor-save" id="wdSave">저장</button></div>
     </div>`;
     document.body.appendChild(modal);
 
     const refresh=()=>{
-      const toggle=(sel,key,val)=>modal.querySelectorAll(sel).forEach(b=>{
-        const on=b.dataset[key]===val; b.classList.toggle('selected',on); b.setAttribute('aria-pressed',String(on));
-      });
-      toggle('[data-wd-style]','wdStyle',chosenStyle); toggle('[data-wd-color]','wdColor',chosenColor); toggle('[data-wd-layout]','wdLayout',chosenLayoutColor);
-      toggle('[data-wd-font]','wdFont',chosenFont); toggle('[data-wd-text]','wdText',chosenTextColor); toggle('[data-wd-button]','wdButton',chosenButtonShape);
-      const st=WORLD_DESIGN_STYLES[chosenStyle]||WORLD_DESIGN_STYLES.fantasy;
-      const accent=WORLD_DESIGN_COLORS[chosenColor]||WORLD_DESIGN_COLORS.purple;
-      const font=WORLD_FONT_OPTIONS[chosenFont]||WORLD_FONT_OPTIONS.system;
-      const txt=WORLD_TEXT_COLORS[chosenTextColor]||WORLD_TEXT_COLORS.default;
-      const bs=WORLD_BUTTON_SHAPES[chosenButtonShape]||WORLD_BUTTON_SHAPES.rounded;
-      const layout=WORLD_LAYOUT_COLORS[chosenLayoutColor]||WORLD_LAYOUT_COLORS.ivory;
-      modal.querySelector('#wdCurrentText').textContent=`${st.label} · ${layout.label} · ${font.label} · ${txt.label} · ${bs.label}`;
-      const preview=modal.querySelector('#worldDecorPreview');
-      const dark=['sf','cyberpunk','darkfantasy','horror','charcoal'].includes(chosenStyle)||chosenLayoutColor==='charcoal';
-      preview.style.background=layout.bg; preview.style.color=txt.value; preview.style.borderColor=layout.border;
-      preview.style.fontFamily=font.css;
-      preview.innerHTML=`<div class="wd-preview-world" style="--preview-accent:${accent};--preview-radius:${bs.radius};--preview-layout-bg:${layout.bg};--preview-layout-panel:${layout.panel};--preview-layout-soft:${layout.soft};--preview-layout-border:${layout.border}">
-        <div class="wd-preview-badge" style="border-color:${accent};color:${accent}">${st.label}</div>
-        <strong>${esc(w.name)}</strong><small>${font.label} · ${txt.label} · ${bs.label}</small>
-        <div class="world-decor-preview-tabs"><span class="preview-btn preview-active">개요</span><span class="preview-btn">캐릭터</span><span class="preview-btn">지역</span><span class="preview-btn">스토리</span></div>
-        <article><b>세계관의 분위기를 미리 확인하세요.</b><p>각 설정은 서로 독립적으로 적용됩니다.</p></article>
-      </div>`;
-      preview.querySelectorAll('.preview-btn').forEach((el,i)=>{el.style.borderRadius=bs.radius;el.style.transform=bs.transform;el.style.borderColor=accent;el.style.color=i===0?'#fff':txt.value;el.style.background=i===0?accent:'transparent';});
+        modal.querySelectorAll('[data-wd-style]').forEach(b=>b.classList.toggle('selected',b.dataset.wdStyle===chosenStyle));
+        modal.querySelectorAll('[data-wd-color]').forEach(b=>b.classList.toggle('selected',b.dataset.wdColor===chosenColor));
+        const saveBtn=modal.querySelector('#wdSave');
+        saveBtn.style.background=chosenColor==='custom'?customColor:(chosenColor==='rainbow'?'linear-gradient(90deg,#ff4f7b,#ffb24a,#67c86b,#58bfe9,#8c69ef)':getDesignAccent(chosenColor));
     };
-
+    modal.querySelectorAll('[data-wd-style]').forEach(b=>b.onclick=()=>{chosenStyle=b.dataset.wdStyle;refresh();});
+    modal.querySelectorAll('[data-wd-color]').forEach(b=>b.onclick=()=>{chosenColor=b.dataset.wdColor;refresh();});
+    const colorInput=modal.querySelector('#wdCustomColor'), colorText=modal.querySelector('#wdCustomColorText');
+    colorInput.oninput=()=>colorText.value=colorInput.value;
+    colorText.oninput=()=>{if(/^#[0-9a-fA-F]{6}$/.test(colorText.value))colorInput.value=colorText.value;};
+    modal.querySelector('#wdUseCustom').onclick=()=>{if(!/^#[0-9a-fA-F]{6}$/.test(colorText.value)){alert('#RRGGBB 형식의 색상을 입력해주세요.');return;}customColor=colorText.value;chosenColor='custom';refresh();};
+    modal.querySelector('#wdCancel').onclick=()=>modal.remove();
+    modal.onclick=e=>{if(e.target===modal)modal.remove();};
+    modal.querySelector('#wdSave').onclick=async()=>{
+        const dbColor=chosenColor==='custom'?customColor:chosenColor;
+        const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:dbColor}).eq('id',w.id).eq('owner_id',currentUserId);
+        if(error){alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
+        w.designStyle=chosenStyle;
+        w.designColor=dbColor;
+        modal.remove();
+        renderWorld();
+    };
     refresh();
-    modal.querySelectorAll('[data-wd-style]').forEach(b=>b.addEventListener('click',()=>{chosenStyle=b.dataset.wdStyle;refresh();}));
-    modal.querySelectorAll('[data-wd-color]').forEach(b=>b.addEventListener('click',()=>{chosenColor=b.dataset.wdColor;refresh();}));
-    modal.querySelectorAll('[data-wd-layout]').forEach(b=>b.addEventListener('click',()=>{chosenLayoutColor=b.dataset.wdLayout;refresh();}));
-    modal.querySelectorAll('[data-wd-font]').forEach(b=>b.addEventListener('click',()=>{chosenFont=b.dataset.wdFont;refresh();}));
-    modal.querySelectorAll('[data-wd-text]').forEach(b=>b.addEventListener('click',()=>{chosenTextColor=b.dataset.wdText;refresh();}));
-    modal.querySelectorAll('[data-wd-button]').forEach(b=>b.addEventListener('click',()=>{chosenButtonShape=b.dataset.wdButton;refresh();}));
-    modal.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>{
-      const k=b.dataset.reset;
-      if(k==='style') chosenStyle=getGenreDesignPreset(w.genre).style;
-      if(k==='color') chosenColor=getGenreDesignPreset(w.genre).color;
-      if(k==='layout') chosenLayoutColor=getDefaultLayoutColor(w);
-      if(k==='font') chosenFont='system';
-      if(k==='text') chosenTextColor='default';
-      if(k==='button') chosenButtonShape='rounded';
-      refresh();
-    }));
-    const close=()=>modal.remove();
-    modal.querySelector('#wdCancel').addEventListener('click',close); modal.querySelector('#wdX').addEventListener('click',close);
-    modal.addEventListener('click',e=>{if(e.target===modal)close();});
-    document.addEventListener('keydown',function escKey(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',escKey);}}, {once:true});
-
-    modal.querySelector('#wdSave').addEventListener('click',async()=>{
-      const saveBtn=modal.querySelector('#wdSave'); saveBtn.disabled=true; saveBtn.textContent='저장 중…';
-      const {error}=await supabaseClient.from('worlds').update({design_style:chosenStyle,design_color:chosenColor,design_font:chosenFont,design_text_color:chosenTextColor,design_button_shape:chosenButtonShape,design_layout_color:chosenLayoutColor}).eq('id',w.id).eq('owner_id',currentUserId);
-      if(error){saveBtn.disabled=false;saveBtn.textContent='저장하기';alert('세계관 디자인 저장에 실패했습니다.\n'+error.message);return;}
-      w.designStyle=chosenStyle; w.designColor=chosenColor; w.designFont=chosenFont; w.designTextColor=chosenTextColor; w.designButtonShape=chosenButtonShape; w.designLayoutColor=chosenLayoutColor;
-      try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
-      // PC에서 저장한 꾸미기 설정이 다른 기기에서도 동일하게 보이도록 DB에 저장합니다.
-      try{localStorage.setItem('world_platform_design_'+w.id,JSON.stringify({font:chosenFont,textColor:chosenTextColor,buttonShape:chosenButtonShape,layoutColor:chosenLayoutColor}));}catch(e){}
-      modal.remove(); applyWorldDesign(w); renderWorld();
-    });
-}
-
-
-function getCyberpunkDecorLayer(){
-  return `
-    <div class="cyber-frame-art" aria-hidden="true">
-      <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid meet" focusable="false">
-        <defs>
-          <filter id="cyberGlow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <linearGradient id="cyberSky" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="var(--cyber-accent)" stop-opacity=".85"/>
-            <stop offset=".5" stop-color="var(--cyber-blue)" stop-opacity=".3"/>
-            <stop offset="1" stop-color="var(--cyber-pink)" stop-opacity=".75"/>
-          </linearGradient>
-        </defs>
-
-        <!-- 상단 홀로그램 링 / HUD -->
-        <g class="cyber-hud" filter="url(#cyberGlow)">
-          <circle cx="600" cy="118" r="72"/>
-          <circle cx="600" cy="118" r="56"/>
-          <path d="M510 118h180M600 28v180M548 66l104 104M652 66L548 170"/>
-          <path class="cyber-hud-tick" d="M600 34v18M600 184v18M516 118h18M666 118h18"/>
-        </g>
-
-        <!-- 네온 도시 실루엣 -->
-        <g class="cyber-city">
-          <path d="M0 780V520H52V590H94V450H142V560H188V380H244V590H292V470H346V555H392V420H448V585H498V500H548V610H600V430H650V585H700V350H758V595H810V455H858V560H910V390H966V600H1014V470H1064V545H1112V415H1160V505H1200V780Z"/>
-          <path class="cyber-city-window" d="M18 548h22v8H18zm90-70h18v8h-18zm104-55h22v8h-22zm86 82h18v8h-18zm150-42h24v8h-24zm170-62h20v8h-20zm128 82h24v8h-24zm112-54h18v8h-18z"/>
-          <path class="cyber-city-lines" d="M52 520v260M188 380v400M346 470v310M448 420v360M600 430v350M700 350v430M858 455v325M966 390v390M1112 415v365"/>
-        </g>
-
-        <!-- 원근 네온 그리드 -->
-        <g class="cyber-grid" filter="url(#cyberGlow)">
-          <path d="M0 820H1200M0 850H1200M0 880H1200"/>
-          <path d="M90 900L520 790M250 900L550 790M1110 900L680 790M950 900L650 790"/>
-        </g>
-
-        <!-- 회로/전선 -->
-        <g class="cyber-wires" filter="url(#cyberGlow)">
-          <path d="M0 175H100L140 135H292L330 98"/>
-          <path d="M1200 188H1100L1058 146H914L870 104"/>
-          <path d="M0 675H120L158 712H320L358 750"/>
-          <path d="M1200 660H1080L1038 700H882L842 738"/>
-        </g>
-
-        <!-- 네온 광고판 / 인터페이스 패널 -->
-        <g class="cyber-signs" filter="url(#cyberGlow)">
-          <rect x="38" y="265" width="132" height="42" rx="2"/>
-          <rect x="1030" y="235" width="132" height="42" rx="2"/>
-          <rect x="54" y="610" width="106" height="30" rx="2"/>
-          <rect x="1040" y="590" width="108" height="30" rx="2"/>
-          <path d="M50 284h92M1042 254h92M64 625h72M1050 605h76"/>
-          <path class="cyber-sign-detail" d="M50 295h42M1042 265h54M64 632h28M1050 612h36"/>
-        </g>
-
-        <!-- 화면 모서리 HUD -->
-        <g class="cyber-corners">
-          <path d="M28 28h112M28 28v112M1172 28h-112M1172 28v112"/>
-          <path d="M28 872h112M28 872V760M1172 872h-112M1172 872V760"/>
-          <path class="cyber-corner-small" d="M48 48h54M48 48v54M1152 48h-54M1152 48v54M48 852h54M48 852v-54M1152 852h-54M1152 852v-54"/>
-        </g>
-
-        <!-- 글리치 조각 -->
-        <g class="cyber-glitch" filter="url(#cyberGlow)">
-          <path d="M240 88h112l-18 9H222z"/>
-          <path d="M832 90h128l12 9H846z"/>
-          <path d="M430 804h92l-14 8h-92z"/>
-          <path d="M680 800h116l14 8H694z"/>
-          <path class="cyber-glitch-thin" d="M370 180h74M756 205h104M190 735h84M918 720h92"/>
-        </g>
-
-        <!-- 스캔 라인 -->
-        <g class="cyber-scan">
-          <path d="M0 110H1200M0 815H1200"/>
-          <path d="M86 0V900M1114 0V900"/>
-        </g>
-      </svg>
-      <div class="cyber-noise"></div>
-      <div class="cyber-vignette"></div>
-    </div>`;
-}
-
-function getMartialDecorLayer(){
-  return `
-    <div class="martial-frame-art" aria-hidden="true">
-      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
-        <!-- 조선 한옥의 기와 지붕 실루엣 -->
-        <g class="mj-roof">
-          <path d="M20 120 Q105 66 210 76 Q285 82 345 125 Q430 66 520 84 Q600 98 680 84 Q770 66 855 125 Q915 82 990 76 Q1095 66 1180 120"/>
-          <path d="M30 136 Q105 92 205 100 Q285 108 348 145 Q430 88 520 105 Q600 118 680 105 Q770 88 852 145 Q915 108 995 100 Q1095 92 1170 136"/>
-        </g>
-        <g class="mj-roof2">
-          <path d="M36 151 Q120 110 205 119 Q292 129 352 163 Q430 112 520 128 Q600 140 680 128 Q770 112 848 163 Q908 129 995 119 Q1080 110 1164 151"/>
-          <path class="mj-roof-tile" d="M78 122l30 25M126 108l28 30M174 108l25 29M1026 108l-25 29M1074 108l-28 30M1122 122l-30 25"/>
-        </g>
-        <!-- 달빛과 수묵 산수 -->
-        <circle class="mj-moon" cx="1010" cy="150" r="38"/>
-        <path class="mj-mountain" d="M0 520 Q105 430 205 505 Q290 565 390 455 Q470 385 545 500 Q620 590 700 470 Q790 350 875 505 Q960 590 1045 465 Q1110 405 1200 480 L1200 900 L0 900Z"/>
-        <!-- 창호 -->
-        <g class="mj-lattice mj-left">
-          <rect x="34" y="250" width="150" height="214"/>
-          <path d="M84 250V464M134 250V464M34 321H184M34 393H184"/>
-        </g>
-        <g class="mj-lattice mj-right">
-          <rect x="1016" y="250" width="150" height="214"/>
-          <path d="M1066 250V464M1116 250V464M1016 321H1166M1016 393H1166"/>
-        </g>
-        <!-- 대나무 -->
-        <g class="mj-bamboo mj-left">
-          <path d="M102 820 C82 690 112 590 92 500 C77 425 91 350 120 270"/>
-          <path d="M96 690L48 655M98 610L145 574M91 526L48 495M97 438L144 405M104 350L66 322"/>
-          <path class="mj-node" d="M84 700H111M88 606H113M84 520H110M89 430H116M100 345H124"/>
-          <path class="mj-leaf" d="M100 420q-48-38-73-28q31 38 72 37zM96 552q48-40 77-30q-31 39-76 40zM105 322q-40-34-68-23q30 34 67 32z"/>
-        </g>
-        <g class="mj-bamboo mj-right">
-          <path d="M1098 820 C1118 690 1088 590 1108 500 C1123 425 1109 350 1080 270"/>
-          <path d="M1104 690L1152 655M1102 610L1055 574M1109 526L1152 495M1103 438L1056 405M1096 350L1134 322"/>
-          <path class="mj-node" d="M1116 700H1089M1112 606H1087M1116 520H1090M1111 430H1084M1100 345H1076"/>
-          <path class="mj-leaf" d="M1100 420q48-38 73-28q-31 38-72 37zM1104 552q-48-40-77-30q31 39 76 40zM1095 322q40-34 68-23q-30 34-67 32z"/>
-        </g>
-        <!-- 매화 -->
-        <g class="mj-plum">
-          <g transform="translate(205 184)"><circle r="7"/><circle cy="-16" r="10"/><circle cx="15" cy="-5" r="10"/><circle cx="9" cy="13" r="10"/><circle cx="-9" cy="13" r="10"/><circle cx="-15" cy="-5" r="10"/></g>
-          <g transform="translate(915 184)"><circle r="7"/><circle cy="-16" r="10"/><circle cx="15" cy="-5" r="10"/><circle cx="9" cy="13" r="10"/><circle cx="-9" cy="13" r="10"/><circle cx="-15" cy="-5" r="10"/></g>
-        </g>
-        <!-- 붓으로 그은 듯한 먹선 -->
-        <g class="mj-ink">
-          <path d="M45 735 Q170 680 270 728 T500 740" stroke-width="10"/>
-          <path d="M700 740 Q840 690 960 730 T1160 705" stroke-width="7"/>
-          <path d="M270 208 Q410 235 560 205 T900 212" stroke-width="5"/>
-        </g>
-        <!-- 검기/바람의 흐름 -->
-        <g class="mj-blade">
-          <path d="M255 760 Q455 620 635 700 Q770 760 958 610"/>
-          <path d="M305 782 Q470 670 630 735 Q790 800 920 670"/>
-          <path d="M365 224 Q520 155 685 215 Q770 246 845 205"/>
-        </g>
-        <!-- 붉은 인장 -->
-        <g transform="translate(600 106)">
-          <rect class="mj-seal" x="-23" y="-23" width="46" height="46" rx="2"/>
-          <text class="mj-seal-text" x="0" y="6" text-anchor="middle">武</text>
-        </g>
-      </svg>
-    </div>`;
-}
-
-function getSFDecorLayer(){
-  return `
-    <div class="sf-frame-art" aria-hidden="true">
-      <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
-        <defs>
-          <linearGradient id="sfLineGlow" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="currentColor" stop-opacity=".95"/>
-            <stop offset="1" stop-color="currentColor" stop-opacity=".15"/>
-          </linearGradient>
-          <filter id="sfGlow" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="2.2" result="b"/>
-            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <g class="sf-grid">
-          <path d="M90 0V900M180 0V900M1020 0V900M1110 0V900"/>
-          <path d="M0 110H1200M0 790H1200"/>
-        </g>
-        <g class="sf-circuit sf-left">
-          <path d="M0 118H108V78H190V38H300"/>
-          <path d="M0 166H72V214H154V250H248"/>
-          <path d="M0 720H88V680H174V642H282"/>
-          <circle cx="108" cy="118" r="5"/><circle cx="190" cy="78" r="4"/><circle cx="154" cy="214" r="5"/><circle cx="174" cy="680" r="4"/>
-        </g>
-        <g class="sf-circuit sf-right">
-          <path d="M1200 118H1092V78H1010V38H900"/>
-          <path d="M1200 166H1128V214H1046V250H952"/>
-          <path d="M1200 720H1112V680H1026V642H918"/>
-          <circle cx="1092" cy="118" r="5"/><circle cx="1010" cy="78" r="4"/><circle cx="1046" cy="214" r="5"/><circle cx="1026" cy="680" r="4"/>
-        </g>
-        <g class="sf-corner">
-          <path d="M30 30H145M30 30V145"/><path d="M1170 30H1055M1170 30V145"/>
-          <path d="M30 870H145M30 870V755"/><path d="M1170 870H1055M1170 870V755"/>
-          <path class="sf-corner-inner" d="M54 54H118M54 54V118M1146 54H1082M1146 54V118M54 846H118M54 846V782M1146 846H1082M1146 846V782"/>
-        </g>
-        <g class="sf-orbit" filter="url(#sfGlow)">
-          <circle cx="600" cy="34" r="8"/><circle cx="600" cy="866" r="8"/>
-          <path d="M575 34H625M600 9V59M575 866H625M600 841V891"/>
-        </g>
-        <g class="sf-dots">
-          <circle cx="84" cy="350" r="2.5"/><circle cx="1116" cy="350" r="2.5"/>
-          <circle cx="112" cy="390" r="1.8"/><circle cx="1088" cy="390" r="1.8"/>
-          <circle cx="76" cy="430" r="1.5"/><circle cx="1124" cy="430" r="1.5"/>
-        </g>
-      </svg>
-      <div class="sf-scanline"></div>
-    </div>`;
-}
-
-function getFantasyDecorLayer(){
-  return `
-    <div class="fantasy-frame-art" aria-hidden="true">
-      <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid meet" focusable="false">
-        <defs>
-          <linearGradient id="fantasyGlow" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="currentColor" stop-opacity=".92"/>
-            <stop offset="1" stop-color="currentColor" stop-opacity=".18"/>
-          </linearGradient>
-          <filter id="fantasySoftGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="b"/>
-            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-
-        <!-- 고풍스러운 프레임 -->
-        <path class="ff-frame" d="M34 122 Q34 48 108 48 H390 M810 48 H1092 Q1166 48 1166 122 V260 M1166 640 V778 Q1166 852 1092 852 H810 M390 852 H108 Q34 852 34 778 V640"/>
-        <path class="ff-frame-soft" d="M56 146 Q56 70 132 70 H350 M850 70 H1068 Q1144 70 1144 146 V240 M1144 660 V756 Q1144 830 1068 830 H850 M350 830 H132 Q56 830 56 756 V660"/>
-
-        <!-- 왼쪽 위 덩굴 -->
-        <g class="ff-vine">
-          <path d="M24 270 C62 228 54 166 112 122 C164 84 226 92 286 54"/>
-          <path d="M68 224 C96 202 126 196 151 211"/>
-          <path d="M108 158 C137 135 169 134 191 149"/>
-          <path d="M176 104 C205 82 231 86 252 101"/>
-          <g class="ff-leaves">
-            <path d="M72 224 q-18 -28 -40 -8 q18 24 40 8z"/>
-            <path d="M101 178 q-3 -34 27 -35 q8 25 -27 35z"/>
-            <path d="M138 142 q-21 -27 -41 -8 q16 24 41 8z"/>
-            <path d="M180 106 q1 -32 31 -33 q5 25 -31 33z"/>
-            <path d="M221 84 q-20 -25 -40 -5 q16 23 40 5z"/>
-            <path d="M267 65 q2 -30 29 -31 q6 22 -29 31z"/>
-          </g>
-        </g>
-
-        <!-- 오른쪽 아래 덩굴 -->
-        <g class="ff-vine ff-vine-right">
-          <path d="M1176 630 C1138 672 1146 734 1088 778 C1036 816 974 808 914 846"/>
-          <path d="M1132 676 C1104 698 1074 704 1049 689"/>
-          <path d="M1092 742 C1063 765 1031 766 1009 751"/>
-          <path d="M1024 796 C995 818 969 814 948 799"/>
-          <g class="ff-leaves">
-            <path d="M1128 677 q18 28 40 8 q-18 -24 -40 -8z"/>
-            <path d="M1099 724 q3 34 -27 35 q-8 -25 27 -35z"/>
-            <path d="M1062 758 q21 27 41 8 q-16 -24 -41 -8z"/>
-            <path d="M1020 794 q-1 32 -31 33 q-5 -25 31 -33z"/>
-            <path d="M979 816 q20 25 40 5 q-16 -23 -40 -5z"/>
-          </g>
-        </g>
-
-        <!-- 꽃/보석 장식 -->
-        <g class="ff-flower" transform="translate(82 94)">
-          <circle r="9"/>
-          <path d="M0-10 C-28-28 -40-8 -21 9 C-36 31 -8 38 5 18 C25 38 44 12 22-4 C40-22 17-37 0-10Z"/>
-          <circle r="4" class="ff-core"/>
-        </g>
-        <g class="ff-flower" transform="translate(1110 800) scale(.82)">
-          <circle r="9"/>
-          <path d="M0-10 C-28-28 -40-8 -21 9 C-36 31 -8 38 5 18 C25 38 44 12 22-4 C40-22 17-37 0-10Z"/>
-          <circle r="4" class="ff-core"/>
-        </g>
-
-        <!-- 작은 별빛 -->
-        <g class="ff-sparkles" filter="url(#fantasySoftGlow)">
-          <path d="M314 94 l4 12 12 4-12 4-4 12-4-12-12-4 12-4z"/>
-          <path d="M936 94 l4 12 12 4-12 4-4 12-4-12-12-4 12-4z"/>
-          <path d="M290 790 l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/>
-          <path d="M910 790 l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/>
-          <circle cx="350" cy="126" r="3"/><circle cx="850" cy="126" r="3"/>
-          <circle cx="330" cy="760" r="2.5"/><circle cx="870" cy="760" r="2.5"/>
-        </g>
-
-        <!-- 상하 중앙의 판타지 문양 -->
-        <g class="ff-emblem" transform="translate(600 48)">
-          <path d="M-42 0 Q-22-22 0 0 Q22-22 42 0 Q22 22 0 0 Q-22 22-42 0Z"/>
-          <circle r="7"/>
-          <path d="M-70 0 H-46 M46 0 H70"/>
-        </g>
-        <g class="ff-emblem ff-emblem-bottom" transform="translate(600 852)">
-          <path d="M-42 0 Q-22-22 0 0 Q22-22 42 0 Q22 22 0 0 Q-22 22-42 0Z"/>
-          <circle r="7"/>
-          <path d="M-70 0 H-46 M46 0 H70"/>
-        </g>
-      </svg>
-    </div>`;
 }
 
 function renderWorld(){
@@ -2828,355 +1882,7 @@ function renderWorld(){
 </div>
 ${isPendingMember ? '<div style="margin:16px 0;padding:14px;border:1px solid #ddd;border-radius:12px">⏳ 승인 대기 중입니다.<br><small>승인 전에도 캐릭터, 지역, 세계관 설정, 소설을 볼 수 있습니다.</small></div>' : ''}
 <h2>세계관 소개</h2><p>${escWithBreaks(w.description)}</p>`;
-else body=section(w);
-
-function getMysteryDecorLayer(){
-  return `
-  <div class="mystery-frame-art" aria-hidden="true">
-    <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
-      <defs>
-        <linearGradient id="mysLine" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="var(--mystery-accent)" stop-opacity=".04"/>
-          <stop offset=".5" stop-color="var(--mystery-accent)" stop-opacity=".72"/>
-          <stop offset="1" stop-color="var(--mystery-accent)" stop-opacity=".04"/>
-        </linearGradient>
-        <filter id="mysSoft" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="2" result="b"/>
-          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-
-      <!-- 사건 기록판 / 오래된 파일 -->
-      <g class="mys-board" fill="none" stroke="var(--mystery-accent)" stroke-linejoin="round">
-        <rect x="80" y="95" width="245" height="155" rx="4" stroke-width="2" opacity=".16"/>
-        <rect x="875" y="95" width="245" height="155" rx="4" stroke-width="2" opacity=".16"/>
-        <path d="M105 130 H285 M105 153 H250 M105 176 H270 M105 199 H230" stroke-width="3" opacity=".14"/>
-        <path d="M895 130 H1075 M895 153 H1040 M895 176 H1060 M895 199 H1020" stroke-width="3" opacity=".14"/>
-        <path d="M102 225 H170 M1030 225 H1098" stroke-width="2" opacity=".28"/>
-      </g>
-
-      <!-- 붉은 실 대신 포인트 색상의 증거 연결선 -->
-      <g class="mys-thread" fill="none" stroke="var(--mystery-accent)" stroke-linecap="round" opacity=".34">
-        <path d="M200 174 C360 300 400 350 520 280 S770 210 930 174" stroke-width="2" stroke-dasharray="7 9"/>
-        <path d="M165 220 C350 410 475 430 600 365 S850 310 1035 220" stroke-width="1.6" stroke-dasharray="5 10"/>
-        <circle cx="200" cy="174" r="7" stroke-width="2"/><circle cx="520" cy="280" r="7" stroke-width="2"/>
-        <circle cx="930" cy="174" r="7" stroke-width="2"/><circle cx="600" cy="365" r="8" stroke-width="2"/>
-      </g>
-
-      <!-- 확대경 -->
-      <g class="mys-loupe" transform="translate(600 205) rotate(-18)" fill="none" stroke="var(--mystery-accent)" stroke-linecap="round" filter="url(#mysSoft)" opacity=".42">
-        <circle cx="0" cy="0" r="48" stroke-width="5"/>
-        <circle cx="0" cy="0" r="37" stroke-width="1.5" opacity=".55"/>
-        <path d="M35 35 L78 78" stroke-width="10"/>
-        <path d="M35 35 L70 70" stroke-width="2"/>
-      </g>
-
-      <!-- 하단 사건 문서 / 신문 느낌 -->
-      <g class="mys-paper" fill="none" stroke="var(--mystery-accent)" stroke-linejoin="round" opacity=".22">
-        <path d="M260 690 H940 L910 825 H290Z" stroke-width="2"/>
-        <path d="M300 718 H900 M300 742 H875 M300 766 H700 M300 790 H820" stroke-width="2"/>
-        <path d="M610 718 V806" stroke-width="1.5"/>
-        <path d="M325 705 H475" stroke-width="4" opacity=".7"/>
-        <path d="M725 705 H875" stroke-width="4" opacity=".7"/>
-      </g>
-
-      <!-- 지문/단서 원 -->
-      <g class="mys-clues" fill="none" stroke="var(--mystery-accent)" opacity=".25">
-        <circle cx="170" cy="520" r="42" stroke-width="2" stroke-dasharray="3 8"/>
-        <circle cx="1030" cy="520" r="42" stroke-width="2" stroke-dasharray="3 8"/>
-        <path d="M145 520 Q170 490 195 520 Q170 550 145 520Z" stroke-width="1.5"/>
-        <path d="M1005 520 Q1030 490 1055 520 Q1030 550 1005 520Z" stroke-width="1.5"/>
-      </g>
-
-      <!-- 상단 장식 -->
-      <path class="mys-rule" d="M390 70 H810 M450 82 H750" stroke="url(#mysLine)" stroke-width="2" fill="none"/>
-      <g fill="var(--mystery-accent)" opacity=".46">
-        <circle cx="360" cy="76" r="3"/><circle cx="840" cy="76" r="3"/>
-        <path d="M600 52 l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
-      </g>
-
-      <!-- 모서리 파일 브래킷 -->
-      <g class="mys-corners" fill="none" stroke="var(--mystery-accent)" stroke-width="3" opacity=".34">
-        <path d="M36 300 V270 H72 M1164 300 V270 H1128 M36 600 V630 H72 M1164 600 V630 H1128"/>
-      </g>
-    </svg>
-  </div>`;
-}
-
-
-function getHealingDecorLayer(){
-  return `
-    <div class="healing-plush-art" aria-hidden="true">
-      <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid meet" focusable="false">
-        <defs>
-          <filter id="healSoft" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="1.2"/>
-          </filter>
-          <linearGradient id="healBlanket" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#fff6e8"/><stop offset="1" stop-color="#f7d9e8"/>
-          </linearGradient>
-        </defs>
-        <g class="heal-garland" fill="none" stroke="var(--healing-accent)" stroke-width="2" opacity=".26">
-          <path d="M45 72 Q210 150 380 76 T720 82 T1155 72"/>
-          <path d="M70 72 q12 25 24 0 M135 96 q12 25 24 0 M1050 96 q12 25 24 0 M1115 72 q12 25 24 0"/>
-        </g>
-
-        <!-- left bear -->
-        <g class="plush plush-bear" transform="translate(58 138)">
-          <circle cx="38" cy="22" r="15" fill="#e9b9a8"/><circle cx="92" cy="22" r="15" fill="#e9b9a8"/>
-          <circle cx="65" cy="55" r="43" fill="#f1c9b8"/>
-          <ellipse cx="65" cy="115" rx="48" ry="58" fill="#f1c9b8"/>
-          <ellipse cx="28" cy="110" rx="14" ry="40" fill="#e9b9a8"/><ellipse cx="102" cy="110" rx="14" ry="40" fill="#e9b9a8"/>
-          <circle cx="50" cy="51" r="4" fill="#55454a"/><circle cx="80" cy="51" r="4" fill="#55454a"/>
-          <ellipse cx="65" cy="67" rx="12" ry="9" fill="#fff0e8"/><circle cx="65" cy="66" r="4" fill="#55454a"/>
-          <path d="M58 76 Q65 83 72 76" fill="none" stroke="#8b5960" stroke-width="2" stroke-linecap="round"/>
-          <path d="M43 105 Q65 94 87 105 L82 132 Q65 142 48 132Z" fill="var(--healing-accent)" opacity=".78"/>
-          <circle cx="65" cy="118" r="5" fill="#fff" opacity=".9"/>
-          <ellipse cx="48" cy="166" rx="20" ry="10" fill="#dfaa9e"/><ellipse cx="82" cy="166" rx="20" ry="10" fill="#dfaa9e"/>
-        </g>
-
-        <!-- right bunny -->
-        <g class="plush plush-bunny" transform="translate(1035 132)">
-          <ellipse cx="38" cy="10" rx="13" ry="38" fill="#e7d7ed" transform="rotate(-12 38 10)"/>
-          <ellipse cx="86" cy="10" rx="13" ry="38" fill="#e7d7ed" transform="rotate(12 86 10)"/>
-          <ellipse cx="62" cy="65" rx="45" ry="42" fill="#f2e4f4"/>
-          <ellipse cx="62" cy="125" rx="48" ry="58" fill="#f2e4f4"/>
-          <circle cx="47" cy="61" r="4" fill="#514653"/><circle cx="77" cy="61" r="4" fill="#514653"/>
-          <ellipse cx="62" cy="76" rx="10" ry="8" fill="#f4b8c8"/>
-          <path d="M56 85 Q62 91 68 85" fill="none" stroke="#866b7f" stroke-width="2" stroke-linecap="round"/>
-          <path d="M43 112 Q62 99 81 112 L76 137 Q62 145 48 137Z" fill="#b9dcbf" opacity=".9"/>
-          <path d="M57 121 h10 M62 116 v10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <ellipse cx="42" cy="174" rx="20" ry="10" fill="#dfc9e5"/><ellipse cx="82" cy="174" rx="20" ry="10" fill="#dfc9e5"/>
-        </g>
-
-        <!-- small cat -->
-        <g class="plush plush-cat" transform="translate(38 650)">
-          <path d="M18 50 L28 8 L55 32 L82 8 L92 50Z" fill="#f6d9a8"/>
-          <ellipse cx="55" cy="68" rx="42" ry="38" fill="#f8dfb5"/>
-          <ellipse cx="55" cy="119" rx="46" ry="49" fill="#f8dfb5"/>
-          <circle cx="41" cy="67" r="4" fill="#514b43"/><circle cx="69" cy="67" r="4" fill="#514b43"/>
-          <path d="M51 78 Q55 82 59 78" fill="none" stroke="#8c6b55" stroke-width="2" stroke-linecap="round"/>
-          <path d="M37 104 Q55 94 73 104 L69 127 Q55 136 41 127Z" fill="#c5dff0"/>
-          <circle cx="55" cy="115" r="5" fill="#fff"/>
-          <ellipse cx="39" cy="163" rx="18" ry="9" fill="#e6c894"/><ellipse cx="71" cy="163" rx="18" ry="9" fill="#e6c894"/>
-        </g>
-
-        <!-- small chick -->
-        <g class="plush plush-chick" transform="translate(1050 655)">
-          <circle cx="50" cy="38" r="34" fill="#ffe59c"/>
-          <ellipse cx="50" cy="88" rx="43" ry="47" fill="#ffe59c"/>
-          <circle cx="38" cy="37" r="4" fill="#5a5142"/><circle cx="62" cy="37" r="4" fill="#5a5142"/>
-          <path d="M44 48 L56 48 L50 56Z" fill="#e9a65a"/>
-          <path d="M29 79 Q50 67 71 79 L67 103 Q50 112 33 103Z" fill="#f6b6c9"/>
-          <ellipse cx="35" cy="133" rx="17" ry="8" fill="#f1cd76"/><ellipse cx="65" cy="133" rx="17" ry="8" fill="#f1cd76"/>
-        </g>
-
-        <!-- center shelf of tiny plushies -->
-        <g class="heal-shelf" opacity=".96">
-          <rect x="385" y="790" width="430" height="8" rx="4" fill="var(--healing-accent)" opacity=".3"/>
-          <g transform="translate(425 716)">
-            <circle cx="25" cy="18" r="11" fill="#f3c2c8"/><circle cx="55" cy="18" r="11" fill="#f3c2c8"/><circle cx="40" cy="42" r="25" fill="#ffd8de"/>
-            <circle cx="32" cy="39" r="3"/><circle cx="48" cy="39" r="3"/><path d="M37 47q3 4 6 0" fill="none" stroke="#8a6570" stroke-width="1.5"/>
-          </g>
-          <g transform="translate(535 710)">
-            <ellipse cx="28" cy="14" rx="9" ry="22" fill="#cce5f2"/><ellipse cx="55" cy="14" rx="9" ry="22" fill="#cce5f2"/><ellipse cx="42" cy="43" rx="27" ry="25" fill="#dceefa"/>
-            <circle cx="34" cy="41" r="3"/><circle cx="50" cy="41" r="3"/><path d="M38 49q4 3 8 0" fill="none" stroke="#6d8190" stroke-width="1.5"/>
-          </g>
-          <g transform="translate(645 715)">
-            <path d="M10 32L18 7L35 24L52 7L60 32Z" fill="#d8c8ee"/><ellipse cx="35" cy="47" rx="27" ry="24" fill="#eadff7"/>
-            <circle cx="28" cy="45" r="3"/><circle cx="42" cy="45" r="3"/><path d="M31 53q4 3 8 0" fill="none" stroke="#776581" stroke-width="1.5"/>
-          </g>
-          <g transform="translate(750 716)">
-            <circle cx="25" cy="19" r="11" fill="#c6dfc8"/><circle cx="55" cy="19" r="11" fill="#c6dfc8"/><ellipse cx="40" cy="45" rx="26" ry="24" fill="#d9efd9"/>
-            <circle cx="33" cy="42" r="3"/><circle cx="47" cy="42" r="3"/><path d="M36 50q4 3 8 0" fill="none" stroke="#617561" stroke-width="1.5"/>
-          </g>
-        </g>
-
-        <!-- floating hearts and stars -->
-        <g fill="var(--healing-accent)" opacity=".42">
-          <path d="M180 290 C168 274 140 292 180 324 C220 292 192 274 180 290Z"/>
-          <path d="M1005 340 C995 326 972 340 1005 368 C1038 340 1015 326 1005 340Z"/>
-          <path d="M300 520 l6 14 15 2-11 10 3 15-13-8-13 8 3-15-11-10 15-2Z"/>
-          <path d="M905 560 l6 14 15 2-11 10 3 15-13-8-13 8 3-15-11-10 15-2Z"/>
-        </g>
-      </svg>
-    </div>`;
-}
-
-function getReligionDecorLayer(){
-  return `
-  <div class="religion-frame-art" aria-hidden="true">
-    <svg viewBox="0 0 1200 900" preserveAspectRatio="none" focusable="false">
-      <defs>
-        <linearGradient id="relGold2" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="var(--religion-accent)" stop-opacity=".08"/>
-          <stop offset=".5" stop-color="var(--religion-accent)" stop-opacity=".72"/>
-          <stop offset="1" stop-color="var(--religion-accent)" stop-opacity=".08"/>
-        </linearGradient>
-        <filter id="relSoft2" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="2.2" result="b"/>
-          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-
-      <!-- 고대 그리스 궁전의 상단 페디먼트 -->
-      <g class="rel-palace" fill="none" stroke="var(--religion-accent)" stroke-linejoin="round">
-        <path d="M220 128 L600 42 L980 128" stroke-width="4" opacity=".46"/>
-        <path d="M255 128 H945" stroke-width="5" opacity=".42"/>
-        <path d="M292 146 H908" stroke-width="2" opacity=".28"/>
-        <path d="M315 146 V282 M400 146 V282 M485 146 V282 M715 146 V282 M800 146 V282 M885 146 V282" stroke-width="11" opacity=".20"/>
-        <path d="M302 282 H898" stroke-width="5" opacity=".30"/>
-        <path d="M324 294 H876" stroke-width="2" opacity=".20"/>
-      </g>
-
-      <!-- 중앙 신전 문 -->
-      <g class="rel-door" fill="none" stroke="var(--religion-accent)" opacity=".32">
-        <path d="M540 282 V395 H660 V282" stroke-width="5"/>
-        <path d="M555 395 V312 Q600 270 645 312 V395" stroke-width="3"/>
-        <circle cx="600" cy="345" r="4" fill="var(--religion-accent)"/>
-      </g>
-
-      <!-- 좌우 대리석 조각상: 흉상 + 받침대 -->
-      <g class="rel-statue" fill="none" stroke="var(--religion-accent)" stroke-linejoin="round" stroke-linecap="round">
-        <g transform="translate(155 515)">
-          <path d="M-42 205 H42 L32 184 H-32Z" stroke-width="3"/>
-          <path d="M-27 184 V168 H27 V184" stroke-width="3"/>
-          <path d="M-20 168 Q-18 128 0 118 Q18 128 20 168" stroke-width="4"/>
-          <circle cx="0" cy="91" r="27" stroke-width="4"/>
-          <path d="M-25 86 Q0 55 25 86 M-15 67 Q0 48 15 67" stroke-width="3"/>
-          <path d="M-20 121 Q0 140 20 121 M-14 126 L-35 154 M14 126 L35 154" stroke-width="4"/>
-          <path d="M-35 154 Q0 172 35 154" stroke-width="4"/>
-        </g>
-        <g transform="translate(1045 515) scale(-1 1)">
-          <path d="M-42 205 H42 L32 184 H-32Z" stroke-width="3"/>
-          <path d="M-27 184 V168 H27 V184" stroke-width="3"/>
-          <path d="M-20 168 Q-18 128 0 118 Q18 128 20 168" stroke-width="4"/>
-          <circle cx="0" cy="91" r="27" stroke-width="4"/>
-          <path d="M-25 86 Q0 55 25 86 M-15 67 Q0 48 15 67" stroke-width="3"/>
-          <path d="M-20 121 Q0 140 20 121 M-14 126 L-35 154 M14 126 L35 154" stroke-width="4"/>
-          <path d="M-35 154 Q0 172 35 154" stroke-width="4"/>
-        </g>
-      </g>
-
-      <!-- 월계수 -->
-      <g class="rel-laurel" fill="none" stroke="var(--religion-accent)" stroke-linecap="round" opacity=".62">
-        <path d="M72 410 C155 325 245 340 300 420" stroke-width="3"/>
-        <path d="M1128 410 C1045 325 955 340 900 420" stroke-width="3"/>
-        <g stroke-width="2.5">
-          <path d="M118 366 l-20 -27 M145 350 l-15 -30 M176 343 l-7 -31 M208 344 l3 -31 M239 354 l14 -28 M267 374 l23 -23"/>
-          <path d="M1082 366 l20 -27 M1055 350 l15 -30 M1024 343 l7 -31 M992 344 l-3 -31 M961 354 l-14 -28 M933 374 l-23 -23"/>
-        </g>
-      </g>
-
-      <!-- 중앙 신성한 태양 -->
-      <g class="rel-sun" filter="url(#relSoft2)" opacity=".52">
-        <circle cx="600" cy="88" r="30" fill="none" stroke="var(--religion-accent)" stroke-width="2"/>
-        <circle cx="600" cy="88" r="7" fill="var(--religion-accent)"/>
-        <path d="M600 44V30 M600 132V146 M556 88H542 M644 88H658 M569 57L559 47 M631 119L641 129 M631 57L641 47 M569 119L559 129" stroke="var(--religion-accent)" stroke-width="2.5" stroke-linecap="round"/>
-      </g>
-
-      <!-- 메안더 문양 -->
-      <path class="rel-meander" d="M42 750 H150 V774 H78 V798 H184 V822 H42 M1158 750 H1050 V774 H1122 V798 H1016 V822 H1158" fill="none" stroke="url(#relGold2)" stroke-width="4" opacity=".52"/>
-      <path class="rel-meander" d="M48 112 H185 V136 H82 V160 H222" fill="none" stroke="url(#relGold2)" stroke-width="3" opacity=".42"/>
-      <path class="rel-meander" d="M1152 112 H1015 V136 H1118 V160 H978" fill="none" stroke="url(#relGold2)" stroke-width="3" opacity=".42"/>
-
-      <!-- 작은 별/꽃 장식 -->
-      <g class="rel-stars" fill="var(--religion-accent)" opacity=".58">
-        <path d="M340 88 l4 11 11 4-11 4-4 11-4-11-11-4 11-4z"/>
-        <path d="M860 88 l4 11 11 4-11 4-4 11-4-11-11-4 11-4z"/>
-        <circle cx="320" cy="410" r="3"/><circle cx="880" cy="410" r="3"/>
-      </g>
-    </svg>
-  </div>`;
-}
-
-
-function getUnifiedRemainingDecorLayer(styleKey){
-  const motif = {
-    darkfantasy: `
-      <defs><linearGradient id="dfGlow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="currentColor" stop-opacity=".8"/><stop offset="1" stop-color="currentColor" stop-opacity=".08"/></linearGradient></defs>
-      <path class="ug-arch" d="M150 760 V300 Q150 125 300 125 H900 Q1050 125 1050 300 V760"/>
-      <path class="ug-arch2" d="M185 760 V325 Q185 165 320 165 H880 Q1015 165 1015 325 V760"/>
-      <path d="M120 180 Q220 105 330 165 T600 135 T870 165 T1080 180"/>
-      <path d="M135 760 Q240 690 345 735 T600 710 T855 735 T1065 760"/>
-      <path class="ug-thorn" d="M70 690 C155 630 115 555 205 505 C135 455 175 365 260 330"/>
-      <path class="ug-thorn" d="M1130 690 C1045 630 1085 555 995 505 C1065 455 1025 365 940 330"/>
-      <path d="M600 80 l18 42 45 4-34 29 10 45-39-24-39 24 10-45-34-29 45-4z"/>
-      <circle cx="600" cy="198" r="30"/><path d="M570 198h60 M600 168v60"/>
-      <path d="M210 280 q-38 42 0 84 q38-42 0-84z M990 280 q38 42 0 84 q-38-42 0-84z"/>
-      <path d="M230 620 q-25-28-50 0 q25 42 50 68 q25-26 50-68 q-25-28-50 0z"/>
-      <path d="M970 620 q-25-28-50 0 q25 42 50 68 q25-26 50-68 q-25-28-50 0z"/>`,
-    horror: `
-      <path class="ug-crack" d="M70 125 L180 185 145 250 250 300 205 380 300 420 250 520 345 570 300 690 410 735"/>
-      <path class="ug-crack" d="M1130 125 L1020 185 1055 250 950 300 995 380 900 420 950 520 855 570 900 690 790 735"/>
-      <path d="M80 170 L170 115 L250 155 L330 105 L410 145 L500 95 L600 130 L700 95 L790 145 L870 105 L950 155 L1030 115 L1120 170"/>
-      <path d="M85 735 L175 790 L255 750 L345 805 L430 755 L520 815 L600 775 L680 815 L770 755 L855 805 L945 750 L1025 790 L1115 735"/>
-      <circle cx="600" cy="430" r="105"/><ellipse cx="600" cy="430" rx="62" ry="31"/><circle cx="600" cy="430" r="13"/>
-      <path d="M505 430 H430 M695 430 H770"/>
-      <path d="M180 340 Q145 395 180 455 M1020 340 Q1055 395 1020 455"/>
-      <path d="M290 150 q-30 42 0 82 M910 150 q30 42 0 82"/>`,
-    romance: `
-      <path class="ug-ribbon" d="M80 180 C190 80 300 120 390 215 C470 300 520 245 600 155 C680 245 730 300 810 215 C900 120 1010 80 1120 180"/>
-      <path d="M90 720 C200 810 315 770 395 700 C480 625 520 690 600 765 C680 690 720 625 805 700 C885 770 1000 810 1110 720"/>
-      <path d="M600 275 C560 215 475 250 600 390 C725 250 640 215 600 275Z"/>
-      <path d="M250 440 C220 400 165 425 250 510 C335 425 280 400 250 440Z"/>
-      <path d="M950 440 C920 400 865 425 950 510 C1035 425 980 400 950 440Z"/>
-      <g class="ug-rose"><path d="M165 300 q-50 45-28 100 q45-25 70-75"/><circle cx="205" cy="285" r="20"/><path d="M1035 300 q50 45 28 100 q-45-25-70-75"/><circle cx="995" cy="285" r="20"/></g>
-      <path d="M120 600 C190 555 230 560 285 600 M1080 600 C1010 555 970 560 915 600"/>`,
-    school: `
-      <path d="M105 145 H1095 V745 H105Z"/>
-      <path d="M155 205 H1045 M155 255 H1045 M155 695 H1045"/>
-      <g class="ug-window"><rect x="185" y="300" width="210" height="150" rx="6"/><path d="M290 300V450 M185 375H395"/><rect x="805" y="300" width="210" height="150" rx="6"/><path d="M910 300V450 M805 375H1015"/></g>
-      <path d="M540 165h120 M600 105v120 M560 125l80 80 M640 125l-80 80"/>
-      <path d="M185 560 L300 500 L370 570 L255 635 Z M830 570 L900 500 L1015 560 L945 635 Z"/>
-      <path d="M255 635v55 M945 635v55"/>
-      <path d="M475 690 H725 M505 665 H695"/>
-      <circle cx="600" cy="600" r="42"/><path d="M570 600h60 M600 570v60"/>`,
-    martial: `
-      <path class="ug-roof" d="M80 190 Q180 105 300 150 Q430 75 600 140 Q770 75 900 150 Q1020 105 1120 190"/>
-      <path d="M105 215 Q200 145 300 180 Q435 110 600 170 Q765 110 900 180 Q1000 145 1095 215"/>
-      <path d="M175 245 V470 M260 215 V490 M940 245 V470 M855 215 V490"/>
-      <path d="M145 470 H305 M895 470 H1055"/>
-      <path d="M600 78 L620 132 L680 138 L635 176 L650 235 L600 205 L550 235 L565 176 L520 138 L580 132Z"/>
-      <path d="M120 690 Q230 545 360 490 Q300 590 270 725 M1080 690 Q970 545 840 490 Q900 590 930 725"/>
-      <path d="M270 360 q-75 45-110 110 M930 360 q75 45 110 110"/>
-      <path d="M455 745 L745 455 M745 745 L455 455"/>
-      <circle cx="600" cy="600" r="48"/><path d="M600 552v96 M552 600h96"/>`,
-    mystery: `
-      <path d="M105 155 H1095 M130 185 H1070"/>
-      <g class="ug-file"><rect x="145" y="225" width="255" height="170" rx="5"/><path d="M175 265h195 M175 300h155 M175 335h175"/><circle cx="340" cy="355" r="20"/></g>
-      <g class="ug-file"><rect x="800" y="225" width="255" height="170" rx="5"/><path d="M830 265h195 M830 300h155 M830 335h175"/><circle cx="995" cy="355" r="20"/></g>
-      <circle cx="600" cy="455" r="86"/><circle cx="600" cy="455" r="42"/><path d="M630 485l82 82"/>
-      <path d="M400 395 L520 425 M680 425 L800 395 M520 500 L400 575 M680 500 L800 575"/>
-      <circle cx="400" cy="395" r="8"/><circle cx="800" cy="395" r="8"/><circle cx="400" cy="575" r="8"/><circle cx="800" cy="575" r="8"/>
-      <path d="M185 690 H410 M790 690 H1015 M515 710 H685"/>
-      <circle cx="600" cy="710" r="16"/>`,
-    historical: `
-      <path d="M120 185 H1080 M150 220 H1050"/>
-      <path d="M190 220 V650 M285 220 V650 M380 220 V650 M820 220 V650 M915 220 V650 M1010 220 V650"/>
-      <path d="M165 650 H1035 M135 685 H1065"/>
-      <path d="M430 190 Q600 75 770 190 M465 165 Q600 90 735 165"/>
-      <path d="M500 445 H700 M600 345 V545"/>
-      <path d="M530 420 Q600 365 670 420 V505 Q600 555 530 505Z"/>
-      <path d="M165 735 Q235 680 305 735 T445 735 M1035 735 Q965 680 895 735 T755 735"/>
-      <rect x="560" y="80" width="80" height="80" rx="2" transform="rotate(45 600 120)"/>
-      <path d="M580 110h40 M600 90v60"/>`
-  }[styleKey] || '';
-  const labels={darkfantasy:'DARK FANTASY · ARCANE',horror:'HORROR · NIGHT CASE',romance:'ROMANCE · LOVE LETTER',school:'ACADEMY · SCHOOL LIFE',martial:'MARTIAL · EASTERN CHRONICLE',mystery:'MYSTERY · CASE ARCHIVE',historical:'HISTORICAL · GRAND ARCHIVE'};
-  return `<div class="unified-genre-frame" aria-hidden="true"><svg viewBox="0 0 1200 900" preserveAspectRatio="none"><defs><filter id="ugGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="ug-frame"><rect x="20" y="20" width="1160" height="860" rx="26"/><rect x="42" y="42" width="1116" height="816" rx="20"/><rect x="62" y="62" width="1076" height="776" rx="16"/></g><g class="ug-motif" filter="url(#ugGlow)">${motif}</g><g class="ug-stars"><circle cx="95" cy="95" r="4"/><circle cx="1105" cy="95" r="4"/><circle cx="95" cy="805" r="4"/><circle cx="1105" cy="805" r="4"/><path d="M95 112v18 M86 121h18 M1105 112v18 M1096 121h18 M95 770v18 M86 779h18 M1105 770v18 M1096 779h18"/></g></svg><span class="ug-label">${labels[styleKey]||''}</span><span class="ug-badge ug-badge-left">WORLD DESIGN</span><span class="ug-badge ug-badge-right">${String(styleKey||'').toUpperCase()}</span></div>`;
-}
-
-const _genrePreset=getGenreDesignPreset(w.genre);
-const _savedStyle=w.designStyle||'fantasy';
-const _useGenrePreset=(!w.designStyle || _savedStyle==='fantasy') && _genrePreset.style!=='fantasy';
-const _renderStyleKey=_useGenrePreset ? _genrePreset.style : _savedStyle;
-const _fantasyDecor=_renderStyleKey==='fantasy' ? getFantasyDecorLayer() : '';
-const _sfDecor=_renderStyleKey==='sf' ? getSFDecorLayer() : '';
-const _martialDecor=['martial','mystery','darkfantasy','horror','romance','school','historical'].includes(_renderStyleKey) ? getUnifiedRemainingDecorLayer(_renderStyleKey) : '';
-const _cyberDecor=_renderStyleKey==='cyberpunk' ? getCyberpunkDecorLayer() : '';
-const _religionDecor=_renderStyleKey==='religion' ? getReligionDecorLayer() : '';
-const _healingDecor=_renderStyleKey==='healing' ? getHealingDecorLayer() : '';
-$('world').innerHTML=`${_fantasyDecor}${_sfDecor}${_martialDecor}${_cyberDecor}${_religionDecor}${_healingDecor}<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
+else body=section(w);$('world').innerHTML=`<div class="hero ${w.theme} ${w.coverImage?'has-photo':''}" ${w.coverImage?`style="background-image:url('${w.coverImage}')"`:''}><button class="back" id="back">← 목록</button><div class="actions"><button id="editPage">✏️ 수정</button><button id="decoratePage">🎨 꾸미기</button></div><div><h1>${esc(w.name)}</h1><p>${escWithBreaks(w.description)}</p></div></div><div class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'active':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div><div class="content">${body}</div>`;$('back').onclick=home;
 applyWorldDesign(w);
     const addStoryButton = $('addStoryButton');
     if(addStoryButton){
@@ -3275,21 +1981,21 @@ function section(w){
                                </button>`
                             : ''}
 
-                        ${canWriteStoryChapter(s, w, currentUserId)
+                        ${canAddContent
                             ? `<button class="story-chapter-btn"
                                 data-story-chapters="${s.id}">
                                 ✍️ 회차 쓰기
                                </button>`
                             : ''}
 
-                        ${canManageStory(s, w, currentUserId)
+                        ${canAddContent
                             ? `<button class="story-edit-btn"
                                 data-story-edit="${s.id}">
                                 ⚙️ 설정
                                </button>`
                             : ''}
 
-                        ${canManageStory(s, w, currentUserId)
+                        ${canAddContent
                             ? `<button class="story-delete-btn"
                                 data-story-delete="${s.id}">
                                 🗑️ 삭제
@@ -3513,67 +2219,28 @@ function processStoryCover(file){
  });
 }
 
-function canManageStory(story, world, userId=currentUserId){
-    if(!story || !world || !userId) return false;
-    return world.owner_id === userId || story.created_by === userId;
-}
-
-function canWriteStoryChapter(story, world, userId=currentUserId){
-    if(!story || !world || !userId) return false;
-    const isOwner = world.owner_id === userId;
-    if(isOwner) return true;
-    if(story.storyType !== 'relay') return false;
-    return myWorldMemberships.some(member =>
-        member.world_id === world.id &&
-        member.user_id === userId &&
-        member.status === 'approved'
-    );
-}
-
 async function saveStoryToSupabase(story){
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const user = session?.user;
-
-    if(!user){
-        alert('로그인 후 저장할 수 있습니다.');
-        return false;
-    }
-
-    const world = get(current);
-    if(!world){
-        alert('세계관을 찾을 수 없습니다.');
-        return false;
-    }
-
-    const isEditing = !!story.id;
-    if(isEditing && !canManageStory(story, world, user.id)){
-        alert('자신이 만든 소설 또는 세계관 소유자의 소설만 수정할 수 있습니다.');
-        return false;
-    }
-
-    if(!isEditing && !(
-        world.owner_id === user.id ||
-        myWorldMemberships.some(member =>
-            member.world_id === world.id &&
-            member.user_id === user.id &&
-            member.status === 'approved'
-        )
-    )){
-        alert('이 세계관의 승인된 멤버만 소설을 만들 수 있습니다.');
-        return false;
-    }
-
     const row={
+        id:story.id,
         world_id:current,
         name:story.name,
         description:story.description || '',
         visibility:story.visibility || 'public',
         cover_image:story.coverImage || '',
         story_type:story.storyType || 'normal',
-        created_by:story.created_by || user.id,
+        created_by:story.created_by || currentUserId || null,
         updated_at:new Date().toISOString()
     };
-    if(story.id) row.id = story.id;
+
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    const user = session?.user;
+
+    if(!user){
+        alert('로그인 후 저장할 수 있습니다.');
+        return false;
+    }
 
     const {data,error}=await supabaseClient
         .from('stories')
@@ -3587,39 +2254,14 @@ async function saveStoryToSupabase(story){
         return false;
     }
 
-    story.created_by = data?.created_by || story.created_by || user.id;
-    story.createdAt=data?.created_at ? new Date(data.created_at).getTime() : (story.createdAt || Date.now());
-    story.updatedAt=data?.updated_at ? new Date(data.updated_at).getTime() : Date.now();
-    return true;
+ story.createdAt=data?.created_at ? new Date(data.created_at).getTime() : (story.createdAt || Date.now());
+ story.updatedAt=data?.updated_at ? new Date(data.updated_at).getTime() : Date.now();
+ return true;
 }
 
 function openStoryModal(id=null){
- const w=get(current);
- const s=id?w?.stories.find(x=>x.id===id):null;
-
- if(!w){
-   alert('세계관을 찾을 수 없습니다.');
-   return;
- }
-
- if(id && !canManageStory(s,w,currentUserId)){
-   alert('자신이 만든 소설 또는 세계관 소유자의 소설만 수정할 수 있습니다.');
-   return;
- }
-
- if(!id && !(
-   w.owner_id===currentUserId ||
-   myWorldMemberships.some(member =>
-     member.world_id===w.id &&
-     member.user_id===currentUserId &&
-     member.status==='approved'
-   )
- )){
-   alert('이 세계관의 승인된 멤버만 소설을 만들 수 있습니다.');
-   return;
- }
-
  editingStoryId=id;
+ const w=get(current),s=id?w?.stories.find(x=>x.id===id):null;
  itemType='stories';
  $('ititle').textContent=id?'스토리 설정':'새 스토리 만들기';
  $('iname').value=s?.name||'';
@@ -3630,32 +2272,33 @@ function openStoryModal(id=null){
  genericPhoto='';
  $('storyVisibility').value=s?.visibility||'public';
  $('storyType').value=s?.storyType||'normal';
+ updateStoryTypeUI();
  $('storyCoverFile').value='';
  setStoryCoverPreview(s?.coverImage||'');
 
  $('itemModal').classList.add('show');
 }
-
 async function deleteStory(id){
- const w=get(current),s=w?.stories.find(x=>x.id===id);
- if(!s)return;
+ const w=get(current),s=w?.stories.find(x=>x.id===id);if(!s)return;
+ if(!confirm(`"${s.name}" 스토리를 삭제하시겠습니까?\\n스토리와 모든 회차가 삭제됩니다.`))return;
 
- const { data: { session } } = await supabaseClient.auth.getSession();
- const user = session?.user;
+const { data: { session } } =
+    await supabaseClient.auth.getSession();
 
- if(!user){
-   alert('로그인 후 소설을 삭제할 수 있습니다.');
-   return false;
- }
+const user = session?.user;
 
- if(!canManageStory(s,w,user.id)){
-   alert('자신이 만든 소설 또는 세계관 소유자의 소설만 삭제할 수 있습니다.');
-   return false;
- }
+if(!user){
+    alert('로그인 후 소설을 삭제할 수 있습니다.');
+    return false;
+}
 
- if(!confirm(`"${s.name}" 스토리를 삭제하시겠습니까?\n스토리와 모든 회차가 삭제됩니다.
-릴레이 소설이라면 다른 사용자가 작성한 회차도 함께 삭제됩니다.`))return;
+const world = get(current);
 
+if(!world || world.owner_id !== user.id){
+    alert('이 세계관의 소유자만 소설을 삭제할 수 있습니다.');
+    return false;
+}
+    
  const {data,error}=await supabaseClient
    .from('stories')
    .delete()
@@ -3664,18 +2307,50 @@ async function deleteStory(id){
 
  if(error){
    console.error('Supabase 소설 삭제 실패:',error);
-   alert('소설 삭제에 실패했습니다.\n'+error.message);
+   alert('소설 삭제에 실패했습니다.\\n'+error.message);
    return;
  }
 
  if(!data || data.length===0){
-   alert('Supabase에서 소설 삭제를 확인하지 못했습니다.\nRLS 삭제 정책을 확인해주세요.');
+   alert('Supabase에서 소설 삭제를 확인하지 못했습니다.');
    return;
  }
 
  w.stories=w.stories.filter(x=>x.id!==id);
  renderWorld();
 }
+
+// ===== 선택형 소설 시작 =====
+const CHOICE_MARKER='\n\n[[WORLD_PLATFORM_CHOICES]]';
+function readChapterData(body=''){
+ const text=String(body||''),pos=text.indexOf(CHOICE_MARKER);
+ if(pos<0)return {body:text,choices:[]};
+ const clean=text.slice(0,pos),encoded=text.slice(pos+CHOICE_MARKER.length).trim();
+ try{return {body:clean,choices:JSON.parse(decodeURIComponent(encoded))||[]};}catch(e){return {body:clean,choices:[]};}
+}
+function writeChapterData(body,choices){
+ const clean=String(body||'').replace(/\n\n\[\[WORLD_PLATFORM_CHOICES\]\][\s\S]*$/,'');
+ return choices?.length?clean+CHOICE_MARKER+encodeURIComponent(JSON.stringify(choices)):clean;
+}
+function renderChoiceEditor(story,chapterId,choices=[]){
+ const editor=$('choiceEditor'),list=$('choiceList');if(!editor||!list)return;
+ if(story?.storyType!=='choice'){editor.style.display='none';list.innerHTML='';return;}
+ editor.style.display='block';
+ const chapters=story.chapters.filter(c=>c.id!==chapterId);
+ list.innerHTML=choices.map((choice,i)=>`<div class="choice-card"><div class="choice-card-head"><span class="choice-number">선택지 ${i+1}</span><button type="button" class="choice-remove" data-remove-choice="${i}">🗑 삭제</button></div><label>선택지 내용<input type="text" class="choice-text" value="${esc(choice.text||'')}" maxlength="120" placeholder="예: 왼쪽 문을 연다"></label><label>이 선택지를 고르면<select class="choice-target"><option value="">⚠️ 아직 연결하지 않음</option>${chapters.map(c=>`<option value="${esc(c.id)}" ${choice.nextChapterId===c.id?'selected':''}>${esc(c.name||'회차')}</option>`).join('')}</select></label><small class="choice-target-status">${choice.nextChapterId&&chapters.some(c=>c.id===choice.nextChapterId)?'연결된 회차가 있습니다.':'나중에 회차를 만든 뒤 연결할 수 있습니다.'}</small></div>`).join('');
+ list.querySelectorAll('[data-remove-choice]').forEach(btn=>btn.onclick=()=>{btn.closest('.choice-card')?.remove();renumberChoiceCards();});
+}
+function renumberChoiceCards(){document.querySelectorAll('#choiceList .choice-card').forEach((card,i)=>{const n=card.querySelector('.choice-number');if(n)n.textContent=`선택지 ${i+1}`;});}
+function collectChoiceEditor(){return [...document.querySelectorAll('#choiceList .choice-card')].map(card=>({text:card.querySelector('.choice-text')?.value.trim()||'',nextChapterId:card.querySelector('.choice-target')?.value||''})).filter(c=>c.text);}
+function addChoiceEditorCard(){
+ const list=$('choiceList');if(!list)return;const count=list.querySelectorAll('.choice-card').length,card=document.createElement('div');card.className='choice-card';
+ card.innerHTML=`<div class="choice-card-head"><span class="choice-number">선택지 ${count+1}</span><button type="button" class="choice-remove">🗑 삭제</button></div><label>선택지 내용<input type="text" class="choice-text" maxlength="120" placeholder="예: 왼쪽 문을 연다"></label><label>이 선택지를 고르면<select class="choice-target"><option value="">⚠️ 아직 연결하지 않음</option></select></label><small class="choice-target-status">회차를 먼저 만든 뒤 연결할 수 있습니다.</small>`;
+ list.appendChild(card);const select=card.querySelector('.choice-target'),w=get(current),s=w?.stories.find(x=>x.id===chapterStoryId);
+ s?.chapters.filter(c=>c.id!==editingChapterId).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name||'회차';select.appendChild(o);});
+ card.querySelector('.choice-remove').onclick=()=>{card.remove();renumberChoiceCards();};card.querySelector('.choice-text')?.focus();
+}
+function updateStoryTypeUI(){const type=$('storyType')?.value,help=$('storyTypeHelp');if(help)help.textContent=type==='relay'?'릴레이 소설은 이 세계관의 승인된 멤버가 다음 회차를 이어서 작성할 수 있습니다.':type==='choice'?'선택형 소설은 회차마다 선택지를 만들고, 독자가 선택한 회차로 이동할 수 있습니다.':'일반 소설은 세계관 소유자가 회차를 작성합니다.';}
+// ===== 선택형 소설 끝 =====
 
 async function openChapterModal(storyId,chapterId=null){
 
@@ -3722,10 +2397,11 @@ async function openChapterModal(storyId,chapterId=null){
     chapterStoryId=storyId;
     editingChapterId=chapterId;
 
+    const chapterData=readChapterData(c?.body||'');
     $('chapterTitle').textContent=chapterId?'회차 수정':'새 회차 쓰기';
     $('chapterName').value=c?.name||`${(s.chapters.length||0)+1}화`;
-    $('chapterBody').value=c?.body||'';
-
+    $('chapterBody').value=chapterData.body;
+    renderChoiceEditor(s,chapterId,chapterData.choices);
     $('chapterModal').classList.add('show');
 }
 
@@ -3733,7 +2409,10 @@ async function saveChapter(){
     const w=get(current),s=w?.stories.find(x=>x.id===chapterStoryId);
     if(!s)return;
 
-    const name=$('chapterName').value.trim(),body=$('chapterBody').value;
+    const name=$('chapterName').value.trim();
+    const plainBody=$('chapterBody').value;
+    const choices=s.storyType==='choice' ? collectChoiceEditor() : [];
+    const body=writeChapterData(plainBody,choices);
     if(!name)return alert('회차 제목을 입력해주세요.');
 
     const { data: { session } } =
@@ -3765,28 +2444,25 @@ async function saveChapter(){
         }
     }
 
-    const existingChapter = editingChapterId
-        ? s.chapters.find(x => x.id === editingChapterId)
-        : null;
+    const chapterId = editingChapterId
+        || ('chapter-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
 
+    // Supabase chapters 테이블에 저장할 데이터
     const chapterRow = {
+        id: chapterId,
         story_id: chapterStoryId,
         chapter_number: editingChapterId
             ? (s.chapters.findIndex(x => x.id === editingChapterId) + 1)
             : (s.chapters.length + 1),
         name: name,
         body: body,
-        author_id: existingChapter?.author_id || user.id,
+        author_id: editingChapterId ? (s.chapters.find(x=>x.id===editingChapterId)?.author_id || user.id) : user.id,
         updated_at: new Date().toISOString()
     };
 
-    if(editingChapterId) chapterRow.id = editingChapterId;
-
-    const result = editingChapterId
-        ? await supabaseClient.from('chapters').update(chapterRow).eq('id', editingChapterId).select().single()
-        : await supabaseClient.from('chapters').insert(chapterRow).select().single();
-    const error = result.error;
-    const savedChapter = result.data;
+    const { error } = await supabaseClient
+        .from('chapters')
+        .upsert(chapterRow);
 
     if(error){
         console.error('Supabase 회차 저장 실패:', error);
@@ -3800,11 +2476,11 @@ async function saveChapter(){
 
  }else{
    s.chapters.push({
-     id: savedChapter?.id,
-     name: savedChapter?.name || name,
-     body: savedChapter?.body || body,
-     author_id: savedChapter?.author_id || user.id,
-     createdAt: savedChapter?.created_at ? new Date(savedChapter.created_at).getTime() : Date.now()
+     id: chapterId,
+     name,
+     body,
+     author_id: user.id,
+     createdAt: Date.now()
    });
  }
 
@@ -3822,10 +2498,6 @@ function renderStorySettings(storyId){
     const s = w?.stories.find(x => x.id === storyId);
 
     if(!s) return;
-
-    const isStoryOwner = w.owner_id === currentUserId;
-    const canManage = canManageStory(s, w, currentUserId);
-    const canWriteChapter = canWriteStoryChapter(s, w, currentUserId);
 
     // 새로고침 시 현재 위치 기억
     sessionStorage.setItem('storyboard_current_world', current);
@@ -3855,13 +2527,13 @@ function renderStorySettings(storyId){
                 <div>
                     <h2>스토리 설정</h2>
                     <small>
-                        ${s.storyType==='relay'?'🔄 릴레이 소설 · 승인된 세계관 멤버가 이어서 작성할 수 있습니다.':'일반 소설 · 세계관 소유자가 회차를 작성합니다.'}
+                        ${s.storyType==='relay'?'🔄 릴레이 소설 · 승인된 세계관 멤버가 이어서 작성할 수 있습니다.':s.storyType==='choice'?'🎮 선택형 소설 · 회차마다 선택지를 연결할 수 있습니다.':'일반 소설 · 세계관 소유자가 회차를 작성합니다.'}
                     </small>
                 </div>
 
-                ${canManage ? `<button id="storySettingsEdit">
+                <button id="storySettingsEdit">
                     ⚙️ 스토리 설정 수정
-                </button>` : ''}
+                </button>
 
             </div>
 
@@ -3890,9 +2562,9 @@ function renderStorySettings(storyId){
 
                     <h2>회차</h2>
 
-                    ${canWriteChapter ? `<button id="writeChapter">
+                    <button id="writeChapter">
                         ${s.storyType==='relay'?'＋ 다음 화 쓰기':'＋ 회차 쓰기'}
-                    </button>` : ''}
+                    </button>
 
                 </div>
 
@@ -3940,22 +2612,22 @@ function renderStorySettings(storyId){
                                 </button>
 
 
-                                ${(isStoryOwner || c.author_id === currentUserId) ? `<button
+                                <button
                                     type="button"
                                     data-edit-chapter="${esc(c.id)}"
                                 >
                                     ✏️ 수정
-                                </button>` : ''}
+                                </button>
 
 
-                                ${(isStoryOwner || c.author_id === currentUserId) ? `<button
+                                <button
                                     type="button"
                                     class="chapter-delete-btn"
                                     data-story-id="${esc(s.id)}"
                                     data-delete-chapter="${esc(c.id)}"
                                 >
                                     🗑️ 삭제
-                                </button>` : ''}
+                                </button>
 
                             </div>
 
@@ -4012,8 +2684,10 @@ function renderStorySettings(storyId){
     // 스토리 설정 수정
     // ============================
 
-    if($('storySettingsEdit')) $('storySettingsEdit').onclick = () => {
+    $('storySettingsEdit').onclick = () => {
+
         openStoryModal(storyId);
+
     };
 
 
@@ -4021,8 +2695,10 @@ function renderStorySettings(storyId){
     // 회차 쓰기
     // ============================
 
-    if($('writeChapter')) $('writeChapter').onclick = () => {
+    $('writeChapter').onclick = () => {
+
         openChapterModal(storyId);
+
     };
 
 
@@ -4185,7 +2861,9 @@ sessionStorage.setItem('storyboard_current_chapter', String(index));
      </div>
    </div>
 
-   <article class="chapter-reader-body">${esc(c.body||'아직 작성된 본문이 없습니다.')}</article>
+   <article class="chapter-reader-body">${escWithBreaks(readChapterData(c.body||'').body||'아직 작성된 본문이 없습니다.')}</article>
+
+   ${s.storyType==='choice' ? (()=>{ const choiceData=readChapterData(c.body||''); return choiceData.choices.length ? `<section class="choice-reader"><h3>어느 쪽을 선택하시겠습니까?</h3><div class="choice-reader-list">${choiceData.choices.map(choice=>{const target=s.chapters.find(ch=>ch.id===choice.nextChapterId);return target?`<button type="button" class="choice-reader-btn" data-choice-target="${esc(target.id)}">${esc(choice.text)}<small>→ ${esc(target.name||'다음 회차')}</small></button>`:`<button type="button" class="choice-reader-btn disabled" disabled>${esc(choice.text)}<small>아직 다음 회차가 연결되지 않았습니다.</small></button>`;}).join('')}</div></section>`:''; })() : ''}
 
    <div class="chapter-reader-navigation">
      ${previous?`
@@ -4206,6 +2884,7 @@ sessionStorage.setItem('storyboard_current_chapter', String(index));
 
  $('readerBack').onclick=()=>renderStorySettings(storyId);
  $('readerList').onclick=()=>renderStorySettings(storyId);
+ document.querySelectorAll('[data-choice-target]').forEach(btn=>{btn.onclick=()=>{const targetIndex=s.chapters.findIndex(ch=>ch.id===btn.dataset.choiceTarget);if(targetIndex>=0){renderChapterReader(storyId,targetIndex);window.scrollTo({top:0,behavior:'smooth'});}};});
 
  document.querySelectorAll('[data-reader-index]').forEach(btn=>{
    btn.onclick=()=>{
@@ -4235,8 +2914,8 @@ async function deleteChapter(storyId,chapterId){
         return;
     }
 
-    if(w.owner_id !== user.id && c.author_id !== user.id){
-        alert('자신이 작성한 회차 또는 세계관 소유자의 회차만 삭제할 수 있습니다.');
+    if(w.owner_id !== user.id){
+        alert('이 세계관의 소유자만 회차를 삭제할 수 있습니다.');
         return;
     }
 
@@ -4276,7 +2955,7 @@ function openModal(id=null){
     
  editId=id;let w=id?get(id):null;
  $('mtitle').textContent=id?'세계관 수정':'새로운 세계관 만들기';
- $('name').value=w?.name||'';$('desc').value=w?.description||'';$('genre').value=['판타지','다크 판타지','SF','사이버펑크','현대','로맨스','학원물','무협','추리물','공포','역사극','힐링','종교/신화','기타'].includes(w?.genre)?(w?.genre||'판타지'):'기타';$('customGenre').value=(w?.genre&& !['판타지','다크 판타지','SF','사이버펑크','현대','로맨스','학원물','무협','추리물','공포','역사극','힐링','종교/신화'].includes(w.genre))?w.genre:'';updateCustomGenreField();$('visibility').value=w?.visibility||'public';$('theme').value=w?.theme||'purple';
+ $('name').value=w?.name||'';$('desc').value=w?.description||'';$('genre').value=['판타지','SF','현대','역사','공포','기타'].includes(w?.genre)?(w?.genre||'판타지'):'기타';$('customGenre').value=(w?.genre&& !['판타지','SF','현대','역사','공포'].includes(w.genre))?w.genre:'';updateCustomGenreField();$('visibility').value=w?.visibility||'public';$('theme').value=w?.theme||'purple';
  $('coverFile').value='';setCoverPreview(w?.coverImage||'');
  $('modal').classList.add('show')
 }
@@ -4353,6 +3032,8 @@ $('msave').onclick = async () => {
             members: 1,
             icon: '✦',
             theme: $('theme').value,
+            designStyle: 'fantasy',
+            designColor: 'purple',
             coverImage: selectedCover || '',
             joined: true,
             createdAt: Date.now(),
@@ -5064,7 +3745,6 @@ renderWorld();
 $('search').oninput=e=>renderHome(e.target.value);
 
 async function showMyCreation(){
-    clearWorldDesign();
     current = null;
 
     $('home').classList.add('hidden');
@@ -5135,8 +3815,7 @@ async function loadMyCreationSettings(){
     const { data, error } = await supabaseClient
         .from('world_settings')
         .select('*')
-        .eq('created_by', currentUserId)
-        .order('created_at', { ascending: true });
+        .eq('created_by', currentUserId);
 
     if(error){
         console.error('내 창작 세계관 설정 불러오기 실패:', error);
@@ -5214,8 +3893,7 @@ async function loadMyCreationLocations(){
     const { data, error } = await supabaseClient
         .from('locations')
         .select('*')
-        .eq('created_by', currentUserId)
-        .order('created_at', { ascending: true });
+        .eq('created_by', currentUserId);
 
     if(error){
         console.error('내 창작 지역 불러오기 실패:', error);
@@ -5255,8 +3933,7 @@ async function loadMyCreationCharacters(){
     const { data, error } = await supabaseClient
         .from('characters')
         .select('*')
-        .eq('owner_id', currentUserId)
-        .order('created_at', { ascending: true });
+        .eq('owner_id', currentUserId);
 
     if(error){
         console.error('내 창작 캐릭터 불러오기 실패:', error);
@@ -5361,7 +4038,7 @@ document.addEventListener("click",function(e){
  }
     
 });
-$('chapterClose').onclick=$('chapterCancel').onclick=()=>{$('chapterModal').classList.remove('show');editingChapterId=null;chapterStoryId=null};
+$('chapterClose').onclick=$('chapterCancel').onclick=()=>{$('chapterModal').classList.remove('show');editingChapterId=null;chapterStoryId=null;if($('choiceList'))$('choiceList').innerHTML='';};
 $('chapterSave').onclick=saveChapter;
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -5388,9 +4065,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 인증 상태 먼저 확인
     const { data } = await supabaseClient.auth.getSession();
 
-    // 최초 1회만 현재 세션으로 UI를 초기화합니다.
-    // 이후 변경은 onAuthStateChange가 담당합니다.
-    updateAuthUI(data?.session || null);
+    await updateAuthUI(data?.session || null);
 
     // 그 다음 세계관 데이터 불러오기
     await load();
@@ -5416,89 +4091,43 @@ let imageCropStartY = 0;
 let imageCropPointers = new Map();
 let imageCropLastPinchDistance = 0;
 let imageCropCallback = null;
-let imageCropCleanup = null;
 
 function openImageCropModal(file, target, ratio, callback) {
     if (!file) return;
 
-    imageCropTarget = target;
-    imageCropRatio = ratio;
-    imageCropCallback = typeof callback === 'function' ? callback : null;
-    imageCropImage = null;
-    imageCropScale = 1;
-    imageCropX = 0;
-    imageCropY = 0;
-    imageCropDragging = false;
-    imageCropPointers.clear();
-    imageCropLastPinchDistance = 0;
+    const reader = new FileReader();
 
-    const title = $('imageCropTitle');
-    if(title) title.textContent = ratio === 16 / 9 ? '세계관 대표 사진 조정' : '사진 조정';
-    const zoom = $('imageZoom');
-    if(zoom) zoom.value = '1';
+    reader.onload = function(e) {
+        imageCropTarget = target;
+        imageCropRatio = ratio;
+        imageCropCallback = typeof callback === 'function' ? callback : null;
 
-    const modal = $('imageCropModal');
-    if(modal) modal.classList.add('show');
-
-    const fail = (message) => {
-        console.error('이미지 처리 실패:', message, file?.name, file?.type, file?.size);
-        alert(message);
-        closeImageCropModal();
-    };
-
-    // 중요: 원본 사진의 가로세로 비율을 절대 강제로 바꾸지 않습니다.
-    // 모바일에서는 원본 전체를 먼저 안전하게 읽은 뒤, 비율을 유지한 채 최대 1600px로 축소합니다.
-    const openImage = (img, cleanup) => {
-        if(!img || !img.naturalWidth || !img.naturalHeight){
-            if(cleanup) cleanup();
-            fail('사진을 읽을 수 없습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
-            return;
+        const title = $('imageCropTitle');
+        if(title){
+            title.textContent = ratio === 16 / 9 ? '세계관 대표 사진 조정' : '사진 조정';
         }
 
-        const maxSide = (window.matchMedia && window.matchMedia('(max-width:700px)').matches) ? 1200 : 1600;
-        const sourceW = img.naturalWidth;
-        const sourceH = img.naturalHeight;
-        const scale = Math.min(1, maxSide / Math.max(sourceW, sourceH));
-        const w = Math.max(1, Math.round(sourceW * scale));
-        const h = Math.max(1, Math.round(sourceH * scale));
+        imageCropImage = new Image();
 
-        // 이미 충분히 작은 사진이면 원본을 그대로 사용합니다.
-        if(scale >= 1){
-            imageCropImage = img;
-            if(cleanup) imageCropCleanup = cleanup;
-            requestAnimationFrame(drawImageCrop);
-            return;
-        }
+        imageCropImage.onload = function() {
+            imageCropScale = 1;
+            imageCropX = 0;
+            imageCropY = 0;
+            imageCropDragging = false;
+            imageCropPointers.clear();
+            imageCropLastPinchDistance = 0;
 
-        const c = document.createElement('canvas');
-        c.width = w;
-        c.height = h;
-        const ctx = c.getContext('2d');
-        if(!ctx){
-            if(cleanup) cleanup();
-            fail('사진을 처리할 수 없습니다. 다른 사진으로 다시 시도해주세요.');
-            return;
-        }
-        // 모바일에서는 canvas -> Base64 -> 새 Image로 다시 만드는 과정이
-        // 메모리를 크게 늘려 페이지가 종료될 수 있으므로 하지 않습니다.
-        // 축소한 canvas 자체를 미리보기 이미지로 사용합니다.
-        ctx.drawImage(img, 0, 0, w, h);
-        if(cleanup) cleanup();
-        imageCropImage = c;
-        requestAnimationFrame(drawImageCrop);
+            const zoom = $('imageZoom');
+            if (zoom) zoom.value = '1';
+
+            $('imageCropModal')?.classList.add('show');
+            drawImageCrop();
+        };
+
+        imageCropImage.src = e.target.result;
     };
 
-    const objectUrl = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-        // onload가 끝난 뒤에만 revoke합니다. 모바일에서 조기 해제되는 문제를 피합니다.
-        openImage(img, () => URL.revokeObjectURL(objectUrl));
-    };
-    img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        fail('이 사진 형식을 브라우저에서 읽지 못했습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
-    };
-    img.src = objectUrl;
+    reader.readAsDataURL(file);
 }
 
 function getCropCanvasSize(){
@@ -5705,8 +4334,6 @@ function closeImageCropModal(){
     imageCropPointers.clear();
     imageCropLastPinchDistance=0;
     imageCropCallback=null;
-    if(typeof imageCropCleanup === 'function'){ try{ imageCropCleanup(); }catch(e){} }
-    imageCropCleanup=null;
 }
 
 if(imageCropClose) imageCropClose.addEventListener('click',closeImageCropModal);
@@ -5737,15 +4364,7 @@ if(imageCropApply){
         outputCanvas.height = outputSize.height;
 
         const outputCtx = outputCanvas.getContext('2d', { alpha: false });
-        if(!outputCtx){
-            alert('사진을 처리할 수 없습니다. 브라우저를 새로고침한 뒤 다시 시도해주세요.');
-            return;
-        }
         const img = imageCropImage;
-        if(!img.width || !img.height){
-            alert('사진을 읽을 수 없습니다. JPG 또는 PNG 사진으로 다시 시도해주세요.');
-            return;
-        }
         const baseScale = Math.max(
             outputSize.width / img.width,
             outputSize.height / img.height
@@ -5774,7 +4393,7 @@ if(imageCropApply){
         outputCtx.drawImage(img,drawX,drawY,drawWidth,drawHeight);
 
         // JPEG 품질을 높여 사진의 디테일과 텍스트 가독성을 최대한 유지합니다.
-        const result=outputCanvas.toDataURL('image/jpeg',0.82);
+        const result=outputCanvas.toDataURL('image/jpeg',0.94);
 
         if(imageCropCallback){
             imageCropCallback(result);
@@ -6018,14 +4637,7 @@ function getMemberIconUrl(userId) {
  */
 
 async function applyPersonalMonthlyIcons() {
-    // 반복적인 getUser() 네트워크 요청을 막아 PC에서 로그인/프로필 메뉴가
-    // 느려지는 현상을 방지합니다. 현재 인증 사용자를 메모리에서 재사용합니다.
-    let supabaseUser = cachedAuthUser;
-    if (!supabaseUser) {
-        const { data } = await supabaseClient.auth.getSession();
-        supabaseUser = data?.session?.user || null;
-        cachedAuthUser = supabaseUser;
-    }
+    const { data: { user: supabaseUser } } = await supabaseClient.auth.getUser();
 
     if (!supabaseUser) return;
 
@@ -6086,53 +4698,6 @@ if (profileMenu) {
         iconChangeBtn.type = "button";
         profileMenu.appendChild(iconChangeBtn);
     }
-
-    let iconResetBtn = document.getElementById("profileIconResetBtn");
-    if (!iconResetBtn) {
-        iconResetBtn = document.createElement("button");
-        iconResetBtn.id = "profileIconResetBtn";
-        iconResetBtn.type = "button";
-        iconResetBtn.textContent = "↩️ 기본 아이콘으로 되돌리기";
-        iconResetBtn.style.cssText =
-            "width:100%; margin-top:8px; padding:9px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:13px;";
-        profileMenu.appendChild(iconResetBtn);
-    }
-
-    iconResetBtn.onclick = async (e) => {
-        e.stopPropagation();
-        const user = cachedAuthUser;
-        if (!user) {
-            alert("로그인 상태를 확인할 수 없습니다.");
-            return;
-        }
-
-        if (!confirm("현재 저장된 개인 아이콘을 삭제하고 기본 아이콘으로 되돌릴까요?")) return;
-
-        iconResetBtn.disabled = true;
-        iconResetBtn.textContent = "되돌리는 중...";
-
-        const { error } = await supabaseClient
-            .from("profiles")
-            .update({ icon_url: null })
-            .eq("user_id", user.id);
-
-        if (error) {
-            console.error("기본 아이콘 복구 실패:", error);
-            alert("기본 아이콘으로 되돌리지 못했습니다.\n" + error.message);
-            iconResetBtn.disabled = false;
-            iconResetBtn.textContent = "↩️ 기본 아이콘으로 되돌리기";
-            return;
-        }
-
-        localStorage.removeItem("my_custom_icon_path");
-        delete profileIconCache[user.id];
-
-        iconResetBtn.disabled = false;
-        iconResetBtn.textContent = "↩️ 기본 아이콘으로 되돌리기";
-
-        await applyPersonalMonthlyIcons();
-        alert("기본 아이콘으로 되돌렸습니다.");
-    };
 
     iconChangeBtn.textContent = canChangeIcon
         ? "✨ 내 아이콘 변경"
@@ -6381,63 +4946,32 @@ function openIconChangeModal() {
 }
 
 // 페이지 로드 시 실행 및 동적 화면 갱신 대응
-// body 전체가 바뀔 때마다 auth.getUser()와 전체 DOM 스캔을 반복하던 기존 방식은
-// PC에서 특히 무거웠습니다. 프로필 영역 변경은 무시하고 실제 콘텐츠 변경만
-// 짧게 묶어서 처리합니다.
+// 세계관을 열거나 탭을 바꾸면 render 함수가 기존 DOM을 다시 만들기 때문에
+// 최초 1회만 아이콘을 적용하면 새로 만들어진 캐릭터/지역/소설/설정 아이콘이 사라집니다.
+// DOM 변경을 감지하여 현재 사용자가 작성한 콘텐츠에만 다시 아이콘을 적용합니다.
 let personalIconApplyTimer = null;
 let personalIconApplying = false;
-let personalIconQueued = false;
 
 async function applyPersonalIconsAfterRender() {
-    if (personalIconApplying) {
-        personalIconQueued = true;
-        return;
-    }
+    if (personalIconApplying) return;
     personalIconApplying = true;
     try {
         await applyPersonalMonthlyIcons();
     } finally {
         personalIconApplying = false;
-        if (personalIconQueued) {
-            personalIconQueued = false;
-            schedulePersonalIconApply();
-        }
     }
 }
 
-function schedulePersonalIconApply() {
-    clearTimeout(personalIconApplyTimer);
-    personalIconApplyTimer = setTimeout(() => {
-        applyPersonalIconsAfterRender();
-    }, 300);
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-    // 로그인/프로필 UI를 먼저 그린 다음 아이콘 보정을 실행합니다.
-    setTimeout(() => applyPersonalIconsAfterRender(), 0);
+    applyPersonalIconsAfterRender();
 
     const observerTarget = document.body;
     if (observerTarget && !window.__personalIconObserver) {
-        window.__personalIconObserver = new MutationObserver((mutations) => {
-            let relevantChange = false;
-
-            for (const mutation of mutations) {
-                if (!mutation.addedNodes || mutation.addedNodes.length === 0) continue;
-                const target = mutation.target;
-
-                // 로그인/프로필 영역 자체의 변경은 다시 전체 아이콘을 적용할 필요가 없습니다.
-                if (target?.closest?.('#profileArea')) continue;
-
-                for (const node of mutation.addedNodes) {
-                    if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.TEXT_NODE) continue;
-                    if (node.nodeType === Node.ELEMENT_NODE && node.closest?.('#profileArea')) continue;
-                    relevantChange = true;
-                    break;
-                }
-                if (relevantChange) break;
-            }
-
-            if (relevantChange) schedulePersonalIconApply();
+        window.__personalIconObserver = new MutationObserver(() => {
+            clearTimeout(personalIconApplyTimer);
+            personalIconApplyTimer = setTimeout(() => {
+                applyPersonalIconsAfterRender();
+            }, 80);
         });
 
         window.__personalIconObserver.observe(observerTarget, {
@@ -6499,14 +5033,10 @@ window.clearMonthsTest = async function() {
 };
 
 
-/* 디자인 적용 후 새로 만들어진 버튼에도 자동 글자색 적용 */
-(function initAutoButtonTextObserver(){
-  const run=()=>applyAutoButtonTextColor(document);
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>setTimeout(run,50),{once:true});
-  }else{
-    setTimeout(run,50);
-  }
-  const obs=new MutationObserver(()=>setTimeout(run,0));
-  obs.observe(document.body,{childList:true,subtree:true});
-})();
+// ===== 선택형 소설 이벤트 =====
+document.addEventListener('DOMContentLoaded',function(){
+ const storyType=$("storyType");
+ if(storyType){storyType.addEventListener('change',updateStoryTypeUI);updateStoryTypeUI();}
+ const addChoice=$("addChoice");
+ if(addChoice)addChoice.addEventListener('click',addChoiceEditorCard);
+});
