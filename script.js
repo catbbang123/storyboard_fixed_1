@@ -1051,6 +1051,7 @@ function restoreStoryView(){
 }
 
 function showJoinedWorlds(){
+    clearWorldDesign();
     current = null;
 
     $('home').classList.add('hidden');
@@ -1118,6 +1119,7 @@ $('world').innerHTML = `
 }
 
 function home(){
+    clearWorldDesign();
     current=null;
     sessionStorage.removeItem('storyboard_current_reader');
     sessionStorage.removeItem('storyboard_current_story');
@@ -1132,6 +1134,7 @@ function home(){
 }
 
 function showMyWorlds(){
+    clearWorldDesign();
     current = null;
 
     $('home').classList.add('hidden');
@@ -1775,6 +1778,17 @@ function ensureWorldDesignStyles(){
       @media(max-width:430px){.world-decor-style-grid{grid-template-columns:1fr}.world-decor-color-grid{grid-template-columns:repeat(5,1fr)}.wd-preview{height:92px;}}
     `;
     document.head.appendChild(style);
+}
+
+function clearWorldDesign(){
+    const el=$('world');
+    if(!el) return;
+
+    el.classList.remove('world-design');
+    delete el.dataset.designStyle;
+    delete el.dataset.designColor;
+    el.style.removeProperty('--wd-accent');
+    el.style.removeProperty('--wd-accent-soft');
 }
 
 function applyWorldDesign(w){
